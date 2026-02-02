@@ -33,7 +33,7 @@ export default function ContinueAsScreen() {
   return (
     <GestureRecognizer style={styles.container} config={swipeConfig}>
       <Image
-        source={require("../assets/images/icon9.png")}
+        source={require("../assets/images/logo.png")}
         style={styles.logo}
         resizeMode="contain"
       />
@@ -44,7 +44,6 @@ export default function ContinueAsScreen() {
         <TouchableOpacity
           style={[
             styles.card,
-            styles.authorCard,
             selected === "author" && styles.activeCard,
           ]}
           onPress={() => handleSelect("author")}
@@ -59,7 +58,6 @@ export default function ContinueAsScreen() {
         <TouchableOpacity
           style={[
             styles.card,
-            styles.studentCard,
             selected === "student" && styles.activeCard,
           ]}
           onPress={() => handleSelect("student")}
@@ -83,38 +81,54 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#FFFFFF",
     alignItems: "center",
-    paddingTop: 120, // increased top spacing
+    paddingTop: 120,
   },
   logo: {
-    width: 140,
-    height: 40,
-    marginBottom: 60, // more space below the logo
+    width: 330,
+    height: 90,
+    marginBottom: 60,
   },
   subtitle: {
-    fontSize: 16,
-    color: "#0A3D91",
-    marginBottom: 65, // increased space between text and cards
-    fontWeight: "500",
+    fontSize: 18,
+    color: "#333333",
+    marginBottom: 65,
+    fontWeight: "600",
   },
   cardRow: {
     flexDirection: "row",
     gap: 20,
-    paddingHorizontal: 20, // add horizontal padding to prevent cards touching edges
+    paddingHorizontal: 20,
   },
   card: {
-    width: 140, // slightly smaller width
+    width: 140,
     borderRadius: 18,
-    padding: 12,
+    padding: 16,
     alignItems: "center",
+    backgroundColor: "#FFFFFF",
+    borderWidth: 2,
+    borderColor: "#E0E0E0",
+    shadowColor: "#000",
+    shadowOpacity: 0.08,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 8,
+    elevation: 2,
   },
-  authorCard: { backgroundColor: "#D7E9FF" },
-  studentCard: { backgroundColor: "#FFDCDC" },
-  activeCard: { borderWidth: 2, borderColor: "#0A3D91" },
+  activeCard: { 
+    borderWidth: 3, 
+    borderColor: "#E85D55", // I-SHELF red/coral color
+    shadowColor: "#E85D55",
+    shadowOpacity: 0.15,
+  },
   image: {
-    width: 100, // reduced size
-    height: 100, // reduced size
+    width: 100,
+    height: 100,
     borderRadius: 14,
     marginBottom: 10,
   },
-  label: { fontSize: 14, fontWeight: "600", color: "#000", textAlign: "center" },
+  label: { 
+    fontSize: 14, 
+    fontWeight: "600", 
+    color: "#2C2C2C", 
+    textAlign: "center" 
+  },
 });

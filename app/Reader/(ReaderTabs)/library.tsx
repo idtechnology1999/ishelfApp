@@ -26,7 +26,7 @@ export default function Library() {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()}>
-          <Ionicons name="chevron-back" size={28} color="#0A3D91" />
+          <Ionicons name="chevron-back" size={28} color="#E85D54" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Library</Text>
         <View style={{ width: 28 }} />
@@ -89,7 +89,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 20,
     fontWeight: "700",
-    color: "#0A3D91",
+    color: "#E85D54",
     flex: 1,
     textAlign: "center",
   },
@@ -116,10 +116,18 @@ const styles = StyleSheet.create({
     height: 180,
   },
   viewAllButton: {
-    backgroundColor: "#0A3D91",
+    backgroundColor: "#E85D54",
     paddingHorizontal: 32,
     paddingVertical: 14,
     borderRadius: 25,
+    shadowColor: "#E85D54",
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 4,
   },
   viewAllText: {
     fontSize: 14,

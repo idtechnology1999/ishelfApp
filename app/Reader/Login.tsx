@@ -6,6 +6,7 @@ import {
   TextInput,
   TouchableOpacity,
   ScrollView,
+  Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -28,12 +29,16 @@ export default function Login() {
           style={styles.backButton}
           onPress={() => router.back()}
         >
-          <Ionicons name="chevron-back" size={24} color="#0A3D91" />
+          <Ionicons name="chevron-back" size={24} color="#E85D54" />
         </TouchableOpacity>
 
         {/* Logo */}
         <View style={styles.logoContainer}>
-          <Ionicons name="book" size={48} color="#0A3D91" />
+          <Image
+            source={require('../../assets/images/logo.png')}
+            style={styles.logoImage}
+            resizeMode="contain"
+          />
         </View>
 
         {/* Title */}
@@ -115,11 +120,21 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginTop: 20,
     marginBottom: 20,
+    backgroundColor: "#FFE8E6", // Light coral background
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    alignSelf: "center",
+    justifyContent: "center",
+  },
+  logoImage: {
+    width: 80,
+    height: 80,
   },
   title: {
     fontSize: 32,
     fontWeight: "700",
-    color: "#0A3D91",
+    color: "#E85D54", // I-SHELF coral red
     textAlign: "center",
     marginBottom: 10,
   },
@@ -143,7 +158,7 @@ const styles = StyleSheet.create({
   input: {
     height: 50,
     borderWidth: 1.5,
-    borderColor: "#0A3D91",
+    borderColor: "#FFD4D1", // Light coral border
     borderRadius: 12,
     paddingHorizontal: 16,
     fontSize: 15,
@@ -154,16 +169,24 @@ const styles = StyleSheet.create({
   },
   forgotPasswordText: {
     fontSize: 14,
-    color: "#000",
+    color: "#E85D54", // I-SHELF coral red
   },
   loginButton: {
     marginHorizontal: 24,
     marginTop: 30,
     height: 56,
-    backgroundColor: "#0A3D91",
+    backgroundColor: "#E85D54", // I-SHELF coral red
     borderRadius: 28,
     justifyContent: "center",
     alignItems: "center",
+    shadowColor: "#E85D54",
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 4,
   },
   loginButtonText: {
     fontSize: 16,
@@ -182,7 +205,7 @@ const styles = StyleSheet.create({
   signUpLink: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#0A3D91",
+    color: "#E85D54", // I-SHELF coral red
   },
   orText: {
     fontSize: 14,
@@ -200,7 +223,7 @@ const styles = StyleSheet.create({
   socialButton: {
     width: 70,
     height: 70,
-    backgroundColor: "#E8F1FF",
+    backgroundColor: "#FFE8E6", // Light coral background
     borderRadius: 16,
     justifyContent: "center",
     alignItems: "center",

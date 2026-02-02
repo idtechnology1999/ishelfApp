@@ -113,7 +113,7 @@ export default function PurchaseHistory() {
             style={styles.backButton}
             onPress={() => router.back()}
           >
-            <Ionicons name="chevron-back" size={28} color="#0A3D91" />
+            <Ionicons name="chevron-back" size={28} color="#E85D54" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Purchase Details</Text>
           <View style={styles.headerSpacer} />
@@ -128,7 +128,7 @@ export default function PurchaseHistory() {
               onPress={() => handleItemPress(item)}
             >
               <Image
-                source={require("../../../assets/images/book-placeholder.png")} // Adjust path
+                source={require("../../../assets/images/book-placeholder.png")}
                 style={styles.bookImage}
               />
               <View style={styles.purchaseDetails}>
@@ -155,13 +155,13 @@ export default function PurchaseHistory() {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <TouchableOpacity style={styles.closeButton} onPress={closeModal}>
-              <Ionicons name="close-circle" size={32} color="#000000" />
+              <Ionicons name="close-circle" size={32} color="#E85D54" />
             </TouchableOpacity>
 
             {selectedItem && (
               <View style={styles.detailContainer}>
                 <Image
-                  source={require("../../../assets/images/book-placeholder.png")} // Adjust path
+                  source={require("../../../assets/images/book-placeholder.png")}
                   style={styles.modalBookImage}
                 />
                 <Text style={styles.modalBookTitle}>{selectedItem.title}</Text>
@@ -212,7 +212,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 20,
     fontWeight: "600",
-    color: "#0A3D91",
+    color: "#E85D54", // I-SHELF coral red
     flex: 1,
     textAlign: "center",
   },
@@ -235,7 +235,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: "#E5E5E5",
+    borderColor: "#FFD4D1", // Light coral border
   },
 
   bookImage: {
@@ -262,7 +262,7 @@ const styles = StyleSheet.create({
   price: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#000000",
+    color: "#E85D54", // I-SHELF coral red
     marginBottom: 4,
   },
 
@@ -286,6 +286,8 @@ const styles = StyleSheet.create({
     width: "85%",
     maxHeight: "70%",
     position: "relative",
+    borderWidth: 2,
+    borderColor: "#FFD4D1", // Light coral border
   },
 
   closeButton: {
@@ -325,7 +327,7 @@ const styles = StyleSheet.create({
   modalPrice: {
     fontSize: 20,
     fontWeight: "700",
-    color: "#000000",
+    color: "#E85D54", // I-SHELF coral red
   },
 
   modalStatus: {

@@ -82,7 +82,7 @@ export default function MyWorksTab() {
               style={styles.backButton}
               onPress={() => router.push("/Author/(AuthorTabs)/")}
             >
-              <Ionicons name="chevron-back" size={28} color="#0A3D91" />
+              <Ionicons name="chevron-back" size={28} color="#E85D54" />
             </TouchableOpacity>
             <Text style={styles.title}>My Works</Text>
             <View style={styles.headerSpacer} />
@@ -120,9 +120,7 @@ export default function MyWorksTab() {
           <View style={styles.booksGrid}>
             {uploadedBooks.map((book) => (
               <View key={book.id} style={styles.bookCard}>
-                <TouchableOpacity
-                //   onPress={() => router.push(`/book/${book.id}`)}
-                >
+                <TouchableOpacity>
                   <View style={styles.bookThumbnail}>
                     <Image
                       source={book.thumbnail}
@@ -177,7 +175,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontWeight: "600",
-    color: "#0A3D91",
+    color: "#E85D54", // I-SHELF coral red
     flex: 1,
     textAlign: "center",
   },
@@ -195,6 +193,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     height: 50,
     borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#FFD4D1", // Light coral border
   },
 
   searchIcon: {
@@ -219,12 +219,20 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#0A3D91",
+    backgroundColor: "#E85D54", // I-SHELF coral red
     marginHorizontal: 24,
     marginBottom: 32,
     height: 56,
     borderRadius: 12,
     gap: 8,
+    shadowColor: "#E85D54",
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 4,
   },
 
   uploadButtonText: {
@@ -247,7 +255,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 12,
     borderWidth: 1,
-    borderColor: "#E5E5E5",
+    borderColor: "#FFD4D1", // Light coral border
   },
 
   bookThumbnail: {
@@ -297,7 +305,7 @@ const styles = StyleSheet.create({
   },
 
   editButton: {
-    backgroundColor: "#0A3D91",
+    backgroundColor: "#E85D54", // I-SHELF coral red
     paddingHorizontal: 20,
     paddingVertical: 8,
     borderRadius: 8,

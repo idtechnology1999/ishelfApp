@@ -1,3 +1,4 @@
+// ReaderOnboarding.tsx
 import React from "react";
 import {
   View,
@@ -33,7 +34,7 @@ export default function ReaderOnboarding() {
           style={styles.backButton}
           onPress={() => router.back()}
         >
-          <Ionicons name="chevron-back" size={24} color="#0A3D91" />
+          <Ionicons name="chevron-back" size={24} color="#E8533F" />
         </TouchableOpacity>
 
         <View style={styles.content}>
@@ -66,7 +67,7 @@ export default function ReaderOnboarding() {
             style={styles.nextButton}
             onPress={() => router.push("/Reader/ReaderOnboarding2")}
           >
-            <Ionicons name="chevron-forward" size={24} color="#0A3D91" />
+            <Ionicons name="chevron-forward" size={24} color="#E8533F" />
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -92,7 +93,7 @@ const styles = StyleSheet.create({
     fontSize: 38,
     lineHeight: 44,
     fontWeight: "700",
-    color: "#0A3D91",
+    color: "#E8533F",
     marginBottom: 14,
   },
   description: {
@@ -129,13 +130,13 @@ const styles = StyleSheet.create({
   },
   activeDot: {
     width: 32,
-    backgroundColor: "#0A3D91",
+    backgroundColor: "#E8533F",
   },
   nextButton: {
     width: 70,
     height: 70,
     borderRadius: 35,
-    backgroundColor: "#C4D9F4",
+    backgroundColor: "#FCDAD6",
     alignItems: "center",
     justifyContent: "center",
   },

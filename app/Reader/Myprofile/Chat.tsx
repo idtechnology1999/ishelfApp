@@ -55,7 +55,7 @@ export default function Chat() {
             style={styles.backButton}
             onPress={() => router.back()}
           >
-            <Ionicons name="chevron-back" size={28} color="#0A3D91" />
+            <Ionicons name="chevron-back" size={28} color="#E85D54" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Chats</Text>
           <View style={styles.headerSpacer} />
@@ -80,7 +80,10 @@ export default function Chat() {
                 msg.sender === "user" ? styles.userMessage : styles.supportMessage,
               ]}
             >
-              <Text style={styles.messageText}>{msg.text}</Text>
+              <Text style={[
+                styles.messageText,
+                msg.sender === "user" && styles.userMessageText
+              ]}>{msg.text}</Text>
             </View>
           ))}
         </ScrollView>
@@ -130,7 +133,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 20,
     fontWeight: "600",
-    color: "#0A3D91",
+    color: "#E85D54", // I-SHELF coral red
     flex: 1,
     textAlign: "center",
   },
@@ -147,7 +150,7 @@ const styles = StyleSheet.create({
   chatWith: {
     fontSize: 16,
     fontWeight: "500",
-    color: "#0A3D91",
+    color: "#E85D54", // I-SHELF coral red
   },
 
   messagesContainer: {
@@ -168,13 +171,13 @@ const styles = StyleSheet.create({
   },
 
   supportMessage: {
-    backgroundColor: "#0A3D91",
+    backgroundColor: "#E85D54", // I-SHELF coral red
     alignSelf: "flex-start",
     borderBottomLeftRadius: 4,
   },
 
   userMessage: {
-    backgroundColor: "#C5E1F5",
+    backgroundColor: "#FFE8E6", // Light coral
     alignSelf: "flex-end",
     borderBottomRightRadius: 4,
   },
@@ -185,6 +188,10 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
 
+  userMessageText: {
+    color: "#333333", // Dark text for light background
+  },
+
   inputContainer: {
     flexDirection: "row",
     alignItems: "center",
@@ -192,7 +199,7 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     backgroundColor: "#FFFFFF",
     borderTopWidth: 1,
-    borderTopColor: "#E5E5E5",
+    borderTopColor: "#FFD4D1", // Light coral border
     gap: 12,
   },
 
@@ -201,7 +208,7 @@ const styles = StyleSheet.create({
     minHeight: 50,
     maxHeight: 100,
     borderWidth: 1,
-    borderColor: "#0A3D91",
+    borderColor: "#FFD4D1", // Light coral border
     borderRadius: 25,
     paddingHorizontal: 20,
     paddingVertical: 12,
@@ -214,8 +221,16 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: "#0A3D91",
+    backgroundColor: "#E85D54", // I-SHELF coral red
     alignItems: "center",
     justifyContent: "center",
+    shadowColor: "#E85D54",
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 4,
   },
 });

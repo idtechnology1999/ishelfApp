@@ -22,7 +22,7 @@ export default function MakePayment() {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()}>
-          <Ionicons name="chevron-back" size={28} color="#0A3D91" />
+          <Ionicons name="chevron-back" size={28} color="#E85D55" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Make Payment</Text>
         <View style={{ width: 28 }} />
@@ -85,7 +85,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 20,
     fontWeight: "700",
-    color: "#0A3D91",
+    color: "#E85D55",
     flex: 1,
     textAlign: "center",
   },
@@ -96,7 +96,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 20,
     fontWeight: "700",
-    color: "#0A3D91",
+    color: "#E85D55",
     marginBottom: 24,
   },
   paymentOption: {
@@ -105,20 +105,20 @@ const styles = StyleSheet.create({
     padding: 20,
     borderRadius: 16,
     borderWidth: 2,
-    borderColor: "#E0E0E0",
+    borderColor: "#FFE5E3",
     marginBottom: 16,
     backgroundColor: "#FFFFFF",
   },
   paymentOptionSelected: {
-    backgroundColor: "#E8F1FF",
-    borderColor: "#0A3D91",
+    backgroundColor: "#FFF5F4",
+    borderColor: "#E85D55",
   },
   radioButton: {
     width: 24,
     height: 24,
     borderRadius: 12,
     borderWidth: 2,
-    borderColor: "#0A3D91",
+    borderColor: "#E85D55",
     marginRight: 16,
     alignItems: "center",
     justifyContent: "center",
@@ -127,11 +127,11 @@ const styles = StyleSheet.create({
     width: 12,
     height: 12,
     borderRadius: 6,
-    backgroundColor: "#0A3D91",
+    backgroundColor: "#E85D55",
   },
   paymentOptionText: {
     fontSize: 18,
     fontWeight: "600",
-    color: "#0A3D91",
+    color: "#2C2C2C",
   },
 });

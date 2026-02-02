@@ -60,7 +60,7 @@ export default function Support() {
             style={styles.backButton}
             onPress={() => router.back()}
           >
-            <Ionicons name="chevron-back" size={28} color="#0A3D91" />
+            <Ionicons name="chevron-back" size={28} color="#E85D54" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Support</Text>
           <View style={styles.headerSpacer} />
@@ -126,7 +126,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 20,
     fontWeight: "600",
-    color: "#0A3D91",
+    color: "#E85D54", // I-SHELF coral red
     flex: 1,
     textAlign: "center",
   },
@@ -161,10 +161,18 @@ const styles = StyleSheet.create({
   },
 
   chatButton: {
-    backgroundColor: "#0A3D91",
+    backgroundColor: "#E85D54", // I-SHELF coral red
     paddingHorizontal: 80,
     paddingVertical: 16,
     borderRadius: 28,
+    shadowColor: "#E85D54",
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 4,
   },
 
   chatButtonText: {
@@ -191,7 +199,7 @@ const styles = StyleSheet.create({
   },
 
   faqQuestion: {
-    backgroundColor: "#0A3D91",
+    backgroundColor: "#E85D54", // I-SHELF coral red
     padding: 20,
     borderRadius: 12,
   },
@@ -203,7 +211,7 @@ const styles = StyleSheet.create({
   },
 
   faqAnswer: {
-    backgroundColor: "#C5E1F5",
+    backgroundColor: "#FFE8E6", // Light coral
     padding: 20,
     borderRadius: 12,
     marginTop: 4,

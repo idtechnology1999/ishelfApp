@@ -9,7 +9,7 @@ export default function TabLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: "#0A3D91",
+        tabBarActiveTintColor: "#DC143C", // Crimson red
         tabBarInactiveTintColor: "#999",
 
         // ✅ Safe Area aware tab bar

@@ -23,15 +23,15 @@ export default function PreviewAddToCart() {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()}>
-          <Ionicons name="chevron-back" size={28} color="#0A3D91" />
+          <Ionicons name="chevron-back" size={28} color="#E85D55" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Creative Art Book</Text>
         <View style={styles.headerIcons}>
           <TouchableOpacity style={styles.iconButton}>
-            <Ionicons name="heart-outline" size={24} color="#0A3D91" />
+            <Ionicons name="heart-outline" size={24} color="#E85D55" />
           </TouchableOpacity>
           <TouchableOpacity style={styles.iconButton}>
-            <Ionicons name="share-social-outline" size={24} color="#0A3D91" />
+            <Ionicons name="share-social-outline" size={24} color="#E85D55" />
           </TouchableOpacity>
         </View>
       </View>
@@ -118,7 +118,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: "700",
-    color: "#0A3D91",
+    color: "#E85D55",
     flex: 1,
     textAlign: "center",
     marginHorizontal: 10,
@@ -131,9 +131,11 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: "#E8F1FF",
+    backgroundColor: "#FFF5F4",
     alignItems: "center",
     justifyContent: "center",
+    borderWidth: 1,
+    borderColor: "#FFE5E3",
   },
   imageContainer: {
     alignItems: "center",
@@ -145,7 +147,7 @@ const styles = StyleSheet.create({
     height: 260,
   },
   contentContainer: {
-    backgroundColor: "#E8F1FF",
+    backgroundColor: "#FFF5F4",
     borderTopLeftRadius: 30,
     borderTopRightRadius: 30,
     paddingHorizontal: 24,
@@ -160,7 +162,7 @@ const styles = StyleSheet.create({
   bookTitle: {
     fontSize: 22,
     fontWeight: "700",
-    color: "#000",
+    color: "#2C2C2C",
     marginBottom: 20,
     lineHeight: 28,
   },
@@ -170,7 +172,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#000",
+    color: "#2C2C2C",
     marginBottom: 10,
   },
   descriptionText: {
@@ -189,7 +191,7 @@ const styles = StyleSheet.create({
   price: {
     fontSize: 28,
     fontWeight: "700",
-    color: "#0A3D91",
+    color: "#E85D55",
   },
   detailsContainer: {
     gap: 10,
@@ -204,15 +206,15 @@ const styles = StyleSheet.create({
   detailValue: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#000",
+    color: "#2C2C2C",
   },
   addToCartButton: {
-    backgroundColor: "#0A3D91",
+    backgroundColor: "#E85D55",
     paddingVertical: 16,
     borderRadius: 30,
     alignItems: "center",
     marginTop: 24,
-    shadowColor: "#0A3D91",
+    shadowColor: "#E85D55",
     shadowOffset: {
       width: 0,
       height: 4,

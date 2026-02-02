@@ -44,7 +44,7 @@ export default function CourseMaterials() {
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity onPress={() => router.back()}>
-            <Ionicons name="chevron-back" size={24} color="#0A3D91" />
+            <Ionicons name="chevron-back" size={24} color="#E85D55" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Textbooks and Course Materials</Text>
           <View style={{ width: 24 }} />
@@ -87,7 +87,7 @@ export default function CourseMaterials() {
                       <Text style={styles.addToCartText}>Add to Cart</Text>
                     </TouchableOpacity>
                     <TouchableOpacity style={styles.favoriteButton}>
-                      <Ionicons name="heart-outline" size={20} color="#0A3D91" />
+                      <Ionicons name="heart-outline" size={20} color="#E85D55" />
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -117,7 +117,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#0A3D91",
+    color: "#E85D55",
     flex: 1,
     textAlign: "center",
     marginHorizontal: 10,
@@ -125,7 +125,7 @@ const styles = StyleSheet.create({
   searchContainer: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#F5F5F5",
+    backgroundColor: "#FFF5F4",
     marginHorizontal: 16,
     marginTop: 16,
     marginBottom: 20,
@@ -133,6 +133,8 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 12,
     gap: 10,
+    borderWidth: 1,
+    borderColor: "#FFE5E3",
   },
   searchInput: {
     flex: 1,
@@ -151,14 +153,16 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
     borderRadius: 12,
     marginBottom: 20,
-    shadowColor: "#000",
+    shadowColor: "#E85D55",
     shadowOffset: {
       width: 0,
       height: 2,
     },
-    shadowOpacity: 0.06,
+    shadowOpacity: 0.1,
     shadowRadius: 4,
-    elevation: 2,
+    elevation: 3,
+    borderWidth: 1,
+    borderColor: "#FFE5E3",
   },
   bookImage: {
     width: "100%",
@@ -177,7 +181,7 @@ const styles = StyleSheet.create({
   bookTitle: {
     fontSize: 13,
     fontWeight: "600",
-    color: "#000",
+    color: "#2C2C2C",
     marginBottom: 8,
     lineHeight: 18,
   },
@@ -192,7 +196,7 @@ const styles = StyleSheet.create({
   price: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#0A3D91",
+    color: "#E85D55",
   },
   bookActions: {
     flexDirection: "row",
@@ -201,7 +205,7 @@ const styles = StyleSheet.create({
   },
   addToCartButton: {
     flex: 1,
-    backgroundColor: "#0A3D91",
+    backgroundColor: "#E85D55",
     paddingVertical: 10,
     borderRadius: 20,
     alignItems: "center",
@@ -216,7 +220,7 @@ const styles = StyleSheet.create({
     height: 40,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: "#0A3D91",
+    borderColor: "#E85D55",
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "#FFFFFF",

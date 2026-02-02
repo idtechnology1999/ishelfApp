@@ -43,7 +43,7 @@ export default function DownloadedBooks() {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()}>
-          <Ionicons name="chevron-back" size={28} color="#0A3D91" />
+          <Ionicons name="chevron-back" size={28} color="#E85D55" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Downloaded Books</Text>
         <View style={styles.viewToggle}>
@@ -54,7 +54,7 @@ export default function DownloadedBooks() {
             <Ionicons
               name="list"
               size={24}
-              color={viewMode === "list" ? "#0A3D91" : "#999"}
+              color={viewMode === "list" ? "#E85D55" : "#999"}
             />
           </TouchableOpacity>
           <TouchableOpacity
@@ -64,7 +64,7 @@ export default function DownloadedBooks() {
             <Ionicons
               name="grid"
               size={24}
-              color={viewMode === "grid" ? "#0A3D91" : "#999"}
+              color={viewMode === "grid" ? "#E85D55" : "#999"}
             />
           </TouchableOpacity>
         </View>
@@ -122,7 +122,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 20,
     fontWeight: "700",
-    color: "#0A3D91",
+    color: "#E85D55",
     flex: 1,
     textAlign: "center",
   },
@@ -131,7 +131,7 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   activeView: {
-    backgroundColor: "#E8F1FF",
+    backgroundColor: "#FFF5F4",
     borderRadius: 8,
     padding: 4,
   },
@@ -142,10 +142,12 @@ const styles = StyleSheet.create({
   },
   bookCard: {
     flexDirection: "row",
-    backgroundColor: "#E8F1FF",
+    backgroundColor: "#FFF5F4",
     borderRadius: 16,
     padding: 12,
     gap: 12,
+    borderWidth: 1,
+    borderColor: "#FFE5E3",
   },
   bookImage: {
     width: 120,
@@ -167,7 +169,7 @@ const styles = StyleSheet.create({
   bookTitle: {
     fontSize: 18,
     fontWeight: "700",
-    color: "#000",
+    color: "#2C2C2C",
     lineHeight: 24,
   },
   deleteButton: {
@@ -181,10 +183,18 @@ const styles = StyleSheet.create({
     left: 144,
   },
   readButton: {
-    backgroundColor: "#0A3D91",
+    backgroundColor: "#E85D55",
     paddingVertical: 12,
     borderRadius: 25,
     alignItems: "center",
+    shadowColor: "#E85D55",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 3,
   },
   readButtonText: {
     fontSize: 14,

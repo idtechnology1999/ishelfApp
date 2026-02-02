@@ -21,15 +21,21 @@ export default function SignUpSuccessful() {
       <View style={styles.content}>
         {/* Success Icon */}
         <View style={styles.iconContainer}>
-          <Ionicons name="checkmark" size={80} color="#FFFFFF" />
+          <Ionicons name="checkmark-circle" size={120} color="#E85D54" />
         </View>
 
         {/* Success Message */}
-        <Text style={styles.title}>Sign Up Successful</Text>
+        <Text style={styles.title}>Sign Up Successful!</Text>
+        <Text style={styles.subtitle}>
+          Your account has been created successfully
+        </Text>
 
-        {/* Login Link */}
-        <TouchableOpacity onPress={handleLogin}>
-          <Text style={styles.loginLink}>Login</Text>
+        {/* Login Button */}
+        <TouchableOpacity 
+          style={styles.loginButton}
+          onPress={handleLogin}
+        >
+          <Text style={styles.loginButtonText}>Login to Your Account</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -50,33 +56,44 @@ const styles = StyleSheet.create({
   },
 
   iconContainer: {
-    width: 160,
-    height: 160,
-    borderRadius: 80,
-    backgroundColor: "#2ECC71",
-    alignItems: "center",
-    justifyContent: "center",
     marginBottom: 32,
-    shadowColor: "#2ECC71",
-    shadowOffset: {
-      width: 0,
-      height: 8,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 16,
-    elevation: 8,
   },
 
   title: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: "700",
-    color: "#333",
-    marginBottom: 16,
+    color: "#E85D54", // I-SHELF coral red
+    marginBottom: 12,
+    textAlign: "center",
   },
 
-  loginLink: {
+  subtitle: {
     fontSize: 16,
+    color: "#666",
+    textAlign: "center",
+    marginBottom: 48,
+  },
+
+  loginButton: {
+    width: "100%",
+    height: 56,
+    backgroundColor: "#E85D54", // I-SHELF coral red
+    borderRadius: 28,
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#E85D54",
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+
+  loginButtonText: {
+    fontSize: 18,
     fontWeight: "600",
-    color: "#0A3D91",
+    color: "#FFFFFF",
   },
 });

@@ -9,10 +9,9 @@ export default function ReaderTabLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: "#0A3D91",
+        tabBarActiveTintColor: "#E85D54",
         tabBarInactiveTintColor: "#999",
 
-        // ✅ Safe Area aware tab bar
         tabBarStyle: {
           backgroundColor: "#FFFFFF",
           borderTopWidth: 1,

@@ -9,7 +9,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-export default function PaymentSuccess() {
+export default function UploadSuccessful() {
   const router = useRouter();
 
   const handleContinue = () => {
@@ -19,16 +19,20 @@ export default function PaymentSuccess() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
-        <View style={styles.checkCircle}>
-          <Ionicons name="checkmark" size={70} color="#FFFFFF" />
+        <View style={styles.iconContainer}>
+          <Ionicons name="checkmark-circle" size={120} color="#E85D54" />
         </View>
         
-        <Text style={styles.title}>Payment Successful</Text>
+        <Text style={styles.title}>Upload Successful!</Text>
+        <Text style={styles.subtitle}>
+          Your book has been uploaded successfully
+        </Text>
         
-        <TouchableOpacity onPress={handleContinue}>
-          <Text style={styles.linkText}>
-           Go to <Text style={styles.linkUnderline}>Home</Text>
-          </Text>
+        <TouchableOpacity 
+          style={styles.homeButton}
+          onPress={handleContinue}
+        >
+          <Text style={styles.homeButtonText}>Go to Home</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -46,27 +50,41 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     paddingHorizontal: 24,
   },
-  checkCircle: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: "#4CAF50",
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 24,
+  iconContainer: {
+    marginBottom: 32,
   },
   title: {
-    fontSize: 22,
-    fontWeight: "600",
-    color: "#000000",
+    fontSize: 28,
+    fontWeight: "700",
+    color: "#E85D54", // I-SHELF coral red
     marginBottom: 12,
+    textAlign: "center",
   },
-  linkText: {
+  subtitle: {
     fontSize: 16,
-    color: "#000000",
+    color: "#666",
+    textAlign: "center",
+    marginBottom: 48,
   },
-  linkUnderline: {
-    color: "#007AFF",
-    textDecorationLine: "underline",
+  homeButton: {
+    width: "100%",
+    height: 56,
+    backgroundColor: "#E85D54", // I-SHELF coral red
+    borderRadius: 28,
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#E85D54",
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  homeButtonText: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#FFFFFF",
   },
 });

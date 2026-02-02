@@ -1,3 +1,4 @@
+// ReaderOnboarding3.tsx
 import React from "react";
 import {
   View,
@@ -34,7 +35,7 @@ export default function ReaderOnboarding3() {
           style={styles.backButton}
           onPress={() => router.back()}
         >
-          <Ionicons name="chevron-back" size={24} color="#0A3D91" />
+          <Ionicons name="chevron-back" size={24} color="#E85D55" />
         </TouchableOpacity>
 
         <View style={styles.content}>
@@ -66,7 +67,7 @@ export default function ReaderOnboarding3() {
             style={styles.nextButton}
             onPress={() => router.push("/Reader/SignUp")}
           >
-            <Ionicons name="chevron-forward" size={24} color="#0A3D91" />
+            <Ionicons name="chevron-forward" size={24} color="#E85D55" />
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -92,7 +93,7 @@ const styles = StyleSheet.create({
     fontSize: 38,
     lineHeight: 44,
     fontWeight: "700",
-    color: "#0A3D91",
+    color: "#E85D55",
     marginBottom: 14,
   },
   description: {
@@ -100,20 +101,22 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     color: "#333",
     maxWidth: 320,
+    marginBottom: 20,
   },
   imageWrapper: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    marginTop: 40,
+    paddingBottom: 60, // Add padding to prevent collision with pagination
   },
   image: {
-    width: width * 0.85,
-    height: width * 1.1,
+    width: width * 0.65, // Reduced from 0.85 to 0.65
+    height: width * 0.75, // Reduced from 1.1 to 0.75
   },
   footer: {
     paddingHorizontal: 24,
     paddingBottom: 40,
+    paddingTop: 20,
     alignItems: "center",
   },
   pagination: {
@@ -129,14 +132,16 @@ const styles = StyleSheet.create({
   },
   activeDot: {
     width: 32,
-    backgroundColor: "#0A3D91",
+    backgroundColor: "#E85D55",
   },
   nextButton: {
     width: 70,
     height: 70,
     borderRadius: 35,
-    backgroundColor: "#C4D9F4",
+    backgroundColor: "#FFF5F4",
     alignItems: "center",
     justifyContent: "center",
+    borderWidth: 2,
+    borderColor: "#FFE5E3",
   },
 });

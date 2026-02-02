@@ -7,7 +7,7 @@
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
 
-    "icon": "./assets/images/icon9.png",
+    "icon": "./assets/images/logo.png",
 
     "ios": {
       "supportsTablet": true,
@@ -17,7 +17,7 @@
     "android": {
       "package": "com.owolabi.ishelf",
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/android-icon-foreground9.png",
+        "foregroundImage": "./assets/images/logo.png",
         "backgroundColor": "#E6F4FE"
       },
       "intentFilters": [

@@ -10,6 +10,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -90,14 +91,18 @@ export default function ForgotPassword2() {
             onPress={() => router.replace("/Author/ForgotPassword1")}
             accessibilityLabel="Go back"
           >
-            <Ionicons name="chevron-back" size={28} color="#0A3D91" />
+            <Ionicons name="chevron-back" size={28} color="#E85D54" />
           </TouchableOpacity>
 
           {/* Header */}
           <View style={styles.header}>
-            {/* Book Icon */}
-            <View style={styles.iconContainer}>
-              <Ionicons name="book" size={40} color="#0A3D91" />
+            {/* Logo */}
+            <View style={styles.logoContainer}>
+              <Image
+                source={require('../../assets/images/logo.png')}
+                style={styles.logoImage}
+                resizeMode="contain"
+              />
             </View>
 
             <Text style={styles.title}>Forgot Password</Text>
@@ -175,20 +180,25 @@ const styles = StyleSheet.create({
     marginBottom: 50,
   },
 
-  iconContainer: {
-    width: 70,
-    height: 70,
-    borderRadius: 35,
-    backgroundColor: "#F0F4F8",
+  logoContainer: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: "#FFE8E6", // Light coral matching brand
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 20,
   },
 
+  logoImage: {
+    width: 80,
+    height: 80,
+  },
+
   title: {
     fontSize: 32,
     fontWeight: "700",
-    color: "#0A3D91",
+    color: "#E85D54", // I-SHELF coral red
     marginBottom: 8,
   },
 
@@ -208,8 +218,8 @@ const styles = StyleSheet.create({
   codeInput: {
     width: 70,
     height: 70,
-    borderWidth: 1,
-    borderColor: "#D0D7E2",
+    borderWidth: 2,
+    borderColor: "#FFD4D1", // Light coral border
     borderRadius: 12,
     fontSize: 24,
     fontWeight: "600",
@@ -225,7 +235,7 @@ const styles = StyleSheet.create({
 
   resendText: {
     fontSize: 14,
-    color: "#0A3D91",
+    color: "#E85D54", // I-SHELF coral red
     fontWeight: "500",
   },
 
@@ -235,11 +245,11 @@ const styles = StyleSheet.create({
 
   submitButton: {
     height: 56,
-    backgroundColor: "#0A3D91",
+    backgroundColor: "#E85D54", // I-SHELF coral red
     borderRadius: 28,
     alignItems: "center",
     justifyContent: "center",
-    shadowColor: "#0A3D91",
+    shadowColor: "#E85D54",
     shadowOffset: {
       width: 0,
       height: 4,

@@ -41,10 +41,10 @@ export default function SignUp4() {
           {/* Back Button */}
           <TouchableOpacity
             style={styles.backButton}
-            onPress={() => router.replace("/SignUp3")}
+            onPress={() => router.replace("/Author/SignUp3")}
             accessibilityLabel="Go back to previous step"
           >
-            <Ionicons name="chevron-back" size={28} color="#0A3D91" />
+            <Ionicons name="chevron-back" size={28} color="#E85D54" />
           </TouchableOpacity>
 
           {/* Header */}
@@ -164,7 +164,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: "700",
-    color: "#0A3D91",
+    color: "#E85D54", // I-SHELF coral red
     marginBottom: 20,
   },
 
@@ -177,7 +177,7 @@ const styles = StyleSheet.create({
 
   progressBarFilled: {
     flex: 1,
-    backgroundColor: "#0A3D91",
+    backgroundColor: "#E85D54", // I-SHELF coral red - 100% filled
   },
 
   form: {
@@ -206,7 +206,7 @@ const styles = StyleSheet.create({
   input: {
     height: 52,
     borderWidth: 1,
-    borderColor: "#D0D7E2",
+    borderColor: "#FFD4D1", // Light coral border
     borderRadius: 12,
     paddingHorizontal: 16,
     fontSize: 16,
@@ -230,12 +230,12 @@ const styles = StyleSheet.create({
 
   continueButton: {
     height: 56,
-    backgroundColor: "#0A3D91",
+    backgroundColor: "#E85D54", // I-SHELF coral red
     borderRadius: 28,
     alignItems: "center",
     justifyContent: "center",
     marginTop: 12,
-    shadowColor: "#0A3D91",
+    shadowColor: "#E85D54",
     shadowOffset: {
       width: 0,
       height: 4,

@@ -2,15 +2,16 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React from "react";
 import {
+  Image,
+  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
-  ScrollView,
-  Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import GestureRecognizer from "react-native-swipe-gestures";
+
 
 export default function HomeTab() {
   const router = useRouter();
@@ -61,15 +62,17 @@ export default function HomeTab() {
         <ScrollView showsVerticalScrollIndicator={false}>
           {/* Header */}
           <View style={styles.header}>
-            <View style={styles.logoContainer}>
-              <Ionicons name="book" size={24} color="#0A3D91" />
-              <Text style={styles.logoText}>I-Shelf</Text>
-            </View>
+            <Image
+              source={require('../../../assets/images/logo.png')}
+              style={styles.logoImage}
+              resizeMode="contain"
+            />
             <TouchableOpacity
+              style={styles.notificationButton}
             //  onPress={() => 
             //     router.push("/notifications")}
                 >
-              <Ionicons name="notifications-outline" size={28} color="#0A3D91" />
+              <Ionicons name="notifications-outline" size={28} color="#DC143C" />
             </TouchableOpacity>
           </View>
 
@@ -78,14 +81,14 @@ export default function HomeTab() {
           <View style={styles.overviewContainer}>
             {/* Total Uploads Card */}
             <View style={[styles.card, styles.uploadsCard]}>
-              <Ionicons name="cloud-upload-outline" size={32} color="#0A3D91" />
+              <Ionicons name="cloud-upload-outline" size={32} color="#DC143C" />
               <Text style={styles.cardLabel}>Total Uploads</Text>
               <Text style={styles.cardValue}>25</Text>
             </View>
 
             {/* Total Earnings Card */}
             <View style={[styles.card, styles.earningsCard]}>
-              <Ionicons name="wallet-outline" size={32} color="#0A3D91" />
+              <Ionicons name="wallet-outline" size={32} color="#DC143C" />
               <Text style={styles.cardLabel}>Total Earnings</Text>
               <Text style={styles.cardValue}>₦23,500</Text>
             </View>
@@ -144,20 +147,18 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingHorizontal: 24,
-    paddingVertical: 16,
+    paddingRight: 20,
+    paddingTop: 12,
+    paddingBottom: 16,
   },
 
-  logoContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
+  logoImage: {
+    width: 100,
+    height: 50,
   },
 
-  logoText: {
-    fontSize: 24,
-    fontWeight: "700",
-    color: "#0A3D91",
+  notificationButton: {
+    padding: 4,
   },
 
   sectionTitle: {
@@ -183,11 +184,11 @@ const styles = StyleSheet.create({
   },
 
   uploadsCard: {
-    backgroundColor: "#D6E9FF",
+    backgroundColor: "#FFE5E5", // Light red/pink
   },
 
   earningsCard: {
-    backgroundColor: "#C8F5D8",
+    backgroundColor: "#FFF0F0", // Very light red/pink
   },
 
   cardLabel: {
@@ -200,14 +201,14 @@ const styles = StyleSheet.create({
   cardValue: {
     fontSize: 24,
     fontWeight: "700",
-    color: "#000",
+    color: "#DC143C", // Crimson red
   },
 
   uploadButton: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#0A3D91",
+    backgroundColor: "#DC143C", // Crimson red
     marginHorizontal: 24,
     height: 56,
     borderRadius: 12,
@@ -273,12 +274,12 @@ const styles = StyleSheet.create({
   purchaseAmount: {
     fontSize: 15,
     fontWeight: "600",
-    color: "#2ECC71",
+    color: "#DC143C", // Crimson red for amounts
     marginBottom: 4,
   },
 
   purchaseStatus: {
     fontSize: 13,
-    color: "#2ECC71",
+    color: "#2ECC71", // Keep green for "Successful" status
   },
 });

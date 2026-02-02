@@ -40,7 +40,7 @@ export default function Explore() {
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity onPress={() => router.back()}>
-            <Ionicons name="chevron-back" size={24} color="#0A3D91" />
+            <Ionicons name="chevron-back" size={24} color="#E85D54" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Categories</Text>
           <View style={{ width: 24 }} />
@@ -95,7 +95,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 20,
     fontWeight: "700",
-    color: "#0A3D91",
+    color: "#E85D54",
   },
   searchContainer: {
     flexDirection: "row",

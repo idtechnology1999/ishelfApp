@@ -22,7 +22,7 @@ export default function PersonaInformation() {
             style={styles.backButton}
             onPress={() => router.back()}
           >
-            <Ionicons name="chevron-back" size={28} color="#0A3D91" />
+            <Ionicons name="chevron-back" size={28} color="#E85D54" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Personal Information</Text>
           <View style={styles.headerSpacer} />
@@ -33,7 +33,7 @@ export default function PersonaInformation() {
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Bio</Text>
             <TouchableOpacity onPress={() => router.push("/Author/Myprofile/editBio")}>
-              <Ionicons name="pencil" size={24} color="#000000" />
+              <Ionicons name="pencil" size={24} color="#E85D54" />
             </TouchableOpacity>
           </View>
           <View style={styles.card}>
@@ -48,7 +48,7 @@ export default function PersonaInformation() {
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Academic Details</Text>
             <TouchableOpacity onPress={() => router.push("/Author/Myprofile/editAcademic")}>
-              <Ionicons name="pencil" size={24} color="#000000" />
+              <Ionicons name="pencil" size={24} color="#E85D54" />
             </TouchableOpacity>
           </View>
           <View style={styles.card}>
@@ -83,7 +83,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 20,
     fontWeight: "600",
-    color: "#0A3D91",
+    color: "#E85D54", // I-SHELF coral red
     flex: 1,
     textAlign: "center",
   },
@@ -111,11 +111,11 @@ const styles = StyleSheet.create({
   },
 
   card: {
-    backgroundColor: "#F8F8F8",
+    backgroundColor: "#FFF9F8", // Very light coral tint
     padding: 24,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: "#E5E5E5",
+    borderColor: "#FFD4D1", // Light coral border
   },
 
   infoText: {

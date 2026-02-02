@@ -45,7 +45,7 @@ export default function Upload2() {
               style={styles.backButton}
               onPress={() => router.back()}
             >
-              <Ionicons name="chevron-back" size={28} color="#0A3D91" />
+              <Ionicons name="chevron-back" size={28} color="#E85D54" />
             </TouchableOpacity>
             <Text style={styles.headerTitle}>Upload</Text>
             <View style={styles.headerSpacer} />
@@ -184,7 +184,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: "600",
-    color: "#0A3D91",
+    color: "#E85D54", // I-SHELF coral red
     flex: 1,
     textAlign: "center",
   },
@@ -208,7 +208,7 @@ const styles = StyleSheet.create({
   progressTitle: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#0A3D91",
+    color: "#E85D54", // I-SHELF coral red
   },
 
   progressCounter: {
@@ -226,12 +226,12 @@ const styles = StyleSheet.create({
 
   progressBarFilled: {
     flex: 1,
-    backgroundColor: "#0A3D91",
+    backgroundColor: "#E85D54", // I-SHELF coral red
   },
 
   progressBarEmpty: {
     flex: 5,
-    backgroundColor: "#D0E4FF",
+    backgroundColor: "#FFE8E6", // Light coral
   },
 
   form: {
@@ -253,7 +253,7 @@ const styles = StyleSheet.create({
   input: {
     height: 52,
     borderWidth: 1,
-    borderColor: "#D0D7E2",
+    borderColor: "#FFD4D1", // Light coral border
     borderRadius: 12,
     paddingHorizontal: 16,
     fontSize: 16,
@@ -270,15 +270,23 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
     backgroundColor: "#FFFFFF",
     borderTopWidth: 1,
-    borderTopColor: "#E5E5E5",
+    borderTopColor: "#FFD4D1", // Light coral border
   },
 
   continueButton: {
     height: 56,
-    backgroundColor: "#0A3D91",
+    backgroundColor: "#E85D54", // I-SHELF coral red
     borderRadius: 28,
     alignItems: "center",
     justifyContent: "center",
+    shadowColor: "#E85D54",
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 4,
   },
 
   continueButtonText: {

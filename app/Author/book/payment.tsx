@@ -31,7 +31,7 @@ export default function Payment() {
             style={styles.backButton}
             onPress={() => router.back()}
           >
-            <Ionicons name="chevron-back" size={28} color="#0A3D91" />
+            <Ionicons name="chevron-back" size={28} color="#E85D54" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Make Payment</Text>
           <View style={styles.headerSpacer} />
@@ -104,7 +104,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: "600",
-    color: "#0A3D91",
+    color: "#E85D54", // I-SHELF coral red
     flex: 1,
     textAlign: "center",
   },
@@ -116,7 +116,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: "600",
-    color: "#0A3D91",
+    color: "#E85D54", // I-SHELF coral red
     paddingHorizontal: 24,
     marginTop: 24,
     marginBottom: 20,
@@ -131,14 +131,15 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#D0D7E2",
+    borderColor: "#FFD4D1", // Light coral border
     backgroundColor: "#FFFFFF",
     gap: 16,
   },
 
   paymentOptionSelected: {
-    backgroundColor: "#D6E9FF",
-    borderColor: "#0A3D91",
+    backgroundColor: "#FFE8E6", // Light coral
+    borderColor: "#E85D54", // I-SHELF coral red
+    borderWidth: 2,
   },
 
   radioCircle: {
@@ -146,7 +147,7 @@ const styles = StyleSheet.create({
     height: 24,
     borderRadius: 12,
     borderWidth: 2,
-    borderColor: "#0A3D91",
+    borderColor: "#E85D54", // I-SHELF coral red
     alignItems: "center",
     justifyContent: "center",
   },
@@ -155,28 +156,36 @@ const styles = StyleSheet.create({
     width: 12,
     height: 12,
     borderRadius: 6,
-    backgroundColor: "#0A3D91",
+    backgroundColor: "#E85D54", // I-SHELF coral red
   },
 
   paymentText: {
     fontSize: 16,
     fontWeight: "500",
-    color: "#0A3D91",
+    color: "#333",
   },
 
   footer: {
     paddingHorizontal: 24,
     paddingVertical: 20,
     borderTopWidth: 1,
-    borderTopColor: "#E5E5E5",
+    borderTopColor: "#FFD4D1", // Light coral border
   },
 
   continueButton: {
     height: 56,
-    backgroundColor: "#0A3D91",
+    backgroundColor: "#E85D54", // I-SHELF coral red
     borderRadius: 28,
     alignItems: "center",
     justifyContent: "center",
+    shadowColor: "#E85D54",
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 4,
   },
 
   continueButtonText: {

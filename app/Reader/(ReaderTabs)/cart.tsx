@@ -51,7 +51,6 @@ export default function Cart() {
 
   const ContinueShopping =()=>{
       router.push("/Reader/(ReaderTabs)/explore");
-
   }
 
   const subtotal = cartItems.reduce(
@@ -66,7 +65,7 @@ export default function Cart() {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()}>
-          <Ionicons name="chevron-back" size={28} color="#0A3D91" />
+          <Ionicons name="chevron-back" size={28} color="#E85D54" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Cart</Text>
         <View style={{ width: 28 }} />
@@ -169,7 +168,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 20,
     fontWeight: "700",
-    color: "#0A3D91",
+    color: "#E85D54",
     flex: 1,
     textAlign: "center",
   },
@@ -180,7 +179,7 @@ const styles = StyleSheet.create({
   },
   cartItem: {
     flexDirection: "row",
-    backgroundColor: "#E8F1FF",
+    backgroundColor: "#FFE8E6",
     borderRadius: 16,
     padding: 12,
     gap: 12,
@@ -219,7 +218,7 @@ const styles = StyleSheet.create({
   quantityContainer: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#0A3D91",
+    backgroundColor: "#E85D54",
     borderRadius: 20,
     paddingHorizontal: 12,
     paddingVertical: 6,
@@ -247,7 +246,7 @@ const styles = StyleSheet.create({
     marginTop: 32,
     padding: 24,
     borderWidth: 2,
-    borderColor: "#0A3D91",
+    borderColor: "#FFD4D1",
     borderRadius: 16,
   },
   summaryTitle: {
@@ -287,7 +286,7 @@ const styles = StyleSheet.create({
   },
   discountInput: {
     borderWidth: 1,
-    borderColor: "#CCCCCC",
+    borderColor: "#FFD4D1",
     borderRadius: 8,
     paddingHorizontal: 16,
     paddingVertical: 12,
@@ -310,10 +309,15 @@ const styles = StyleSheet.create({
     color: "#000",
   },
   paymentButton: {
-    backgroundColor: "#0A3D91",
+    backgroundColor: "#E85D54",
     paddingVertical: 16,
     borderRadius: 30,
     alignItems: "center",
+    shadowColor: "#E85D54",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 4,
   },
   paymentButtonText: {
     fontSize: 16,
@@ -327,12 +331,12 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     borderRadius: 30,
     borderWidth: 2,
-    borderColor: "#0A3D91",
+    borderColor: "#E85D54",
     alignItems: "center",
   },
   continueButtonText: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#0A3D91",
+    color: "#E85D54",
   },
 });

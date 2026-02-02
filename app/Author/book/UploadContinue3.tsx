@@ -84,7 +84,7 @@ export default function Upload4() {
             style={styles.backButton}
             onPress={() => router.back()}
           >
-            <Ionicons name="chevron-back" size={28} color="#0A3D91" />
+            <Ionicons name="chevron-back" size={28} color="#E85D54" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Upload</Text>
           <View style={styles.headerSpacer} />
@@ -109,7 +109,7 @@ export default function Upload4() {
             style={styles.uploadBox}
             onPress={pickCoverImage}
           >
-            <Ionicons name="image-outline" size={40} color="#0A3D91" />
+            <Ionicons name="image-outline" size={40} color="#E85D54" />
             <View style={styles.uploadTextContainer}>
               <Text style={styles.uploadMainText}>
                 <Text style={styles.uploadLink}>Choose a file</Text>
@@ -122,7 +122,7 @@ export default function Upload4() {
             </View>
             {coverImage && (
               <View style={styles.fileSelectedContainer}>
-                <Ionicons name="checkmark-circle" size={20} color="#2ECC71" />
+                <Ionicons name="checkmark-circle" size={20} color="#4CAF50" />
                 <Text style={styles.fileSelectedText}>Image selected</Text>
               </View>
             )}
@@ -136,7 +136,7 @@ export default function Upload4() {
             style={styles.uploadBox}
             onPress={pickPDFFile}
           >
-            <Ionicons name="document-outline" size={40} color="#0A3D91" />
+            <Ionicons name="document-outline" size={40} color="#E85D54" />
             <View style={styles.uploadTextContainer}>
               <Text style={styles.uploadMainText}>
                 <Text style={styles.uploadLink}>Choose a file</Text>
@@ -149,7 +149,7 @@ export default function Upload4() {
             </View>
             {pdfFile && (
               <View style={styles.fileSelectedContainer}>
-                <Ionicons name="checkmark-circle" size={20} color="#2ECC71" />
+                <Ionicons name="checkmark-circle" size={20} color="#4CAF50" />
                 <Text style={styles.fileSelectedText}>PDF selected</Text>
               </View>
             )}
@@ -165,7 +165,7 @@ export default function Upload4() {
             style={styles.uploadBox}
             onPress={pickExtraFiles}
           >
-            <Ionicons name="document-outline" size={40} color="#0A3D91" />
+            <Ionicons name="document-outline" size={40} color="#E85D54" />
             <View style={styles.uploadTextContainer}>
               <Text style={styles.uploadMainText}>
                 <Text style={styles.uploadLink}>Choose a file</Text>
@@ -178,7 +178,7 @@ export default function Upload4() {
             </View>
             {extraFiles && (
               <View style={styles.fileSelectedContainer}>
-                <Ionicons name="checkmark-circle" size={20} color="#2ECC71" />
+                <Ionicons name="checkmark-circle" size={20} color="#4CAF50" />
                 <Text style={styles.fileSelectedText}>Files selected</Text>
               </View>
             )}
@@ -220,7 +220,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: "600",
-    color: "#0A3D91",
+    color: "#E85D54", // I-SHELF coral red
     flex: 1,
     textAlign: "center",
   },
@@ -244,7 +244,7 @@ const styles = StyleSheet.create({
   progressTitle: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#0A3D91",
+    color: "#E85D54", // I-SHELF coral red
   },
 
   progressCounter: {
@@ -262,12 +262,12 @@ const styles = StyleSheet.create({
 
   progressBarFilled: {
     flex: 3,
-    backgroundColor: "#0A3D91",
+    backgroundColor: "#E85D54", // I-SHELF coral red
   },
 
   progressBarEmpty: {
     flex: 3,
-    backgroundColor: "#D0E4FF",
+    backgroundColor: "#FFE8E6", // Light coral
   },
 
   uploadSection: {
@@ -284,12 +284,12 @@ const styles = StyleSheet.create({
 
   uploadBox: {
     borderWidth: 2,
-    borderColor: "#0A3D91",
+    borderColor: "#E85D54", // I-SHELF coral red
     borderStyle: "dashed",
     borderRadius: 12,
     padding: 32,
     alignItems: "center",
-    backgroundColor: "#F8FBFF",
+    backgroundColor: "#FFF9F8", // Very light coral tint
   },
 
   uploadTextContainer: {
@@ -303,7 +303,7 @@ const styles = StyleSheet.create({
   },
 
   uploadLink: {
-    color: "#0A3D91",
+    color: "#E85D54", // I-SHELF coral red
     fontWeight: "600",
   },
 
@@ -329,7 +329,7 @@ const styles = StyleSheet.create({
 
   fileSelectedText: {
     fontSize: 14,
-    color: "#2ECC71",
+    color: "#4CAF50",
     fontWeight: "500",
   },
 
@@ -338,15 +338,23 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
     backgroundColor: "#FFFFFF",
     borderTopWidth: 1,
-    borderTopColor: "#E5E5E5",
+    borderTopColor: "#FFD4D1", // Light coral border
   },
 
   continueButton: {
     height: 56,
-    backgroundColor: "#0A3D91",
+    backgroundColor: "#E85D54", // I-SHELF coral red
     borderRadius: 28,
     alignItems: "center",
     justifyContent: "center",
+    shadowColor: "#E85D54",
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 4,
   },
 
   continueButtonText: {

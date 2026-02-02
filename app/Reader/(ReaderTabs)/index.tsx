@@ -40,19 +40,18 @@ export default function Home() {
           {/* Header */}
           <View style={styles.header}>
             <View style={styles.logoContainer}>
-              <Ionicons name="book" size={24} color="#0A3D91" />
-              <Text style={styles.logo}>I-Shelf</Text>
+              <Image
+                source={require("../../../assets/images/logo.png")}
+                style={styles.logoImage}
+                resizeMode="contain"
+              />
             </View>
             <View style={styles.headerIcons}>
               <TouchableOpacity style={styles.iconButton}>
-                <Ionicons name="cart-outline" size={24} color="#0A3D91" />
+                <Ionicons name="cart-outline" size={24} color="#E85D54" />
               </TouchableOpacity>
               <TouchableOpacity style={styles.iconButton}>
-                <Ionicons
-                  name="notifications-outline"
-                  size={24}
-                  color="#0A3D91"
-                />
+                <Ionicons name="notifications-outline" size={24} color="#E85D54" />
               </TouchableOpacity>
             </View>
           </View>
@@ -91,7 +90,7 @@ export default function Home() {
                       <Text style={styles.price}>{book.price}</Text>
                     </View>
                     <TouchableOpacity style={styles.favoriteButton}>
-                      <Ionicons name="heart-outline" size={20} color="#0A3D91" />
+                      <Ionicons name="heart-outline" size={20} color="#E85D54" />
                     </TouchableOpacity>
                   </View>
                   <TouchableOpacity
@@ -133,10 +132,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 8,
   },
-  logo: {
-    fontSize: 24,
-    fontWeight: "700",
-    color: "#0A3D91",
+  logoImage: {
+    width: 32,
+    height: 32,
   },
   headerIcons: {
     flexDirection: "row",
@@ -227,23 +225,31 @@ const styles = StyleSheet.create({
   price: {
     fontSize: 18,
     fontWeight: "700",
-    color: "#0A3D91",
+    color: "#E85D54",
   },
   favoriteButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: "#0A3D91",
+    borderColor: "#E85D54",
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "#FFFFFF",
   },
   addToCartButton: {
-    backgroundColor: "#0A3D91",
+    backgroundColor: "#E85D54",
     paddingVertical: 12,
     borderRadius: 24,
     alignItems: "center",
+    shadowColor: "#E85D54",
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 4,
   },
   addToCartText: {
     fontSize: 14,

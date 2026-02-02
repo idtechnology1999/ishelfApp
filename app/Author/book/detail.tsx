@@ -23,7 +23,7 @@ export default function CreativeArtBook() {
             style={styles.backButton}
             onPress={() => router.back()}
           >
-            <Ionicons name="chevron-back" size={28} color="#0A3D91" />
+            <Ionicons name="chevron-back" size={28} color="#E85D54" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Creative Art Book</Text>
           <View style={styles.headerSpacer} />
@@ -32,7 +32,7 @@ export default function CreativeArtBook() {
         {/* Book Cover */}
         <View style={styles.bookCoverContainer}>
           <Image
-            source={require('../../../assets/images/book-placeholder.png')} // Replace with your image
+            source={require('../../../assets/images/book-placeholder.png')}
             style={styles.bookCover}
             resizeMode="contain"
           />
@@ -112,7 +112,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: "600",
-    color: "#0A3D91",
+    color: "#E85D54", // I-SHELF coral red
     flex: 1,
     textAlign: "center",
   },
@@ -134,7 +134,7 @@ const styles = StyleSheet.create({
   },
 
   contentCard: {
-    backgroundColor: "#D6E9FF",
+    backgroundColor: "#FFE8E6", // Light coral matching brand
     borderTopLeftRadius: 32,
     borderTopRightRadius: 32,
     paddingHorizontal: 24,
@@ -182,7 +182,7 @@ const styles = StyleSheet.create({
   priceAmount: {
     fontSize: 24,
     fontWeight: "700",
-    color: "#000000",
+    color: "#E85D54", // I-SHELF coral red
   },
 
   detailRow: {
@@ -203,11 +203,19 @@ const styles = StyleSheet.create({
 
   editButton: {
     height: 56,
-    backgroundColor: "#0A3D91",
+    backgroundColor: "#E85D54", // I-SHELF coral red
     borderRadius: 28,
     alignItems: "center",
     justifyContent: "center",
     marginTop: 16,
+    shadowColor: "#E85D54",
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 4,
   },
 
   editButtonText: {

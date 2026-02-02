@@ -20,15 +20,16 @@ export default function PaymentSuccess() {
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
         <View style={styles.checkCircle}>
-          <Ionicons name="checkmark" size={80} color="#FFFFFF" />
+          <Ionicons name="checkmark-circle" size={120} color="#E85D54" />
         </View>
         
-        <Text style={styles.title}>Payment Successful</Text>
+        <Text style={styles.title}>Payment Successful!</Text>
         
-        <TouchableOpacity onPress={handleContinue}>
-          <Text style={styles.linkText}>
-            Continue to <Text style={styles.linkUnderline}>Upload</Text>
-          </Text>
+        <TouchableOpacity 
+          style={styles.continueButton}
+          onPress={handleContinue}
+        >
+          <Text style={styles.continueButtonText}>Continue to Upload</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -44,28 +45,37 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
+    paddingHorizontal: 24,
   },
   checkCircle: {
-    width: 140,
-    height: 140,
-    borderRadius: 70,
-    backgroundColor: "#4CAF50",
-    alignItems: "center",
-    justifyContent: "center",
     marginBottom: 32,
   },
   title: {
-    fontSize: 24,
+    fontSize: 28,
+    fontWeight: "700",
+    color: "#E85D54", // I-SHELF coral red
+    marginBottom: 48,
+    textAlign: "center",
+  },
+  continueButton: {
+    width: "100%",
+    height: 56,
+    backgroundColor: "#E85D54", // I-SHELF coral red
+    borderRadius: 28,
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#E85D54",
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  continueButtonText: {
+    fontSize: 18,
     fontWeight: "600",
-    color: "#000000",
-    marginBottom: 16,
-  },
-  linkText: {
-    fontSize: 16,
-    color: "#000000",
-  },
-  linkUnderline: {
-    color: "#0A3D91",
-    textDecorationLine: "underline",
+    color: "#FFFFFF",
   },
 });

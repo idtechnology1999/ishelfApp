@@ -62,7 +62,7 @@ export default function Upload7() {
               style={styles.backButton}
               onPress={() => router.back()}
             >
-              <Ionicons name="chevron-back" size={28} color="#0A3D91" />
+              <Ionicons name="chevron-back" size={28} color="#E85D54" />
             </TouchableOpacity>
             <Text style={styles.headerTitle}>Upload</Text>
             <View style={styles.headerSpacer} />
@@ -92,7 +92,7 @@ export default function Upload7() {
                 style={styles.uploadBox}
                 onPress={pickPastQuestions}
               >
-                <Ionicons name="document-outline" size={40} color="#0A3D91" />
+                <Ionicons name="document-outline" size={40} color="#E85D54" />
                 <View style={styles.uploadTextContainer}>
                   <Text style={styles.uploadMainText}>
                     <Text style={styles.uploadLink}>Choose a file</Text>
@@ -108,7 +108,7 @@ export default function Upload7() {
                     <Ionicons
                       name="checkmark-circle"
                       size={20}
-                      color="#2ECC71"
+                      color="#4CAF50"
                     />
                     <Text style={styles.fileSelectedText}>File selected</Text>
                   </View>
@@ -133,9 +133,9 @@ export default function Upload7() {
               onPress={() => setAcceptTerms(!acceptTerms)}
               activeOpacity={0.7}
             >
-              <View style={styles.checkbox}>
+              <View style={[styles.checkbox, acceptTerms && styles.checkboxChecked]}>
                 {acceptTerms && (
-                  <Ionicons name="checkmark" size={18} color="#0A3D91" />
+                  <Ionicons name="checkmark" size={18} color="#FFFFFF" />
                 )}
               </View>
               <Text style={styles.checkboxText}>
@@ -181,7 +181,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: "600",
-    color: "#0A3D91",
+    color: "#E85D54", // I-SHELF coral red
     flex: 1,
     textAlign: "center",
   },
@@ -205,7 +205,7 @@ const styles = StyleSheet.create({
   progressTitle: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#0A3D91",
+    color: "#E85D54", // I-SHELF coral red
   },
 
   progressCounter: {
@@ -223,7 +223,7 @@ const styles = StyleSheet.create({
 
   progressBarFilled: {
     flex: 1,
-    backgroundColor: "#0A3D91",
+    backgroundColor: "#E85D54", // I-SHELF coral red - 100% complete
   },
 
   form: {
@@ -244,12 +244,12 @@ const styles = StyleSheet.create({
 
   uploadBox: {
     borderWidth: 2,
-    borderColor: "#0A3D91",
+    borderColor: "#E85D54", // I-SHELF coral red
     borderStyle: "dashed",
     borderRadius: 12,
     padding: 32,
     alignItems: "center",
-    backgroundColor: "#F8FBFF",
+    backgroundColor: "#FFF9F8", // Very light coral tint
   },
 
   uploadTextContainer: {
@@ -263,7 +263,7 @@ const styles = StyleSheet.create({
   },
 
   uploadLink: {
-    color: "#0A3D91",
+    color: "#E85D54", // I-SHELF coral red
     fontWeight: "600",
   },
 
@@ -289,7 +289,7 @@ const styles = StyleSheet.create({
 
   fileSelectedText: {
     fontSize: 14,
-    color: "#2ECC71",
+    color: "#4CAF50",
     fontWeight: "500",
   },
 
@@ -307,7 +307,7 @@ const styles = StyleSheet.create({
   input: {
     height: 52,
     borderWidth: 1,
-    borderColor: "#D0D7E2",
+    borderColor: "#FFD4D1", // Light coral border
     borderRadius: 12,
     paddingHorizontal: 16,
     fontSize: 16,
@@ -327,10 +327,15 @@ const styles = StyleSheet.create({
     height: 24,
     borderRadius: 4,
     borderWidth: 2,
-    borderColor: "#D0D7E2",
+    borderColor: "#FFD4D1", // Light coral border
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "#FFFFFF",
+  },
+
+  checkboxChecked: {
+    backgroundColor: "#E85D54", // I-SHELF coral red
+    borderColor: "#E85D54",
   },
 
   checkboxText: {
@@ -340,7 +345,7 @@ const styles = StyleSheet.create({
   },
 
   termsLink: {
-    color: "#0A3D91",
+    color: "#E85D54", // I-SHELF coral red
     textDecorationLine: "underline",
   },
 
@@ -353,15 +358,23 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
     backgroundColor: "#FFFFFF",
     borderTopWidth: 1,
-    borderTopColor: "#E5E5E5",
+    borderTopColor: "#FFD4D1", // Light coral border
   },
 
   uploadButton: {
     height: 56,
-    backgroundColor: "#0A3D91",
+    backgroundColor: "#E85D54", // I-SHELF coral red
     borderRadius: 28,
     alignItems: "center",
     justifyContent: "center",
+    shadowColor: "#E85D54",
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 4,
   },
 
   uploadButtonText: {

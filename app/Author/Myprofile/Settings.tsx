@@ -25,7 +25,7 @@ export default function Settings() {
             style={styles.backButton}
             onPress={() => router.back()}
           >
-            <Ionicons name="chevron-back" size={28} color="#0A3D91" />
+            <Ionicons name="chevron-back" size={28} color="#E85D54" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Settings</Text>
           <View style={styles.headerSpacer} />
@@ -37,7 +37,7 @@ export default function Settings() {
           <View style={styles.settingRow}>
             <Text style={styles.settingLabel}>Theme</Text>
             <Switch
-              trackColor={{ false: "#D1D5DB", true: "#0A3D91" }}
+              trackColor={{ false: "#D1D5DB", true: "#E85D54" }}
               thumbColor={themeEnabled ? "#FFFFFF" : "#FFFFFF"}
               ios_backgroundColor="#D1D5DB"
               onValueChange={setThemeEnabled}
@@ -53,7 +53,7 @@ export default function Settings() {
           <View style={styles.settingRow}>
             <Text style={styles.settingLabel}>Notification</Text>
             <Switch
-              trackColor={{ false: "#D1D5DB", true: "#0A3D91" }}
+              trackColor={{ false: "#D1D5DB", true: "#E85D54" }}
               thumbColor={notificationEnabled ? "#FFFFFF" : "#FFFFFF"}
               ios_backgroundColor="#D1D5DB"
               onValueChange={setNotificationEnabled}
@@ -102,7 +102,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 20,
     fontWeight: "600",
-    color: "#0A3D91",
+    color: "#E85D54", // I-SHELF coral red
     flex: 1,
     textAlign: "center",
   },
@@ -117,7 +117,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: "#E5E5E5",
+    borderColor: "#FFD4D1", // Light coral border
     padding: 8,
   },
 
@@ -141,7 +141,7 @@ const styles = StyleSheet.create({
 
   divider: {
     height: 1,
-    backgroundColor: "#E5E5E5",
+    backgroundColor: "#FFE8E6", // Light coral divider
     marginHorizontal: 16,
   },
 
@@ -153,8 +153,8 @@ const styles = StyleSheet.create({
 
   languageText: {
     fontSize: 16,
-    color: "#000000",
-    backgroundColor: "#C5E1F5",
+    color: "#333",
+    backgroundColor: "#FFE8E6", // Light coral background
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
@@ -164,7 +164,7 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: "#0A3D91",
+    backgroundColor: "#E85D54", // I-SHELF coral red
     alignItems: "center",
     justifyContent: "center",
   },

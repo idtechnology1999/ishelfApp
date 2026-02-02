@@ -55,7 +55,7 @@ export default function Earning() {
             style={styles.backButton}
             onPress={() => router.back()}
           >
-            <Ionicons name="chevron-back" size={28} color="#0A3D91" />
+            <Ionicons name="chevron-back" size={28} color="#E85D54" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Earnings</Text>
           <View style={styles.headerSpacer} />
@@ -65,21 +65,21 @@ export default function Earning() {
         <View style={styles.cardsContainer}>
           {/* Total Earnings Card */}
           <View style={[styles.card, styles.cardBlue]}>
-            <Ionicons name="layers-outline" size={28} color="#0A3D91" />
+            <Ionicons name="layers-outline" size={28} color="#E85D54" />
             <Text style={styles.cardLabel}>Total Earnings</Text>
             <Text style={styles.cardAmount}>₦234,500</Text>
           </View>
 
           {/* July Earnings Card */}
           <View style={[styles.card, styles.cardGreen]}>
-            <Ionicons name="layers-outline" size={28} color="#2E7D32" />
+            <Ionicons name="layers-outline" size={28} color="#E85D54" />
             <Text style={styles.cardLabel}>July Earnings</Text>
             <Text style={styles.cardAmount}>₦64,500</Text>
           </View>
 
           {/* Balance Card */}
           <View style={[styles.card, styles.cardPink]}>
-            <Ionicons name="layers-outline" size={28} color="#C2185B" />
+            <Ionicons name="layers-outline" size={28} color="#E85D54" />
             <Text style={styles.cardLabel}>Balance</Text>
             <Text style={styles.cardAmount}>₦24,500</Text>
             <TouchableOpacity onPress={() => router.push("/Author/Withdraw/WithdrawScreen")}>
@@ -100,8 +100,7 @@ export default function Earning() {
           {transactions.map((transaction) => (
             <View key={transaction.id} style={styles.transactionCard}>
               <Image
-                source={require('../../../assets/images/book-placeholder.png')} // Adjust path
-                
+                source={require('../../../assets/images/book-placeholder.png')}
                 style={styles.transactionImage}
               />
               <View style={styles.transactionDetails}>
@@ -191,7 +190,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 20,
     fontWeight: "600",
-    color: "#0A3D91",
+    color: "#E85D54", // I-SHELF coral red
     flex: 1,
     textAlign: "center",
   },
@@ -216,15 +215,15 @@ const styles = StyleSheet.create({
   },
 
   cardBlue: {
-    backgroundColor: "#C5E1F5",
+    backgroundColor: "#FFE8E6", // Light coral
   },
 
   cardGreen: {
-    backgroundColor: "#C8E6C9",
+    backgroundColor: "#FFF4E6", // Light warm beige
   },
 
   cardPink: {
-    backgroundColor: "#F8BBD0",
+    backgroundColor: "#FFD4D1", // Light coral pink
   },
 
   cardLabel: {
@@ -242,7 +241,7 @@ const styles = StyleSheet.create({
 
   withdrawLink: {
     fontSize: 13,
-    color: "#0A3D91",
+    color: "#E85D54", // I-SHELF coral red
     textDecorationLine: "underline",
     marginTop: 4,
   },
@@ -267,7 +266,7 @@ const styles = StyleSheet.create({
 
   seeAllText: {
     fontSize: 14,
-    color: "#0A3D91",
+    color: "#E85D54", // I-SHELF coral red
   },
 
   transactionCard: {
@@ -278,7 +277,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: "#E5E5E5",
+    borderColor: "#FFD4D1", // Light coral border
   },
 
   transactionImage: {
@@ -352,7 +351,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     marginBottom: 24,
     borderWidth: 1,
-    borderColor: "#E5E5E5",
+    borderColor: "#FFD4D1", // Light coral border
   },
 
   bankInfo: {
@@ -379,7 +378,7 @@ const styles = StyleSheet.create({
 
   editText: {
     fontSize: 14,
-    color: "#EF5350",
+    color: "#E85D54", // I-SHELF coral red
     fontWeight: "500",
   },
 
@@ -425,10 +424,18 @@ const styles = StyleSheet.create({
 
   withdrawButton: {
     height: 56,
-    backgroundColor: "#0A3D91",
+    backgroundColor: "#E85D54", // I-SHELF coral red
     borderRadius: 28,
     alignItems: "center",
     justifyContent: "center",
+    shadowColor: "#E85D54",
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 4,
   },
 
   withdrawButtonText: {

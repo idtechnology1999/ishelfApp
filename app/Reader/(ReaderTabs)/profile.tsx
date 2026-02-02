@@ -15,7 +15,6 @@ export default function Profile() {
   const router = useRouter();
 
   const handleLogOut = () => {
-    // Add logout logic here
     console.log("Logging out...");
     router.push("/Reader/Login")
   };
@@ -29,7 +28,7 @@ export default function Profile() {
             style={styles.backButton}
             onPress={() => router.back()}
           >
-            <Ionicons name="chevron-back" size={28} color="#0A3D91" />
+            <Ionicons name="chevron-back" size={28} color="#E85D54" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Profile</Text>
           <View style={styles.headerSpacer} />
@@ -54,6 +53,7 @@ export default function Profile() {
             onPress={() => router.push("/Reader/Myprofile/Persona_Information")}
           >
             <Text style={styles.menuText}>Persona Information</Text>
+            <Ionicons name="chevron-forward" size={20} color="#E85D54" />
           </TouchableOpacity>
 
           <TouchableOpacity 
@@ -61,6 +61,7 @@ export default function Profile() {
             onPress={() => router.push("/Reader/Myprofile/Purchase_History")}
           >
             <Text style={styles.menuText}>Purchase History</Text>
+            <Ionicons name="chevron-forward" size={20} color="#E85D54" />
           </TouchableOpacity>
 
           <TouchableOpacity 
@@ -68,6 +69,7 @@ export default function Profile() {
             onPress={() => router.push("/Reader/Myprofile/Settings")}
           >
             <Text style={styles.menuText}>Settings</Text>
+            <Ionicons name="chevron-forward" size={20} color="#E85D54" />
           </TouchableOpacity>
 
           <TouchableOpacity 
@@ -75,6 +77,7 @@ export default function Profile() {
             onPress={() => router.push("/Reader/Myprofile/Support")}
           >
             <Text style={styles.menuText}>Support</Text>
+            <Ionicons name="chevron-forward" size={20} color="#E85D54" />
           </TouchableOpacity>
         </View>
 
@@ -110,7 +113,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 20,
     fontWeight: "600",
-    color: "#0A3D91",
+    color: "#E85D54",
     flex: 1,
     textAlign: "center",
   },
@@ -128,11 +131,13 @@ const styles = StyleSheet.create({
     width: 140,
     height: 140,
     borderRadius: 70,
-    backgroundColor: "#FFD4E5",
+    backgroundColor: "#FFE8E6",
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 16,
     overflow: "hidden",
+    borderWidth: 3,
+    borderColor: "#FFD4D1",
   },
 
   avatarImage: {
@@ -160,12 +165,15 @@ const styles = StyleSheet.create({
   },
 
   menuItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     backgroundColor: "#FFFFFF",
     paddingVertical: 18,
     paddingHorizontal: 20,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#E5E5E5",
+    borderColor: "#FFD4D1",
   },
 
   menuText: {
@@ -182,10 +190,18 @@ const styles = StyleSheet.create({
 
   logoutButton: {
     height: 56,
-    backgroundColor: "#FF3B30",
+    backgroundColor: "#E85D54",
     borderRadius: 28,
     alignItems: "center",
     justifyContent: "center",
+    shadowColor: "#E85D54",
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 4,
   },
 
   logoutButtonText: {

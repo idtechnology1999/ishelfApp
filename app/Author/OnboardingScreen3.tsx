@@ -35,7 +35,7 @@ export default function OnboardingScreenThree() {
           style={styles.backButton}
           onPress={() => router.back()}
         >
-          <Ionicons name="chevron-back" size={24} color="#0A3D91" />
+          <Ionicons name="chevron-back" size={24} color="#E85D54" />
         </TouchableOpacity>
 
         {/* Content */}
@@ -76,6 +76,7 @@ export default function OnboardingScreenThree() {
     </GestureRecognizer>
   );
 }
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -96,7 +97,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 34,
     fontWeight: "700",
-    color: "#0A3D91",
+    color: "#E85D54", // I-SHELF coral red
     marginBottom: 12,
   },
 
@@ -134,21 +135,26 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: "#D0D7E2",
+    backgroundColor: "#FFD4D1", // Light coral
     marginHorizontal: 4,
   },
 
   activeDot: {
     width: 18,
-    backgroundColor: "#0A3D91",
+    backgroundColor: "#E85D54", // I-SHELF coral red
   },
 
   nextButton: {
     width: 52,
     height: 52,
     borderRadius: 26,
-    backgroundColor: "#0A3D91",
+    backgroundColor: "#E85D54", // I-SHELF coral red
     alignItems: "center",
     justifyContent: "center",
+    elevation: 3,
+    shadowColor: "#E85D54",
+    shadowOpacity: 0.3,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 4,
   },
 });
