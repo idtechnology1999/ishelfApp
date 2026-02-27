@@ -1,6 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { authorAPI } from '../authorAPI';
+import Toast from '../Toast';
 import {
   StyleSheet,
   Text,
@@ -10,6 +13,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -19,16 +23,64 @@ export default function SignUp4() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [isConfirmPasswordVisible, setIsConfirmPasswordVisible] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [toast, setToast] = useState({ visible: false, message: '', type: 'success' as 'success' | 'error' });
 
-  const handleContinue = () => {
-    // Add validation here (check if passwords match, meet requirements, etc.)
-    if (password && confirmPassword && password === confirmPassword) {
-      router.replace("/Author/SignUpSuccessful");
+  const showToast = (message: string, type: 'success' | 'error') => {
+    setToast({ visible: true, message, type });
+  };
+
+  const handleContinue = async () => {
+    if (!password || !confirmPassword) {
+      showToast('Please fill in all password fields', 'error');
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      showToast('Passwords do not match', 'error');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const saved = await AsyncStorage.getItem('signupData');
+      const data = saved ? JSON.parse(saved) : {};
+      
+      const authorData = {
+        fullName: data.fullName,
+        email: data.email,
+        institution: data.institution,
+        governmentId: data.governmentId,
+        institutionalEmail: data.institutionalEmail,
+        displayName: data.displayName,
+        areasOfExpertise: data.areasOfExpertise,
+        shortBio: data.shortBio,
+        password: password,
+      };
+
+      await authorAPI.register(authorData);
+      await AsyncStorage.removeItem('signupData');
+      
+      showToast('Registration Successful! 🎉', 'success');
+      
+      setTimeout(() => {
+        router.replace("/Author/SignUpSuccessful");
+      }, 1500);
+    } catch (error: any) {
+      showToast(error.response?.data?.message || 'Registration failed', 'error');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <SafeAreaView style={styles.container}>
+      <Toast
+        visible={toast.visible}
+        message={toast.message}
+        type={toast.type}
+        onHide={() => setToast({ ...toast, visible: false })}
+      />
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.keyboardView}
@@ -123,11 +175,12 @@ export default function SignUp4() {
 
             {/* Continue Button */}
             <TouchableOpacity
-              style={styles.continueButton}
+              style={[styles.continueButton, loading && { opacity: 0.6 }]}
               onPress={handleContinue}
+              disabled={loading}
               accessibilityLabel="Complete sign up"
             >
-              <Text style={styles.continueButtonText}>Continue</Text>
+              <Text style={styles.continueButtonText}>{loading ? 'Registering...' : 'Continue'}</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>

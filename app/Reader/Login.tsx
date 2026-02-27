@@ -7,18 +7,58 @@ import {
   TouchableOpacity,
   ScrollView,
   Image,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import { readerAuth } from "../readerAPI";
+import Toast from "../Toast";
 
 export default function Login() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [toast, setToast] = useState({ visible: false, message: "", type: "success" as "success" | "error" | "warning" });
 
-  const handleLogin = () => {
-    router.push("/Reader/(ReaderTabs)")
+  const showToast = (message: string, type: "success" | "error" | "warning") => {
+    setToast({ visible: true, message, type });
+  };
+
+  const hideToast = () => {
+    setToast({ visible: false, message: "", type: "success" });
+  };
+
+  const handleLogin = async () => {
+    if (!email || !password) {
+      showToast("Please enter email and password", "error");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await readerAuth.login(email, password);
+      showToast("Login successful!", "success");
+      setTimeout(() => router.push("/Reader/(ReaderTabs)"), 1000);
+    } catch (error: any) {
+      const status = error.response?.status;
+      const message = error.response?.data?.message;
+      
+      if (status === 403) {
+        if (message?.includes('verified')) {
+          showToast("Account pending verification", "warning");
+        } else {
+          showToast("Account suspended. Contact support.", "error");
+        }
+      } else if (status === 404) {
+        showToast("Account not found", "error");
+      } else {
+        showToast(message || "Login failed", "error");
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -77,9 +117,19 @@ export default function Login() {
         </View>
 
         {/* Login Button */}
-        <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
-          <Text style={styles.loginButtonText}>Log in</Text>
+        <TouchableOpacity 
+          style={[styles.loginButton, loading && styles.buttonDisabled]} 
+          onPress={handleLogin}
+          disabled={loading}
+        >
+          {loading ? (
+            <ActivityIndicator color="#FFFFFF" />
+          ) : (
+            <Text style={styles.loginButtonText}>Log in</Text>
+          )}
         </TouchableOpacity>
+
+        {toast.visible && <Toast visible={toast.visible} message={toast.message} type={toast.type} onHide={hideToast} />}
 
         {/* Sign Up Link */}
         <View style={styles.signUpContainer}>
@@ -227,5 +277,8 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     justifyContent: "center",
     alignItems: "center",
+  },
+  buttonDisabled: {
+    opacity: 0.6,
   },
 });

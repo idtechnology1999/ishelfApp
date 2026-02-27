@@ -11,6 +11,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import GestureRecognizer from "react-native-swipe-gestures";
+import { DynamicBackgroundPattern } from "../../components/BackgroundPattern";
 
 const { width } = Dimensions.get("window");
 
@@ -29,6 +30,7 @@ export default function OnboardingScreenThree() {
       onSwipeRight={() => router.back()}
       onSwipeLeft={() => router.push("/Author/Login")}
     >
+      <DynamicBackgroundPattern />
       <SafeAreaView style={styles.container}>
         {/* Back Button */}
         <TouchableOpacity
@@ -80,7 +82,7 @@ export default function OnboardingScreenThree() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "transparent",
   },
 
   backButton: {
@@ -113,6 +115,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     marginTop: 20,
+    backgroundColor: "transparent",
   },
 
   image: {

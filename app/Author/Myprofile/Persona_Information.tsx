@@ -1,17 +1,109 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
-import React from "react";
+import { useRouter, useFocusEffect } from "expo-router";
+import React, { useState, useCallback } from "react";
 import {
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
   ScrollView,
+  Image,
+  ActivityIndicator,
+  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as ImagePicker from 'expo-image-picker';
+import axios from 'axios';
+import { useAuthorAuth } from '../useAuthorAuth';
+
+const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
 export default function PersonaInformation() {
+  useAuthorAuth();
   const router = useRouter();
+  const [loading, setLoading] = useState(true);
+  const [author, setAuthor] = useState<any>(null);
+  const [profileImage, setProfileImage] = useState<string | null>(null);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadAuthorData();
+    }, [])
+  );
+
+  const loadAuthorData = async () => {
+    try {
+      const token = await AsyncStorage.getItem('authorToken');
+      if (token) {
+        const response = await axios.get(`${API_URL}/api/authors/profile/data`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (response.data) {
+          setAuthor(response.data);
+          await AsyncStorage.setItem('authorData', JSON.stringify(response.data));
+        }
+        
+        const imgResponse = await axios.get(`${API_URL}/api/authors/profile/image`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (imgResponse.data.imageUrl) {
+          setProfileImage(`${API_URL}${imgResponse.data.imageUrl}`);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading author data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const pickImage = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permission needed', 'Camera roll permissions are required!');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+      base64: true,
+    });
+
+    if (!result.canceled && result.assets[0]) {
+      try {
+        const token = await AsyncStorage.getItem('authorToken');
+        const response = await axios.post(
+          `${API_URL}/api/authors/profile/upload-image`,
+          {
+            image: `data:image/jpeg;base64,${result.assets[0].base64}`,
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        setProfileImage(`${API_URL}${response.data.imageUrl}`);
+        Alert.alert('Success', 'Profile image updated successfully');
+      } catch (error) {
+        console.error('Error uploading image:', error);
+        Alert.alert('Error', 'Failed to upload profile image');
+      }
+    }
+  };
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <ActivityIndicator size="large" color="#E85D54" style={{ marginTop: 50 }} />
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -28,6 +120,22 @@ export default function PersonaInformation() {
           <View style={styles.headerSpacer} />
         </View>
 
+        {/* Profile Image */}
+        <View style={styles.imageSection}>
+          <TouchableOpacity onPress={pickImage} style={styles.imageContainer}>
+            {profileImage ? (
+              <Image source={{ uri: profileImage }} style={styles.profileImage} />
+            ) : (
+              <View style={styles.placeholderImage}>
+                <Ionicons name="person-circle" size={120} color="#FFD4D1" />
+              </View>
+            )}
+            <View style={styles.cameraIcon}>
+              <Ionicons name="camera" size={20} color="#FFFFFF" />
+            </View>
+          </TouchableOpacity>
+        </View>
+
         {/* Bio Section */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
@@ -37,24 +145,24 @@ export default function PersonaInformation() {
             </TouchableOpacity>
           </View>
           <View style={styles.card}>
-            <Text style={styles.infoText}>Angela Phillips</Text>
-            <Text style={styles.infoText}>angelaphillips@gmail.com</Text>
-            <Text style={styles.infoText}>08123 456 7885</Text>
+            <Text style={styles.infoText}>{author?.fullName || 'Not set'}</Text>
+            <Text style={styles.infoText}>{author?.email || 'Not set'}</Text>
+            <Text style={styles.infoText}>Phone: {author?.phone || 'Not set'}</Text>
           </View>
         </View>
 
-        {/* Academic Details Section */}
+        {/* Professional Details Section */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Academic Details</Text>
+            <Text style={styles.sectionTitle}>Professional Details</Text>
             <TouchableOpacity onPress={() => router.push("/Author/Myprofile/editAcademic")}>
               <Ionicons name="pencil" size={24} color="#E85D54" />
             </TouchableOpacity>
           </View>
           <View style={styles.card}>
-            <Text style={styles.infoText}>Nnamdi Azikwe</Text>
-            <Text style={styles.infoText}>300lvl</Text>
-            <Text style={styles.infoText}>Business Management</Text>
+            <Text style={styles.infoText}>Institution: {author?.institution || 'Not set'}</Text>
+            <Text style={styles.infoText}>Specialization: {author?.areasOfExpertise || 'Not set'}</Text>
+            <Text style={styles.infoText}>Bio: {author?.shortBio || 'Not set'}</Text>
           </View>
         </View>
       </ScrollView>
@@ -67,7 +175,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#FFFFFF",
   },
-
   header: {
     flexDirection: "row",
     alignItems: "center",
@@ -75,49 +182,76 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingVertical: 16,
   },
-
   backButton: {
     padding: 4,
   },
-
   headerTitle: {
     fontSize: 20,
     fontWeight: "600",
-    color: "#E85D54", // I-SHELF coral red
+    color: "#E85D54",
     flex: 1,
     textAlign: "center",
   },
-
   headerSpacer: {
     width: 36,
   },
-
+  imageSection: {
+    alignItems: "center",
+    marginVertical: 24,
+  },
+  imageContainer: {
+    position: "relative",
+  },
+  profileImage: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    borderWidth: 3,
+    borderColor: "#FFD4D1",
+  },
+  placeholderImage: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: "#FFF9F8",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  cameraIcon: {
+    position: "absolute",
+    bottom: 0,
+    right: 0,
+    backgroundColor: "#E85D54",
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 3,
+    borderColor: "#FFFFFF",
+  },
   section: {
     paddingHorizontal: 24,
     marginTop: 24,
   },
-
   sectionHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 16,
   },
-
   sectionTitle: {
     fontSize: 22,
     fontWeight: "600",
     color: "#000000",
   },
-
   card: {
-    backgroundColor: "#FFF9F8", // Very light coral tint
+    backgroundColor: "#FFF9F8",
     padding: 24,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: "#FFD4D1", // Light coral border
+    borderColor: "#FFD4D1",
   },
-
   infoText: {
     fontSize: 16,
     color: "#000000",

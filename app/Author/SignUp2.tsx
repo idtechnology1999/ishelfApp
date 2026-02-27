@@ -1,6 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   StyleSheet,
   Text,
@@ -18,9 +19,23 @@ export default function SignUp2() {
   const [governmentId, setGovernmentId] = useState("");
   const [institutionalEmail, setInstitutionalEmail] = useState("");
 
-  const handleContinue = () => {
-    // Add validation here if needed
+  useEffect(() => {
+    const loadData = async () => {
+      const saved = await AsyncStorage.getItem('signupData');
+      if (saved) {
+        const data = JSON.parse(saved);
+        setGovernmentId(data.governmentId || '');
+        setInstitutionalEmail(data.institutionalEmail || '');
+      }
+    };
+    loadData();
+  }, []);
+
+  const handleContinue = async () => {
     if (governmentId) {
+      const saved = await AsyncStorage.getItem('signupData');
+      const data = saved ? JSON.parse(saved) : {};
+      await AsyncStorage.setItem('signupData', JSON.stringify({ ...data, governmentId, institutionalEmail }));
       router.replace("/Author/SignUp3");
     }
   };

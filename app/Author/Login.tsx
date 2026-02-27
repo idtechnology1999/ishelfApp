@@ -1,6 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
+import { authorAPI } from '../authorAPI';
+import Toast from '../Toast';
 import {
   StyleSheet,
   Text,
@@ -11,26 +13,56 @@ import {
   Platform,
   ScrollView,
   Image,
+  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import GestureRecognizer from "react-native-swipe-gestures";
+import { StaticBackgroundPattern } from "../../components/BackgroundPattern";
 
 export default function LoginScreen() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [toast, setToast] = useState({ visible: false, message: '', type: 'success' as 'success' | 'error' | 'warning' });
 
   const swipeConfig = {
     velocityThreshold: 0.25,
     directionalOffsetThreshold: 70,
   };
 
-  const handleLogin = () => {
-    // Add your login logic here
-    console.log("Login with:", email, password);
-    // Navigate to SignUp1 after login
-    router.replace("/Author/(AuthorTabs)");
+  const showToast = (message: string, type: 'success' | 'error' | 'warning') => {
+    setToast({ visible: true, message, type });
+  };
+
+  const handleLogin = async () => {
+    if (!email || !password) {
+      showToast('Please enter email and password', 'error');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await authorAPI.login(email, password);
+      
+      showToast('Welcome Back! 👋', 'success');
+      
+      setTimeout(() => {
+        router.replace("/Author/(AuthorTabs)");
+      }, 1000);
+    } catch (error: any) {
+      const status = error.response?.status;
+      const message = error.response?.data?.message || 'Invalid credentials';
+      
+      if (status === 403) {
+        showToast(message, 'warning');
+      } else {
+        showToast(message, 'error');
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -39,7 +71,14 @@ export default function LoginScreen() {
       config={swipeConfig}
       onSwipeRight={() => router.replace("/Author/OnboardingScreen3")}
     >
+      <StaticBackgroundPattern />
       <SafeAreaView style={styles.container}>
+        <Toast
+          visible={toast.visible}
+          message={toast.message}
+          type={toast.type}
+          onHide={() => setToast({ ...toast, visible: false })}
+        />
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : "height"}
           style={styles.keyboardView}
@@ -132,11 +171,12 @@ export default function LoginScreen() {
 
               {/* Login Button */}
               <TouchableOpacity
-                style={styles.loginButton}
+                style={[styles.loginButton, loading && { opacity: 0.6 }]}
                 onPress={handleLogin}
+                disabled={loading}
                 accessibilityLabel="Log in button"
               >
-                <Text style={styles.loginButtonText}>Log in</Text>
+                <Text style={styles.loginButtonText}>{loading ? 'Logging in...' : 'Log in'}</Text>
               </TouchableOpacity>
 
               {/* Sign Up Link */}

@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   StyleSheet,
   Text,
@@ -10,19 +10,62 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
+  Alert,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { readerProfile } from '../../readerAPI';
+import axios from 'axios';
+import { useReaderAuth } from '../useReaderAuth';
+
+const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
 export default function EditAcademic() {
+  useReaderAuth();
   const router = useRouter();
-  const [university, setUniversity] = useState("Nnamdi Azike University");
-  const [level, setLevel] = useState("300lvl");
-  const [course, setCourse] = useState("Business Management");
+  const [university, setUniversity] = useState("");
+  const [level, setLevel] = useState("");
+  const [course, setCourse] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleSave = () => {
-    // Add save logic here
-    console.log("Saving academic details...");
-    router.back();
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = async () => {
+    try {
+      const token = await AsyncStorage.getItem('readerToken');
+      if (token) {
+        const response = await axios.get(`${API_URL}/api/readers/profile/data`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (response.data) {
+          setUniversity(response.data.institution || '');
+          setLevel(response.data.level || '');
+          setCourse(response.data.department || '');
+        }
+      }
+    } catch (error) {
+      console.error('Error loading data:', error);
+    }
+  };
+
+  const handleSave = async () => {
+    setLoading(true);
+    try {
+      const response = await readerProfile.updateAcademic(university, level, course);
+      if (response.reader) {
+        await AsyncStorage.setItem('readerData', JSON.stringify(response.reader));
+      }
+      Alert.alert('Success', 'Academic details updated successfully');
+      router.back();
+    } catch (error: any) {
+      console.error('Error updating academic details:', error);
+      Alert.alert('Error', error.response?.data?.message || 'Failed to update academic details');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -86,8 +129,16 @@ export default function EditAcademic() {
 
         {/* Save Button - Fixed at bottom */}
         <View style={styles.buttonContainer}>
-          <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-            <Text style={styles.saveButtonText}>Save</Text>
+          <TouchableOpacity 
+            style={[styles.saveButton, loading && { opacity: 0.6 }]} 
+            onPress={handleSave}
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator color="#FFFFFF" />
+            ) : (
+              <Text style={styles.saveButtonText}>Save</Text>
+            )}
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>

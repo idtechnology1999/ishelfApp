@@ -49,7 +49,7 @@ export default function ReaderOnboarding3() {
 
           <View style={styles.imageWrapper}>
             <Image
-              source={require("../../assets/images/authorb3.png")}
+              source={require("../../assets/images/design.png")}
               style={styles.image}
               resizeMode="contain"
             />
@@ -110,8 +110,8 @@ const styles = StyleSheet.create({
     paddingBottom: 60, // Add padding to prevent collision with pagination
   },
   image: {
-    width: width * 0.65, // Reduced from 0.85 to 0.65
-    height: width * 0.75, // Reduced from 1.1 to 0.75
+    width: width * 0.48,
+    height: width * 0.48,
   },
   footer: {
     paddingHorizontal: 24,

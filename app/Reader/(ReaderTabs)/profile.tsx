@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
-import React from "react";
+import { useRouter, useFocusEffect } from "expo-router";
+import React, { useState, useEffect } from "react";
 import {
   StyleSheet,
   Text,
@@ -8,15 +8,71 @@ import {
   View,
   ScrollView,
   Image,
+  ActivityIndicator,
+  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { readerAuth } from '../../readerAPI';
+import axios from 'axios';
+
+const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
 export default function Profile() {
   const router = useRouter();
+  const [reader, setReader] = useState<any>(null);
+  const [profileImage, setProfileImage] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadReaderData();
+  }, []);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      loadReaderData();
+    }, [])
+  );
+
+  const loadReaderData = async () => {
+    try {
+      const data = await AsyncStorage.getItem('readerData');
+      if (data) {
+        setReader(JSON.parse(data));
+      }
+      
+      const token = await AsyncStorage.getItem('readerToken');
+      if (token) {
+        const response = await axios.get(`${API_URL}/api/readers/profile/image`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (response.data.imageUrl) {
+          setProfileImage(`${API_URL}${response.data.imageUrl}`);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading reader data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleLogOut = () => {
-    console.log("Logging out...");
-    router.push("/Reader/Login")
+    Alert.alert(
+      'Log Out',
+      'Are you sure you want to log out?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Log Out',
+          style: 'destructive',
+          onPress: async () => {
+            await readerAuth.logout();
+            router.replace('/Reader/Login');
+          },
+        },
+      ]
+    );
   };
 
   return (
@@ -35,16 +91,21 @@ export default function Profile() {
         </View>
 
         {/* Profile Avatar Section */}
-        <View style={styles.profileSection}>
-          <View style={styles.avatarContainer}>
-            <Image
-              source={require("../../../assets/images/avatar.png")}
-              style={styles.avatarImage}
-            />
-          </View>
-          <Text style={styles.userName}>Angela Phillips</Text>
-          <Text style={styles.userRole}>Student</Text>
-        </View>
+        {loading ? (
+          <ActivityIndicator size="large" color="#E85D54" style={{ marginTop: 50 }} />
+        ) : (
+          <>
+            <View style={styles.profileSection}>
+              <View style={styles.avatarContainer}>
+                {profileImage ? (
+                  <Image source={{ uri: profileImage }} style={styles.avatarImage} />
+                ) : (
+                  <Ionicons name="person-circle" size={140} color="#FFD4D1" />
+                )}
+              </View>
+              <Text style={styles.userName}>{reader?.fullName || 'Reader'}</Text>
+              <Text style={styles.userRole}>Student</Text>
+            </View>
 
         {/* Menu Options */}
         <View style={styles.menuContainer}>
@@ -87,6 +148,8 @@ export default function Profile() {
             <Text style={styles.logoutButtonText}>Log Out</Text>
           </TouchableOpacity>
         </View>
+      </>
+        )}
       </ScrollView>
     </SafeAreaView>
   );

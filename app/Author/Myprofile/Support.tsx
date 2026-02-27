@@ -58,7 +58,7 @@ export default function Support() {
         <View style={styles.header}>
           <TouchableOpacity
             style={styles.backButton}
-            onPress={() => router.back()}
+            onPress={() => router.push('Author/profile')}
           >
             <Ionicons name="chevron-back" size={28} color="#E85D54" />
           </TouchableOpacity>

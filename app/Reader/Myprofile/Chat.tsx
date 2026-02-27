@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   StyleSheet,
   Text,
@@ -12,33 +12,56 @@ import {
   Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
+
+const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
 type Message = {
-  id: number;
+  _id: string;
   text: string;
-  sender: "user" | "support";
+  sender: "user" | "admin";
+  timestamp: string;
 };
 
 export default function Chat() {
   const router = useRouter();
   const [message, setMessage] = useState("");
-  const [messages, setMessages] = useState<Message[]>([
-    { id: 1, text: "Hello! How can I help you today?", sender: "support" },
-    { id: 2, text: "Hi, I have a question about my purchase", sender: "user" },
-    { id: 3, text: "Sure, I'd be happy to help. What would you like to know?", sender: "support" },
-    { id: 4, text: "How do I download the book I bought?", sender: "user" },
-    { id: 5, text: "You can find your purchased books in the Library section. Just tap on any book to download it.", sender: "support" },
-  ]);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const scrollViewRef = useRef<ScrollView>(null);
 
-  const handleSend = () => {
+  useEffect(() => {
+    fetchMessages();
+    const interval = setInterval(fetchMessages, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const fetchMessages = async () => {
+    try {
+      const token = await AsyncStorage.getItem('readerToken');
+      const response = await axios.get(`${API_URL}/api/readers/support/messages`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setMessages(response.data);
+    } catch (error) {
+      console.error('Error fetching messages:', error);
+    }
+  };
+
+  const handleSend = async () => {
     if (message.trim()) {
-      const newMessage: Message = {
-        id: messages.length + 1,
-        text: message,
-        sender: "user",
-      };
-      setMessages([...messages, newMessage]);
-      setMessage("");
+      try {
+        const token = await AsyncStorage.getItem('readerToken');
+        await axios.post(`${API_URL}/api/readers/support/messages`, {
+          text: message
+        }, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setMessage("");
+        fetchMessages();
+      } catch (error) {
+        console.error('Error sending message:', error);
+      }
     }
   };
 
@@ -63,18 +86,20 @@ export default function Chat() {
 
         {/* Chat Info */}
         <View style={styles.chatInfo}>
-          <Text style={styles.chatWith}>Chatting with Andrew</Text>
+          <Text style={styles.chatWith}>Support Team</Text>
         </View>
 
         {/* Messages */}
         <ScrollView 
+          ref={scrollViewRef}
           style={styles.messagesContainer}
           contentContainerStyle={styles.messagesContent}
           showsVerticalScrollIndicator={false}
+          onContentSizeChange={() => scrollViewRef.current?.scrollToEnd({ animated: true })}
         >
           {messages.map((msg) => (
             <View
-              key={msg.id}
+              key={msg._id}
               style={[
                 styles.messageBubble,
                 msg.sender === "user" ? styles.userMessage : styles.supportMessage,
@@ -84,6 +109,12 @@ export default function Chat() {
                 styles.messageText,
                 msg.sender === "user" && styles.userMessageText
               ]}>{msg.text}</Text>
+              <Text style={[
+                styles.messageTime,
+                msg.sender === "user" && styles.userMessageTime
+              ]}>
+                {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              </Text>
             </View>
           ))}
         </ScrollView>
@@ -190,6 +221,18 @@ const styles = StyleSheet.create({
 
   userMessageText: {
     color: "#333333", // Dark text for light background
+  },
+
+  messageTime: {
+    fontSize: 11,
+    color: "#FFFFFF",
+    opacity: 0.7,
+    marginTop: 4,
+    textAlign: 'right',
+  },
+
+  userMessageTime: {
+    color: "#666666",
   },
 
   inputContainer: {

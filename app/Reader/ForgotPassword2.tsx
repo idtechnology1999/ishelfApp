@@ -11,14 +11,33 @@ import {
   Platform,
   ScrollView,
   Image,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { readerAuth } from "../readerAPI";
+import Toast from "../Toast";
 
 export default function ForgotPassword2() {
   const router = useRouter();
-  const [code, setCode] = useState(["", "", "", ""]);
-  const [timer, setTimer] = useState(52);
+  const [code, setCode] = useState(["", "", "", "", "", ""]);
+  const [timer, setTimer] = useState(600); // 10 minutes
+  const [loading, setLoading] = useState(false);
+  const [email, setEmail] = useState("");
+  const [toast, setToast] = useState({ visible: false, message: "", type: "success" as "success" | "error" | "warning" });
   const inputRefs = useRef<(TextInput | null)[]>([]);
+
+  useEffect(() => {
+    AsyncStorage.getItem('resetEmail').then(e => e && setEmail(e));
+  }, []);
+
+  const showToast = (message: string, type: "success" | "error" | "warning") => {
+    setToast({ visible: true, message, type });
+  };
+
+  const hideToast = () => {
+    setToast({ visible: false, message: "", type: "success" });
+  };
 
   // Timer countdown
   useEffect(() => {
@@ -53,18 +72,40 @@ export default function ForgotPassword2() {
     }
   };
 
-  const handleResend = () => {
-    // Reset timer and resend code logic
-    setTimer(52);
-    setCode(["", "", "", ""]);
-    inputRefs.current[0]?.focus();
+  const handleResend = async () => {
+    if (!email) return;
+    
+    setLoading(true);
+    try {
+      await readerAuth.forgotPassword(email);
+      setTimer(600);
+      setCode(["", "", "", "", "", ""]);
+      inputRefs.current[0]?.focus();
+      showToast("New code sent!", "success");
+    } catch (error: any) {
+      showToast("Failed to resend code", "error");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const fullCode = code.join("");
-    if (fullCode.length === 4) {
-      // Verify code and navigate
-      router.replace("/Reader/ForgotPassword3");
+    if (fullCode.length !== 6) {
+      showToast("Please enter complete code", "error");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await readerAuth.verifyCode(email, fullCode);
+      await AsyncStorage.setItem('resetCode', fullCode);
+      showToast("Code verified!", "success");
+      setTimeout(() => router.replace("/Reader/ForgotPassword3"), 1000);
+    } catch (error: any) {
+      showToast(error.response?.data?.message || "Invalid code", "error");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -142,12 +183,19 @@ export default function ForgotPassword2() {
 
           {/* Submit Button */}
           <TouchableOpacity
-            style={styles.submitButton}
+            style={[styles.submitButton, loading && styles.buttonDisabled]}
             onPress={handleSubmit}
+            disabled={loading}
             accessibilityLabel="Submit code"
           >
-            <Text style={styles.submitButtonText}>Submit</Text>
+            {loading ? (
+              <ActivityIndicator color="#FFFFFF" />
+            ) : (
+              <Text style={styles.submitButtonText}>Submit</Text>
+            )}
           </TouchableOpacity>
+
+          {toast.visible && <Toast visible={toast.visible} message={toast.message} type={toast.type} onHide={hideToast} />}
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -263,5 +311,8 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "600",
     color: "#FFFFFF",
+  },
+  buttonDisabled: {
+    opacity: 0.6,
   },
 });

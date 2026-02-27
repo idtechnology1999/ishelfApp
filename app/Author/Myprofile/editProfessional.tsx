@@ -1,6 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useState, useEffect } from "react";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   StyleSheet,
   Text,
@@ -11,23 +12,14 @@ import {
   KeyboardAvoidingView,
   Platform,
   Alert,
-  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { readerProfile } from '../../readerAPI';
-import axios from 'axios';
-import { useReaderAuth } from '../useReaderAuth';
 
-const API_URL = process.env.EXPO_PUBLIC_API_URL;
-
-export default function EditBio() {
-  useReaderAuth();
+export default function EditProfessional() {
   const router = useRouter();
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [institution, setInstitution] = useState("");
+  const [specialization, setSpecialization] = useState("");
+  const [bio, setBio] = useState("");
 
   useEffect(() => {
     loadData();
@@ -35,16 +27,12 @@ export default function EditBio() {
 
   const loadData = async () => {
     try {
-      const token = await AsyncStorage.getItem('readerToken');
-      if (token) {
-        const response = await axios.get(`${API_URL}/api/readers/profile/data`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        if (response.data) {
-          setName(response.data.fullName || '');
-          setEmail(response.data.email || '');
-          setPhone(response.data.phone || '');
-        }
+      const data = await AsyncStorage.getItem('authorData');
+      if (data) {
+        const author = JSON.parse(data);
+        setInstitution(author.institution || '');
+        setSpecialization(author.areasOfExpertise || '');
+        setBio(author.shortBio || '');
       }
     } catch (error) {
       console.error('Error loading data:', error);
@@ -52,24 +40,20 @@ export default function EditBio() {
   };
 
   const handleSave = async () => {
-    if (!name || !email) {
-      Alert.alert('Error', 'Name and email are required');
-      return;
-    }
-
-    setLoading(true);
     try {
-      const response = await readerProfile.updateBio(name, email, phone);
-      if (response.reader) {
-        await AsyncStorage.setItem('readerData', JSON.stringify(response.reader));
+      const data = await AsyncStorage.getItem('authorData');
+      if (data) {
+        const author = JSON.parse(data);
+        author.institution = institution;
+        author.areasOfExpertise = specialization;
+        author.shortBio = bio;
+        await AsyncStorage.setItem('authorData', JSON.stringify(author));
+        Alert.alert('Success', 'Professional details updated');
+        router.back();
       }
-      Alert.alert('Success', 'Bio updated successfully');
-      router.back();
-    } catch (error: any) {
-      console.error('Error updating bio:', error);
-      Alert.alert('Error', error.response?.data?.message || 'Failed to update bio');
-    } finally {
-      setLoading(false);
+    } catch (error) {
+      console.error('Error saving data:', error);
+      Alert.alert('Error', 'Failed to save changes');
     }
   };
 
@@ -80,73 +64,56 @@ export default function EditBio() {
         style={styles.keyboardView}
       >
         <ScrollView showsVerticalScrollIndicator={false}>
-          {/* Header */}
           <View style={styles.header}>
-            <TouchableOpacity
-              style={styles.backButton}
-              onPress={() => router.back()}
-            >
+            <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
               <Ionicons name="chevron-back" size={28} color="#E85D54" />
             </TouchableOpacity>
-            <Text style={styles.headerTitle}>Bio</Text>
+            <Text style={styles.headerTitle}>Professional Details</Text>
             <View style={styles.headerSpacer} />
           </View>
 
-          {/* Form */}
           <View style={styles.formContainer}>
-            {/* Name Input */}
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Name</Text>
+              <Text style={styles.label}>Institution</Text>
               <TextInput
                 style={styles.input}
-                value={name}
-                onChangeText={setName}
-                placeholder="Enter your name"
+                value={institution}
+                onChangeText={setInstitution}
+                placeholder="Enter your institution"
                 placeholderTextColor="#999999"
               />
             </View>
 
-            {/* Email Input */}
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>E-mail Address</Text>
+              <Text style={styles.label}>Specialization</Text>
               <TextInput
                 style={styles.input}
-                value={email}
-                onChangeText={setEmail}
-                placeholder="Enter your email"
-                keyboardType="email-address"
-                autoCapitalize="none"
+                value={specialization}
+                onChangeText={setSpecialization}
+                placeholder="Enter your areas of expertise"
                 placeholderTextColor="#999999"
               />
             </View>
 
-            {/* Phone Number Input */}
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Phone Number</Text>
+              <Text style={styles.label}>Bio</Text>
               <TextInput
-                style={styles.input}
-                value={phone}
-                onChangeText={setPhone}
-                placeholder="Enter your phone number"
-                keyboardType="phone-pad"
+                style={[styles.input, styles.textArea]}
+                value={bio}
+                onChangeText={setBio}
+                placeholder="Enter your bio"
                 placeholderTextColor="#999999"
+                multiline
+                numberOfLines={4}
+                textAlignVertical="top"
               />
             </View>
           </View>
         </ScrollView>
 
-        {/* Save Button - Fixed at bottom */}
         <View style={styles.buttonContainer}>
-          <TouchableOpacity 
-            style={[styles.saveButton, loading && { opacity: 0.6 }]} 
-            onPress={handleSave}
-            disabled={loading}
-          >
-            {loading ? (
-              <ActivityIndicator color="#FFFFFF" />
-            ) : (
-              <Text style={styles.saveButtonText}>Save</Text>
-            )}
+          <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
+            <Text style={styles.saveButtonText}>Save</Text>
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
@@ -159,11 +126,9 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#FFFFFF",
   },
-
   keyboardView: {
     flex: 1,
   },
-
   header: {
     flexDirection: "row",
     alignItems: "center",
@@ -171,61 +136,56 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingVertical: 16,
   },
-
   backButton: {
     padding: 4,
   },
-
   headerTitle: {
     fontSize: 20,
     fontWeight: "600",
-    color: "#E85D54", // I-SHELF coral red
+    color: "#E85D54",
     flex: 1,
     textAlign: "center",
   },
-
   headerSpacer: {
     width: 36,
   },
-
   formContainer: {
     paddingHorizontal: 24,
     paddingTop: 24,
   },
-
   inputGroup: {
     marginBottom: 24,
   },
-
   label: {
     fontSize: 16,
     fontWeight: "500",
     color: "#000000",
     marginBottom: 12,
   },
-
   input: {
     height: 56,
     borderWidth: 1,
-    borderColor: "#FFD4D1", // Light coral border
+    borderColor: "#FFD4D1",
     borderRadius: 12,
     paddingHorizontal: 16,
     fontSize: 16,
     color: "#000000",
     backgroundColor: "#FFFFFF",
   },
-
+  textArea: {
+    height: 120,
+    paddingTop: 16,
+  },
   buttonContainer: {
     paddingHorizontal: 24,
     paddingVertical: 20,
     borderTopWidth: 1,
-    borderTopColor: "#FFD4D1", // Light coral border
+    borderTopColor: "#FFD4D1",
     backgroundColor: "#FFFFFF",
   },
-
   saveButton: {
     height: 56,
-    backgroundColor: "#E85D54", // I-SHELF coral red
+    backgroundColor: "#E85D54",
     borderRadius: 28,
     alignItems: "center",
     justifyContent: "center",
@@ -238,7 +198,6 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 4,
   },
-
   saveButtonText: {
     fontSize: 18,
     fontWeight: "600",

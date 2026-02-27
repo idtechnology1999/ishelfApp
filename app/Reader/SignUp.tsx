@@ -8,10 +8,13 @@ import {
   KeyboardAvoidingView,
   Platform,
   Image,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import { readerAuth } from "../readerAPI";
+import Toast from "../Toast";
 
 export default function SignUp() {
   const router = useRouter();
@@ -19,10 +22,33 @@ export default function SignUp() {
   const [email, setEmail] = useState("");
   const [institution, setInstitution] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [toast, setToast] = useState({ visible: false, message: "", type: "success" as "success" | "error" | "warning" });
 
-  const handleSignUp = () => {
-    // Handle sign up logic
-     router.push("/Reader/Login")
+  const showToast = (message: string, type: "success" | "error" | "warning") => {
+    setToast({ visible: true, message, type });
+  };
+
+  const hideToast = () => {
+    setToast({ visible: false, message: "", type: "success" });
+  };
+
+  const handleSignUp = async () => {
+    if (!fullName || !email || !password) {
+      showToast("Please fill all required fields", "error");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await readerAuth.register(fullName, email, institution, password);
+      showToast("Registration successful! Wait for admin verification.", "success");
+      setTimeout(() => router.push("/Reader/Login"), 2000);
+    } catch (error: any) {
+      showToast(error.response?.data?.message || "Registration failed", "error");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -93,9 +119,19 @@ export default function SignUp() {
         </View>
 
         {/* Sign Up Button */}
-        <TouchableOpacity style={styles.signUpButton} onPress={handleSignUp}>
-          <Text style={styles.signUpButtonText}>Sign Up</Text>
+        <TouchableOpacity 
+          style={[styles.signUpButton, loading && styles.buttonDisabled]} 
+          onPress={handleSignUp}
+          disabled={loading}
+        >
+          {loading ? (
+            <ActivityIndicator color="#FFFFFF" />
+          ) : (
+            <Text style={styles.signUpButtonText}>Sign Up</Text>
+          )}
         </TouchableOpacity>
+
+        {toast.visible && <Toast visible={toast.visible} message={toast.message} type={toast.type} onHide={hideToast} />}
 
         {/* Login Link */}
         <View style={styles.loginContainer}>
@@ -238,5 +274,8 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     justifyContent: "center",
     alignItems: "center",
+  },
+  buttonDisabled: {
+    opacity: 0.6,
   },
 });

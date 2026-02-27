@@ -11,17 +11,48 @@ import {
   Platform,
   ScrollView,
   Image,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { readerAuth } from "../readerAPI";
+import Toast from "../Toast";
 
 export default function ForgotPassword1() {
   const router = useRouter();
   const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [toast, setToast] = useState({ visible: false, message: "", type: "success" as "success" | "error" | "warning" });
 
-  const handleProceed = () => {
-    // Add email validation here if needed
-    if (email) {
-      router.replace("/Reader/ForgotPassword2");
+  const showToast = (message: string, type: "success" | "error" | "warning") => {
+    setToast({ visible: true, message, type });
+  };
+
+  const hideToast = () => {
+    setToast({ visible: false, message: "", type: "success" });
+  };
+
+  const handleProceed = async () => {
+    if (!email) {
+      showToast("Please enter your email", "error");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await readerAuth.forgotPassword(email);
+      await AsyncStorage.setItem('resetEmail', email);
+      showToast("Code sent to your email!", "success");
+      setTimeout(() => router.replace("/Reader/ForgotPassword2"), 1000);
+    } catch (error: any) {
+      const status = error.response?.status;
+      if (status === 404) {
+        showToast("Email not registered", "error");
+      } else {
+        showToast(error.response?.data?.message || "Failed to send code", "error");
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -81,13 +112,20 @@ export default function ForgotPassword1() {
 
             {/* Proceed Button */}
             <TouchableOpacity
-              style={styles.proceedButton}
+              style={[styles.proceedButton, loading && styles.buttonDisabled]}
               onPress={handleProceed}
+              disabled={loading}
               accessibilityLabel="Proceed button"
             >
-              <Text style={styles.proceedButtonText}>Proceed</Text>
+              {loading ? (
+                <ActivityIndicator color="#FFFFFF" />
+              ) : (
+                <Text style={styles.proceedButtonText}>Proceed</Text>
+              )}
             </TouchableOpacity>
           </View>
+
+          {toast.visible && <Toast visible={toast.visible} message={toast.message} type={toast.type} onHide={hideToast} />}
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -197,5 +235,8 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "600",
     color: "#FFFFFF",
+  },
+  buttonDisabled: {
+    opacity: 0.6,
   },
 });

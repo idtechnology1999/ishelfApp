@@ -98,7 +98,7 @@ export default function HomeTab() {
           <Text style={styles.sectionTitle}>Upload Your Book</Text>
           <TouchableOpacity
             style={styles.uploadButton}
-            // onPress={() => router.push("/upload")}
+            onPress={() => router.push("/Author/book/Upload1")}
           >
             <Ionicons name="add-circle-outline" size={24} color="#FFFFFF" />
             <Text style={styles.uploadButtonText}>Upload</Text>

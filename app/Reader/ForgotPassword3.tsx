@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   StyleSheet,
   Text,
@@ -11,18 +11,64 @@ import {
   Platform,
   ScrollView,
   Image,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { readerAuth } from "../readerAPI";
+import Toast from "../Toast";
 
 export default function ForgotPassword3() {
   const router = useRouter();
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+  const [isConfirmVisible, setIsConfirmVisible] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [email, setEmail] = useState("");
+  const [code, setCode] = useState("");
+  const [toast, setToast] = useState({ visible: false, message: "", type: "success" as "success" | "error" | "warning" });
 
-  const handleReset = () => {
-    // Add password validation here if needed
-    if (password) {
-      router.replace("/Reader/ForgotPasswordDone");
+  useEffect(() => {
+    AsyncStorage.getItem('resetEmail').then(e => e && setEmail(e));
+    AsyncStorage.getItem('resetCode').then(c => c && setCode(c));
+  }, []);
+
+  const showToast = (message: string, type: "success" | "error" | "warning") => {
+    setToast({ visible: true, message, type });
+  };
+
+  const hideToast = () => {
+    setToast({ visible: false, message: "", type: "success" });
+  };
+
+  const handleReset = async () => {
+    if (!password || !confirmPassword) {
+      showToast("Please fill all fields", "error");
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      showToast("Passwords do not match", "error");
+      return;
+    }
+
+    if (password.length < 6) {
+      showToast("Password must be at least 6 characters", "error");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await readerAuth.resetPassword(email, code, password);
+      await AsyncStorage.removeItem('resetEmail');
+      await AsyncStorage.removeItem('resetCode');
+      showToast("Password reset successful!", "success");
+      setTimeout(() => router.replace("/Reader/ForgotPasswordDone"), 1000);
+    } catch (error: any) {
+      showToast(error.response?.data?.message || "Failed to reset password", "error");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -65,7 +111,7 @@ export default function ForgotPassword3() {
           <View style={styles.form}>
             {/* Password Input */}
             <View style={styles.inputContainer}>
-              <Text style={styles.label}>Password</Text>
+              <Text style={styles.label}>New Password</Text>
               <View style={styles.passwordWrapper}>
                 <TextInput
                   style={[styles.input, styles.passwordInput]}
@@ -93,15 +139,52 @@ export default function ForgotPassword3() {
               </View>
             </View>
 
+            {/* Confirm Password Input */}
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Confirm Password</Text>
+              <View style={styles.passwordWrapper}>
+                <TextInput
+                  style={[styles.input, styles.passwordInput]}
+                  placeholder=""
+                  value={confirmPassword}
+                  onChangeText={setConfirmPassword}
+                  secureTextEntry={!isConfirmVisible}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  accessibilityLabel="Confirm password input"
+                />
+                <TouchableOpacity
+                  style={styles.eyeIcon}
+                  onPress={() => setIsConfirmVisible(!isConfirmVisible)}
+                  accessibilityLabel={
+                    isConfirmVisible ? "Hide password" : "Show password"
+                  }
+                >
+                  <Ionicons
+                    name={isConfirmVisible ? "eye-off-outline" : "eye-outline"}
+                    size={22}
+                    color="#888"
+                  />
+                </TouchableOpacity>
+              </View>
+            </View>
+
             {/* Reset Button */}
             <TouchableOpacity
-              style={styles.resetButton}
+              style={[styles.resetButton, loading && styles.buttonDisabled]}
               onPress={handleReset}
+              disabled={loading}
               accessibilityLabel="Reset password button"
             >
-              <Text style={styles.resetButtonText}>Reset</Text>
+              {loading ? (
+                <ActivityIndicator color="#FFFFFF" />
+              ) : (
+                <Text style={styles.resetButtonText}>Reset</Text>
+              )}
             </TouchableOpacity>
           </View>
+
+          {toast.visible && <Toast visible={toast.visible} message={toast.message} type={toast.type} onHide={hideToast} />}
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -223,5 +306,8 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "600",
     color: "#FFFFFF",
+  },
+  buttonDisabled: {
+    opacity: 0.6,
   },
 });

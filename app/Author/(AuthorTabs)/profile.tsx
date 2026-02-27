@@ -1,6 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
-import React from "react";
+import { useRouter, useFocusEffect } from "expo-router";
+import React, { useState, useCallback } from "react";
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
 import {
   StyleSheet,
   Text,
@@ -11,13 +13,44 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+const API_URL = process.env.EXPO_PUBLIC_API_URL;
+
 export default function Profile() {
   const router = useRouter();
+  const [author, setAuthor] = useState<any>(null);
+  const [profileImage, setProfileImage] = useState<string | null>(null);
 
-  const handleLogOut = () => {
-    // Add logout logic here
-    console.log("Logging out...");
-    router.push("/Author/Login")
+  useFocusEffect(
+    useCallback(() => {
+      loadAuthorData();
+    }, [])
+  );
+
+  const loadAuthorData = async () => {
+    try {
+      const data = await AsyncStorage.getItem('authorData');
+      if (data) {
+        setAuthor(JSON.parse(data));
+      }
+      
+      const token = await AsyncStorage.getItem('authorToken');
+      if (token) {
+        const response = await axios.get(`${API_URL}/api/authors/profile/image`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (response.data.imageUrl) {
+          setProfileImage(`${API_URL}${response.data.imageUrl}`);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading author data:', error);
+    }
+  };
+
+  const handleLogOut = async () => {
+    await AsyncStorage.removeItem('authorToken');
+    await AsyncStorage.removeItem('authorData');
+    router.push("/Author/Login");
   };
 
   return (
@@ -38,13 +71,14 @@ export default function Profile() {
         {/* Profile Avatar Section */}
         <View style={styles.profileSection}>
           <View style={styles.avatarContainer}>
-            <Image
-              source={require("../../../assets/images/avatar.png")}
-              style={styles.avatarImage}
-            />
+            {profileImage ? (
+              <Image source={{ uri: profileImage }} style={styles.avatarImage} />
+            ) : (
+              <Ionicons name="person-circle" size={140} color="#FFD4D1" />
+            )}
           </View>
-          <Text style={styles.userName}>Angela Phillips</Text>
-          <Text style={styles.userRole}>Student</Text>
+          <Text style={styles.userName}>{author?.fullName || 'Author'}</Text>
+          <Text style={styles.userRole}>{author?.displayName || 'Author'}</Text>
         </View>
 
         {/* Menu Options */}

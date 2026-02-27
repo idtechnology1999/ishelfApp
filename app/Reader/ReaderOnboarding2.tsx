@@ -49,7 +49,7 @@ export default function ReaderOnboarding2() {
 
           <View style={styles.imageWrapper}>
             <Image
-              source={require("../../assets/images/authorb2.png")}
+              source={require("../../assets/images/design.png")}
               style={styles.image}
               resizeMode="contain"
             />
@@ -109,8 +109,8 @@ const styles = StyleSheet.create({
     marginTop: 40,
   },
   image: {
-    width: width * 0.85,
-    height: width * 1.1,
+    width: width * 0.48,
+    height: width * 0.48,
   },
   footer: {
     paddingHorizontal: 24,

@@ -11,6 +11,7 @@ import GestureRecognizer from "react-native-swipe-gestures";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import { DynamicBackgroundPattern } from "../../components/BackgroundPattern";
 
 const { width } = Dimensions.get("window");
 
@@ -29,6 +30,7 @@ export default function OnboardingScreenOne() {
       onSwipeRight={() => router.back()}
       onSwipeLeft={() => router.push("/Author/OnboardingScreen2")}
     >
+      <DynamicBackgroundPattern />
       <SafeAreaView style={styles.container}>
         {/* Back Button */}
         <TouchableOpacity
@@ -84,7 +86,7 @@ export default function OnboardingScreenOne() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "transparent",
   },
 
   backButton: {
@@ -118,6 +120,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     marginTop: 20,
+    backgroundColor: "transparent",
   },
 
   image: {

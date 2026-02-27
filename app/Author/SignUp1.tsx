@@ -1,6 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   StyleSheet,
   Text,
@@ -13,6 +14,7 @@ import {
   Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { StaticBackgroundPattern } from "../../components/BackgroundPattern";
 
 export default function SignUp1() {
   const router = useRouter();
@@ -20,15 +22,32 @@ export default function SignUp1() {
   const [email, setEmail] = useState("");
   const [institution, setInstitution] = useState("");
 
-  const handleContinue = () => {
-    // Add validation here if needed
+  useEffect(() => {
+    const loadData = async () => {
+      const saved = await AsyncStorage.getItem('signupData');
+      if (saved) {
+        const data = JSON.parse(saved);
+        setFullName(data.fullName || '');
+        setEmail(data.email || '');
+        setInstitution(data.institution || '');
+      }
+    };
+    loadData();
+  }, []);
+
+  const handleContinue = async () => {
     if (fullName && email && institution) {
+      const saved = await AsyncStorage.getItem('signupData');
+      const data = saved ? JSON.parse(saved) : {};
+      await AsyncStorage.setItem('signupData', JSON.stringify({ ...data, fullName, email, institution }));
       router.replace("/Author/SignUp2");
     }
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <>
+      <StaticBackgroundPattern />
+      <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.keyboardView}
@@ -121,6 +140,7 @@ export default function SignUp1() {
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
+    </>
   );
 }
 
