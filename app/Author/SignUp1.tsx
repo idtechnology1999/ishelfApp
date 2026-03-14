@@ -21,6 +21,7 @@ export default function SignUp1() {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [institution, setInstitution] = useState("");
+  const [referralCode, setReferralCode] = useState("");
 
   useEffect(() => {
     const loadData = async () => {
@@ -30,6 +31,7 @@ export default function SignUp1() {
         setFullName(data.fullName || '');
         setEmail(data.email || '');
         setInstitution(data.institution || '');
+        setReferralCode(data.referralCode || '');
       }
     };
     loadData();
@@ -39,7 +41,7 @@ export default function SignUp1() {
     if (fullName && email && institution) {
       const saved = await AsyncStorage.getItem('signupData');
       const data = saved ? JSON.parse(saved) : {};
-      await AsyncStorage.setItem('signupData', JSON.stringify({ ...data, fullName, email, institution }));
+      await AsyncStorage.setItem('signupData', JSON.stringify({ ...data, fullName, email, institution, referralCode: referralCode.trim().toUpperCase() }));
       router.replace("/Author/SignUp2");
     }
   };
@@ -125,6 +127,21 @@ export default function SignUp1() {
                 autoCapitalize="words"
                 autoCorrect={false}
                 accessibilityLabel="Institution input"
+              />
+            </View>
+
+            {/* Referral Code Input */}
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Referral Code <Text style={{ color: '#999', fontWeight: '400' }}>(Optional)</Text></Text>
+              <TextInput
+                style={styles.input}
+                placeholder="e.g. ISH-A3F9B2C1"
+                placeholderTextColor="#bbb"
+                value={referralCode}
+                onChangeText={setReferralCode}
+                autoCapitalize="characters"
+                autoCorrect={false}
+                accessibilityLabel="Referral code input"
               />
             </View>
 

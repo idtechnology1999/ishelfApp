@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React from "react";
+import React, { useEffect } from "react";
 import {
   StyleSheet,
   Text,
@@ -8,9 +8,22 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { authorAPI } from "../../authorAPI";
 
 export default function UploadSuccessful() {
   const router = useRouter();
+
+  useEffect(() => {
+    completeUpload();
+  }, []);
+
+  const completeUpload = async () => {
+    try {
+      await authorAPI.completeBookUpload();
+    } catch (error) {
+      console.error('Failed to mark upload as complete:', error);
+    }
+  };
 
   const handleContinue = () => {
     router.push("/Author/(AuthorTabs)");
@@ -25,7 +38,7 @@ export default function UploadSuccessful() {
         
         <Text style={styles.title}>Upload Successful!</Text>
         <Text style={styles.subtitle}>
-          Your book has been uploaded successfully
+          Your book will be verified within 30 minutes. Check your book back later.
         </Text>
         
         <TouchableOpacity 

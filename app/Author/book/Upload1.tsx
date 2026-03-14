@@ -1,67 +1,58 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React, { useState, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import {
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
   ScrollView,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { authorAPI } from "../../authorAPI";
 
 export default function Upload1() {
   const router = useRouter();
-  const [isbn, setIsbn] = useState(["", "", "", "", "", "", "", "", "", ""]);
-  const [selectedOption, setSelectedOption] = useState("ISBN For Books");
-  const inputRefs = useRef<(TextInput | null)[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [hasPaid, setHasPaid] = useState(false);
 
-  const handleIsbnChange = (text: string, index: number) => {
-    // Only allow single character
-    if (text.length > 1) {
-      text = text.slice(-1);
-    }
+  useEffect(() => {
+    checkPaymentStatus();
+  }, []);
 
-    const newIsbn = [...isbn];
-    newIsbn[index] = text;
-    setIsbn(newIsbn);
-
-    // Auto-focus next input
-    if (text && index < 9) {
-      inputRefs.current[index + 1]?.focus();
+  const checkPaymentStatus = async () => {
+    try {
+      const response = await authorAPI.checkActivePayment();
+      setHasPaid(response.hasActivePayment);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleKeyPress = (e: any, index: number) => {
-    // Handle backspace
-    if (e.nativeEvent.key === "Backspace" && !isbn[index] && index > 0) {
-      inputRefs.current[index - 1]?.focus();
+  const handleProceed = () => {
+    if (hasPaid) {
+      router.push("/Author/book/UploadContinue1");
+    } else {
+      router.push("/Author/book/payment");
     }
   };
 
-  const handleVerify = () => {
-    const fullIsbn = isbn.join("");
-    if (fullIsbn.length === 10) {
-      console.log("Verifying ISBN:", fullIsbn);
-      // Add verification logic here
-    }
-  };
-
-  const handlePayUploadFee = () => {
-    // Navigate to payment or next step
-    // router.push("/book/Upload2");
-  };
-
-  const handleProceedToPayment = () => {
-    // Navigate to payment screen
-    router.push("/Author/book/payment");
-  };
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#E85D54" />
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
-        {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity
             style={styles.backButton}
@@ -73,113 +64,28 @@ export default function Upload1() {
           <View style={styles.headerSpacer} />
         </View>
 
-        {/* Info Text */}
         <View style={styles.infoContainer}>
-          <Text style={styles.infoText}>
-            To Publish your book on i-shelf, a one-time upload fee is required
-          </Text>
+          {hasPaid ? (
+            <View style={styles.paidBadge}>
+              <Ionicons name="checkmark-circle" size={24} color="#22c55e" />
+              <Text style={styles.paidText}>
+                Your one-time payment has been paid
+              </Text>
+            </View>
+          ) : (
+            <Text style={styles.infoText}>
+              To Publish your book on i-shelf, a one-time upload fee of ₦7,000 is required
+            </Text>
+          )}
         </View>
 
-        {/* ISBN Section */}
-        <Text style={styles.sectionTitle}>
-          Do you already have a valid ISBN or ISSN?
-        </Text>
-
-        <Text style={styles.label}>Enter Here</Text>
-        <View style={styles.isbnContainer}>
-          {isbn.map((digit, index) => (
-            <TextInput
-              key={index}
-              ref={(ref) => {
-                inputRefs.current[index] = ref;
-              }}
-              style={styles.isbnInput}
-              value={digit}
-              onChangeText={(text) => handleIsbnChange(text, index)}
-              onKeyPress={(e) => handleKeyPress(e, index)}
-              keyboardType="default"
-              maxLength={1}
-              selectTextOnFocus
-              accessibilityLabel={`ISBN digit ${index + 1}`}
-            />
-          ))}
-        </View>
-
-        {/* Verify Button */}
-        <TouchableOpacity style={styles.verifyButton} onPress={handleVerify}>
-          <Text style={styles.verifyButtonText}>Verify</Text>
-        </TouchableOpacity>
-
-        {/* Pay Upload Fee Button */}
-        <TouchableOpacity
-          style={styles.payUploadButton}
-          onPress={handlePayUploadFee}
-        >
-          <Text style={styles.payUploadButtonText}>Pay Upload fee</Text>
-        </TouchableOpacity>
-
-        {/* Publishing Setup Section */}
-        <Text style={styles.sectionTitle}>Complete your publishing Setup</Text>
-        <Text style={styles.setupDescription}>
-          Pay once. Upload your book and get your official ISBN/ISSN in a single transaction
-        </Text>
-
-        <View style={styles.feeRow}>
-          <Text style={styles.feeLabel}>Upload fee</Text>
-          <Text style={styles.feeAmount}>₦30,000</Text>
-        </View>
-
-        {/* Radio Options */}
-        <Text style={styles.radioQuestion}>Do you Need an ISBN or ISSN Number?</Text>
-
-        <TouchableOpacity
-          style={styles.radioOption}
-          onPress={() => setSelectedOption("ISBN For Books")}
-        >
-          <View style={styles.radioCircle}>
-            {selectedOption === "ISBN For Books" && (
-              <View style={styles.radioSelected} />
-            )}
-          </View>
-          <Text style={styles.radioText}>ISBN For Books</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.radioOption}
-          onPress={() => setSelectedOption("ISSN For Journals")}
-        >
-          <View style={styles.radioCircle}>
-            {selectedOption === "ISSN For Journals" && (
-              <View style={styles.radioSelected} />
-            )}
-          </View>
-          <Text style={styles.radioText}>ISSN For Journals</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.radioOption}
-          onPress={() => setSelectedOption("I already have one")}
-        >
-          <View style={styles.radioCircle}>
-            {selectedOption === "I already have one" && (
-              <View style={styles.radioSelected} />
-            )}
-          </View>
-          <Text style={styles.radioText}>I already have one</Text>
-        </TouchableOpacity>
-
-        {/* Total Amount */}
-        <View style={styles.totalRow}>
-          <Text style={styles.totalLabel}>Total Amount</Text>
-          <Text style={styles.totalAmount}>₦50,000</Text>
-        </View>
-
-        {/* Proceed to Payment Button */}
         <TouchableOpacity
           style={styles.proceedButton}
-          onPress={handleProceedToPayment}
+          onPress={handleProceed}
         >
-          <Text style={styles.proceedButtonText}>Proceed to Payment</Text>
+          <Text style={styles.proceedButtonText}>
+            {hasPaid ? "Continue Upload" : "Proceed to Payment (₦7,000)"}
+          </Text>
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
@@ -190,6 +96,12 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#FFFFFF",
+  },
+
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
   },
 
   header: {
@@ -207,7 +119,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: "600",
-    color: "#E85D54", // I-SHELF coral red
+    color: "#E85D54",
     flex: 1,
     textAlign: "center",
   },
@@ -218,190 +130,41 @@ const styles = StyleSheet.create({
 
   infoContainer: {
     paddingHorizontal: 24,
-    marginBottom: 24,
+    marginTop: 40,
+    marginBottom: 40,
   },
 
   infoText: {
     fontSize: 14,
     lineHeight: 20,
     color: "#666",
-  },
-
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#333",
-    paddingHorizontal: 24,
-    marginBottom: 16,
-  },
-
-  label: {
-    fontSize: 14,
-    fontWeight: "500",
-    color: "#333",
-    paddingHorizontal: 24,
-    marginBottom: 12,
-  },
-
-  isbnContainer: {
-    flexDirection: "row",
-    paddingHorizontal: 24,
-    gap: 8,
-    marginBottom: 20,
-  },
-
-  isbnInput: {
-    flex: 1,
-    height: 50,
-    borderWidth: 1,
-    borderColor: "#FFD4D1", // Light coral border
-    borderRadius: 8,
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#333",
     textAlign: "center",
-    backgroundColor: "#FFFFFF",
   },
 
-  verifyButton: {
-    height: 56,
-    backgroundColor: "#FFFFFF",
-    borderWidth: 2,
-    borderColor: "#E85D54", // I-SHELF coral red
-    borderRadius: 28,
-    alignItems: "center",
-    justifyContent: "center",
-    marginHorizontal: 24,
-    marginBottom: 12,
-  },
-
-  verifyButtonText: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#E85D54", // I-SHELF coral red
-  },
-
-  payUploadButton: {
-    height: 56,
-    backgroundColor: "#E85D54", // I-SHELF coral red
-    borderRadius: 28,
-    alignItems: "center",
-    justifyContent: "center",
-    marginHorizontal: 24,
-    marginBottom: 32,
-    shadowColor: "#E85D54",
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-
-  payUploadButtonText: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#FFFFFF",
-  },
-
-  setupDescription: {
-    fontSize: 14,
-    lineHeight: 20,
-    color: "#666",
-    paddingHorizontal: 24,
-    marginBottom: 16,
-  },
-
-  feeRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 24,
-    marginBottom: 24,
-  },
-
-  feeLabel: {
-    fontSize: 15,
-    color: "#333",
-  },
-
-  feeAmount: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#333",
-  },
-
-  radioQuestion: {
-    fontSize: 15,
-    fontWeight: "500",
-    color: "#333",
-    paddingHorizontal: 24,
-    marginBottom: 16,
-  },
-
-  radioOption: {
+  paidBadge: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 24,
-    paddingVertical: 12,
+    justifyContent: "center",
+    backgroundColor: "#f0fdf4",
+    padding: 16,
+    borderRadius: 12,
     gap: 12,
   },
 
-  radioCircle: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: "#E85D54", // I-SHELF coral red
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  radioSelected: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: "#E85D54", // I-SHELF coral red
-  },
-
-  radioText: {
-    fontSize: 15,
-    color: "#333",
-  },
-
-  totalRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 24,
-    paddingVertical: 20,
-    marginTop: 16,
-    borderTopWidth: 1,
-    borderTopColor: "#FFD4D1", // Light coral border
-  },
-
-  totalLabel: {
+  paidText: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#333",
-  },
-
-  totalAmount: {
-    fontSize: 20,
-    fontWeight: "700",
-    color: "#E85D54", // I-SHELF coral red
+    color: "#22c55e",
   },
 
   proceedButton: {
     height: 56,
-    backgroundColor: "#E85D54", // I-SHELF coral red
+    backgroundColor: "#E85D54",
     borderRadius: 28,
     alignItems: "center",
     justifyContent: "center",
     marginHorizontal: 24,
-    marginTop: 24,
-    marginBottom: 32,
+    marginTop: 32,
     shadowColor: "#E85D54",
     shadowOffset: {
       width: 0,

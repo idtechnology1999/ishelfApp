@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   StyleSheet,
   Text,
@@ -11,19 +11,45 @@ import {
   KeyboardAvoidingView,
   Platform,
   Alert,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { authorAPI } from "../../authorAPI";
 
 export default function Upload5() {
   const router = useRouter();
   const [price, setPrice] = useState("");
-  const [discountPrice, setDiscountPrice] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleContinue = () => {
-    if (price) {
-      router.push("/Author/book/UploadContinue6");
-    } else {
+  useEffect(() => {
+    loadDraftBook();
+  }, []);
+
+  const loadDraftBook = async () => {
+    try {
+      const response = await authorAPI.getDraftBook();
+      if (response.book) {
+        setPrice(response.book.price?.toString() || "");
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const handleContinue = async () => {
+    if (!price) {
       Alert.alert("Required Field", "Please enter the pricing");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await authorAPI.uploadBook({ price: parseFloat(price) });
+      router.push("/Author/book/UploadContinue6");
+    } catch (error: any) {
+      Alert.alert("Error", error.response?.data?.message || "Failed to save book data");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -40,7 +66,7 @@ export default function Upload5() {
               style={styles.backButton}
               onPress={() => router.back()}
             >
-              <Ionicons name="chevron-back" size={28} color="#0A3D91" />
+              <Ionicons name="chevron-back" size={28} color="#E85D54" />
             </TouchableOpacity>
             <Text style={styles.headerTitle}>Upload</Text>
             <View style={styles.headerSpacer} />
@@ -50,7 +76,7 @@ export default function Upload5() {
           <View style={styles.progressSection}>
             <View style={styles.progressHeader}>
               <Text style={styles.progressTitle}>Pricing & Sales Settings</Text>
-              <Text style={styles.progressCounter}>4/6</Text>
+              <Text style={styles.progressCounter}>5/6</Text>
             </View>
             <View style={styles.progressBarContainer}>
               <View style={styles.progressBarFilled} />
@@ -60,26 +86,14 @@ export default function Upload5() {
 
           {/* Form */}
           <View style={styles.form}>
-            {/* Pricing & Sales Settings */}
+            {/* Pricing */}
             <View style={styles.inputContainer}>
-              <Text style={styles.label}>Pricing & Sales Settings</Text>
+              <Text style={styles.label}>Book Price (₦)</Text>
               <TextInput
                 style={styles.input}
                 value={price}
                 onChangeText={setPrice}
-                placeholder=""
-                keyboardType="numeric"
-              />
-            </View>
-
-            {/* Discount Price */}
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>Discount Price</Text>
-              <TextInput
-                style={styles.input}
-                value={discountPrice}
-                onChangeText={setDiscountPrice}
-                placeholder=""
+                placeholder="Enter price in Naira"
                 keyboardType="numeric"
               />
             </View>
@@ -89,10 +103,15 @@ export default function Upload5() {
         {/* Continue Button - Fixed at bottom */}
         <View style={styles.footer}>
           <TouchableOpacity
-            style={styles.continueButton}
+            style={[styles.continueButton, loading && styles.buttonDisabled]}
             onPress={handleContinue}
+            disabled={loading}
           >
-            <Text style={styles.continueButtonText}>Continue</Text>
+            {loading ? (
+              <ActivityIndicator color="#FFFFFF" />
+            ) : (
+              <Text style={styles.continueButtonText}>Continue</Text>
+            )}
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
@@ -125,7 +144,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: "600",
-    color: "#0A3D91",
+    color: "#E85D54",
     flex: 1,
     textAlign: "center",
   },
@@ -149,7 +168,7 @@ const styles = StyleSheet.create({
   progressTitle: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#0A3D91",
+    color: "#E85D54",
   },
 
   progressCounter: {
@@ -166,13 +185,13 @@ const styles = StyleSheet.create({
   },
 
   progressBarFilled: {
-    flex: 4,
-    backgroundColor: "#0A3D91",
+    flex: 5,
+    backgroundColor: "#E85D54",
   },
 
   progressBarEmpty: {
-    flex: 2,
-    backgroundColor: "#D0E4FF",
+    flex: 1,
+    backgroundColor: "#FFE8E6",
   },
 
   form: {
@@ -194,7 +213,7 @@ const styles = StyleSheet.create({
   input: {
     height: 52,
     borderWidth: 1,
-    borderColor: "#D0D7E2",
+    borderColor: "#FFD4D1",
     borderRadius: 12,
     paddingHorizontal: 16,
     fontSize: 16,
@@ -211,20 +230,32 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
     backgroundColor: "#FFFFFF",
     borderTopWidth: 1,
-    borderTopColor: "#E5E5E5",
+    borderTopColor: "#FFD4D1",
   },
 
   continueButton: {
     height: 56,
-    backgroundColor: "#0A3D91",
+    backgroundColor: "#E85D54",
     borderRadius: 28,
     alignItems: "center",
     justifyContent: "center",
+    shadowColor: "#E85D54",
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 4,
   },
 
   continueButtonText: {
     fontSize: 18,
     fontWeight: "600",
     color: "#FFFFFF",
+  },
+
+  buttonDisabled: {
+    opacity: 0.6,
   },
 });

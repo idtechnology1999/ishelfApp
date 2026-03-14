@@ -1,17 +1,36 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
   Image,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import { readerBooks } from "../../readerAPI";
 
 export default function Library() {
   const router = useRouter();
+  const [purchaseCount, setPurchaseCount] = useState(0);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadPurchaseCount();
+  }, []);
+
+  const loadPurchaseCount = async () => {
+    try {
+      const data = await readerBooks.getMyPurchases();
+      setPurchaseCount(data.purchases?.length || 0);
+    } catch (error) {
+      console.error('Failed to load purchases:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleViewPurchasedBooks = () => {
     router.push("/Reader/Library/PurchasedBooks");
@@ -21,9 +40,50 @@ export default function Library() {
     router.push("/Reader/Library/DownloadedBooks");
   };
 
+  const renderContent = () => {
+    if (loading) {
+      return (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#E85D54" />
+        </View>
+      );
+    }
+    return (
+      <View>
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Purchased Books</Text>
+            <View style={styles.countBadge}>
+              <Text style={styles.countText}>{purchaseCount}</Text>
+            </View>
+          </View>
+          <View style={styles.booksContainer}>
+            <Image source={require("../../../assets/images/categoriespic.png")} style={styles.booksImage} resizeMode="contain" />
+            <TouchableOpacity style={styles.viewAllButton} onPress={handleViewPurchasedBooks}>
+              <Text style={styles.viewAllText}>View All</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Downloaded Books</Text>
+            <View style={styles.countBadge}>
+              <Text style={styles.countText}>{purchaseCount}</Text>
+            </View>
+          </View>
+          <View style={styles.booksContainer}>
+            <Image source={require("../../../assets/images/categoriespic.png")} style={styles.booksImage} resizeMode="contain" />
+            <TouchableOpacity style={styles.viewAllButton} onPress={handleViewDownloadedBooks}>
+              <Text style={styles.viewAllText}>View All</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    );
+  };
+
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()}>
           <Ionicons name="chevron-back" size={28} color="#E85D54" />
@@ -31,44 +91,8 @@ export default function Library() {
         <Text style={styles.headerTitle}>Library</Text>
         <View style={{ width: 28 }} />
       </View>
-
-      {/* Content */}
       <View style={styles.content}>
-        {/* Purchased Books Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Purchased Books</Text>
-          <View style={styles.booksContainer}>
-            <Image
-              source={require("../../../assets/images/categoriespic.png")}
-              style={styles.booksImage}
-              resizeMode="contain"
-            />
-            <TouchableOpacity
-              style={styles.viewAllButton}
-              onPress={handleViewPurchasedBooks}
-            >
-              <Text style={styles.viewAllText}>View All</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* Downloaded Books Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Downloaded Books</Text>
-          <View style={styles.booksContainer}>
-            <Image
-              source={require("../../../assets/images/categoriespic.png")}
-              style={styles.booksImage}
-              resizeMode="contain"
-            />
-            <TouchableOpacity
-              style={styles.viewAllButton}
-              onPress={handleViewDownloadedBooks}
-            >
-              <Text style={styles.viewAllText}>View All</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
+        {renderContent()}
       </View>
     </SafeAreaView>
   );
@@ -100,11 +124,27 @@ const styles = StyleSheet.create({
   section: {
     marginBottom: 40,
   },
+  sectionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    marginBottom: 20,
+  },
   sectionTitle: {
     fontSize: 18,
     fontWeight: "600",
     color: "#000",
-    marginBottom: 20,
+  },
+  countBadge: {
+    backgroundColor: "#E85D54",
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  countText: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: "#FFFFFF",
   },
   booksContainer: {
     flexDirection: "row",
@@ -133,5 +173,9 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "700",
     color: "#FFFFFF",
+  },
+  loadingContainer: {
+    paddingVertical: 60,
+    alignItems: 'center',
   },
 });

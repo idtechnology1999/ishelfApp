@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   StyleSheet,
   Text,
@@ -8,43 +8,42 @@ import {
   View,
   ScrollView,
   Image,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { authorAPI } from "../../authorAPI";
 
 export default function Earning() {
   const router = useRouter();
+  const [stats, setStats] = useState({ totalEarnings: 0, monthlyEarnings: 0, balance: 0 });
+  const [transactions, setTransactions] = useState<any[]>([]);
+  const [bankAccount, setBankAccount] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
-  const transactions = [
-    {
-      id: 1,
-      title: "Abstract Color Poster",
-      date: "12 Nov 2025",
-      amount: "+₦1500",
-      status: "Successful",
-      statusColor: "#4CAF50",
-    },
-    {
-      id: 2,
-      title: "Abstract Color Poster",
-      date: "12 Nov 2025",
-      amount: "+₦1500",
-      status: "Pending",
-      statusColor: "#FFA726",
-    },
-    {
-      id: 3,
-      title: "Abstract Color Poster",
-      date: "12 Nov 2025",
-      amount: "+₦1500",
-      status: "Failed",
-      statusColor: "#EF5350",
-    },
-  ];
+  useEffect(() => {
+    loadEarningsData();
+  }, []);
 
-  const withdrawals = [
-    { id: 1, amount: "-₦50,000", date: "12 Nov 2025" },
-    { id: 2, amount: "-₦50,000", date: "12 Nov 2025" },
-  ];
+  const loadEarningsData = async () => {
+    try {
+      const [statsData, purchasesData, accountData] = await Promise.all([
+        authorAPI.getDashboardStats(),
+        authorAPI.getLatestPurchases(),
+        authorAPI.getSubaccountStatus()
+      ]);
+      setStats(statsData);
+      setTransactions(purchasesData.purchases);
+      setBankAccount(accountData.bankAccount);
+    } catch (error) {
+      console.error('Failed to load earnings data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getMonthName = () => {
+    return new Date().toLocaleString('default', { month: 'long' });
+  };
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -62,31 +61,34 @@ export default function Earning() {
         </View>
 
         {/* Earnings Cards */}
-        <View style={styles.cardsContainer}>
-          {/* Total Earnings Card */}
-          <View style={[styles.card, styles.cardBlue]}>
-            <Ionicons name="layers-outline" size={28} color="#E85D54" />
-            <Text style={styles.cardLabel}>Total Earnings</Text>
-            <Text style={styles.cardAmount}>₦234,500</Text>
+        {loading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#E85D54" />
           </View>
+        ) : (
+          <View style={styles.cardsContainer}>
+            <View style={[styles.card, styles.cardBlue]}>
+              <Ionicons name="layers-outline" size={28} color="#E85D54" />
+              <Text style={styles.cardLabel}>Total Earnings</Text>
+              <Text style={styles.cardAmount}>₦{stats.totalEarnings.toLocaleString()}</Text>
+            </View>
 
-          {/* July Earnings Card */}
-          <View style={[styles.card, styles.cardGreen]}>
-            <Ionicons name="layers-outline" size={28} color="#E85D54" />
-            <Text style={styles.cardLabel}>July Earnings</Text>
-            <Text style={styles.cardAmount}>₦64,500</Text>
-          </View>
+            <View style={[styles.card, styles.cardGreen]}>
+              <Ionicons name="layers-outline" size={28} color="#E85D54" />
+              <Text style={styles.cardLabel}>{getMonthName()} Earnings</Text>
+              <Text style={styles.cardAmount}>₦{stats.monthlyEarnings.toLocaleString()}</Text>
+            </View>
 
-          {/* Balance Card */}
-          <View style={[styles.card, styles.cardPink]}>
-            <Ionicons name="layers-outline" size={28} color="#E85D54" />
-            <Text style={styles.cardLabel}>Balance</Text>
-            <Text style={styles.cardAmount}>₦24,500</Text>
-            <TouchableOpacity onPress={() => router.push("/Author/Withdraw/WithdrawScreen")}>
-              <Text style={styles.withdrawLink}>Withdraw</Text>
-            </TouchableOpacity>
+            <View style={[styles.card, styles.cardPink]}>
+              <Ionicons name="layers-outline" size={28} color="#E85D54" />
+              <Text style={styles.cardLabel}>Balance</Text>
+              <Text style={styles.cardAmount}>₦{stats.balance.toLocaleString()}</Text>
+              <TouchableOpacity onPress={() => router.push("/Author/Withdraw/WithdrawScreen")}>
+                <Text style={styles.withdrawLink}>Withdraw</Text>
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
+        )}
 
         {/* Recent Transactions */}
         <View style={styles.section}>
@@ -97,58 +99,61 @@ export default function Earning() {
             </TouchableOpacity>
           </View>
 
-          {transactions.map((transaction) => (
-            <View key={transaction.id} style={styles.transactionCard}>
-              <Image
-                source={require('../../../assets/images/book-placeholder.png')}
-                style={styles.transactionImage}
-              />
-              <View style={styles.transactionDetails}>
-                <Text style={styles.transactionTitle}>{transaction.title}</Text>
-                <Text style={styles.transactionDate}>{transaction.date}</Text>
+          {transactions.length === 0 ? (
+            <Text style={styles.emptyText}>No transactions yet</Text>
+          ) : (
+            transactions.map((transaction) => (
+              <View key={transaction.id} style={styles.transactionCard}>
+                {transaction.coverImage ? (
+                  <Image source={{ uri: `${process.env.EXPO_PUBLIC_API_URL}/${transaction.coverImage}` }} style={styles.transactionImage} />
+                ) : (
+                  <Image source={require('../../../assets/images/book-placeholder.png')} style={styles.transactionImage} />
+                )}
+                <View style={styles.transactionDetails}>
+                  <Text style={styles.transactionTitle}>{transaction.title}</Text>
+                  <Text style={styles.transactionDate}>{new Date(transaction.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</Text>
+                </View>
+                <View style={styles.transactionRight}>
+                  <Text style={styles.transactionAmount}>₦{transaction.amount.toLocaleString()}</Text>
+                  <Text style={[styles.transactionStatus, { color: '#4CAF50' }]}>Completed</Text>
+                </View>
               </View>
-              <View style={styles.transactionRight}>
-                <Text style={styles.transactionAmount}>{transaction.amount}</Text>
-                <Text style={[styles.transactionStatus, { color: transaction.statusColor }]}>
-                  {transaction.status}
-                </Text>
-              </View>
-            </View>
-          ))}
+            ))
+          )}
         </View>
 
-        {/* Withdrawal Section */}
+        {/* Bank Account Section */}
         <View style={styles.section}>
-          <View style={styles.withdrawalHeader}>
-            <Text style={styles.sectionTitle}>Withdrawal</Text>
-            <View style={styles.withdrawalBadge}>
-              <Ionicons name="arrow-up" size={16} color="#EF5350" />
-              <Text style={styles.withdrawalBadgeText}>-₦50,000</Text>
-            </View>
-          </View>
-
-          <View style={styles.bankCard}>
-            <View style={styles.bankInfo}>
-              <Text style={styles.bankName}>Polaris Bank</Text>
-              <Text style={styles.accountNumber}>0984737274</Text>
-              <Text style={styles.accountName}>Tunde Afolayan</Text>
-            </View>
-            <TouchableOpacity>
-              <Text style={styles.editText}>Edit</Text>
-            </TouchableOpacity>
-          </View>
-
-          <Text style={styles.withdrawalTitle}>Last Withdrawal Activity</Text>
-
-          {withdrawals.map((withdrawal) => (
-            <View key={withdrawal.id} style={styles.withdrawalItem}>
-              <View style={styles.withdrawalIcon}>
-                <Ionicons name="arrow-up" size={20} color="#EF5350" />
+          <Text style={styles.sectionTitle}>Bank Account</Text>
+          {bankAccount && bankAccount.accountNumber ? (
+            <View style={styles.bankCard}>
+              <View style={styles.bankInfo}>
+                <Text style={styles.bankName}>{bankAccount.bankName}</Text>
+                <Text style={styles.accountNumber}>{bankAccount.accountNumber}</Text>
+                <Text style={styles.accountName}>{bankAccount.accountName}</Text>
               </View>
-              <Text style={styles.withdrawalAmount}>{withdrawal.amount}</Text>
-              <Text style={styles.withdrawalDate}>{withdrawal.date}</Text>
+              <View style={styles.bankActions}>
+                <Ionicons name="checkmark-circle" size={20} color="#4CAF50" style={{ marginBottom: 4 }} />
+                <TouchableOpacity onPress={() => router.push("/Author/Withdraw/WithdrawScreen")}>
+                  <Text style={styles.editText}>Withdraw</Text>
+                </TouchableOpacity>
+              </View>
             </View>
-          ))}
+          ) : (
+            <TouchableOpacity 
+              style={styles.setupBankCard}
+              onPress={() => router.push("/Author/Withdraw/WithdrawScreen")}
+            >
+              <View style={styles.setupBankContent}>
+                <Ionicons name="add-circle" size={24} color="#E85D54" />
+                <View style={styles.setupBankText}>
+                  <Text style={styles.setupBankTitle}>Setup Bank Account</Text>
+                  <Text style={styles.setupBankDesc}>Add your bank details to withdraw funds</Text>
+                </View>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color="#E85D54" />
+            </TouchableOpacity>
+          )}
         </View>
 
         {/* Withdraw Now Button */}
@@ -190,7 +195,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 20,
     fontWeight: "600",
-    color: "#E85D54", // I-SHELF coral red
+    color: "#E85D54",
     flex: 1,
     textAlign: "center",
   },
@@ -215,15 +220,15 @@ const styles = StyleSheet.create({
   },
 
   cardBlue: {
-    backgroundColor: "#FFE8E6", // Light coral
+    backgroundColor: "#FFE8E6",
   },
 
   cardGreen: {
-    backgroundColor: "#FFF4E6", // Light warm beige
+    backgroundColor: "#FFF4E6",
   },
 
   cardPink: {
-    backgroundColor: "#FFD4D1", // Light coral pink
+    backgroundColor: "#FFD4D1",
   },
 
   cardLabel: {
@@ -241,7 +246,7 @@ const styles = StyleSheet.create({
 
   withdrawLink: {
     fontSize: 13,
-    color: "#E85D54", // I-SHELF coral red
+    color: "#E85D54",
     textDecorationLine: "underline",
     marginTop: 4,
   },
@@ -262,11 +267,12 @@ const styles = StyleSheet.create({
     fontSize: 17,
     fontWeight: "600",
     color: "#000000",
+    marginBottom: 16,
   },
 
   seeAllText: {
     fontSize: 14,
-    color: "#E85D54", // I-SHELF coral red
+    color: "#E85D54",
   },
 
   transactionCard: {
@@ -277,7 +283,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: "#FFD4D1", // Light coral border
+    borderColor: "#FFD4D1",
   },
 
   transactionImage: {
@@ -319,29 +325,6 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
 
-  withdrawalHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 16,
-  },
-
-  withdrawalBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#FFEBEE",
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
-    gap: 4,
-  },
-
-  withdrawalBadgeText: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#000000",
-  },
-
   bankCard: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -349,9 +332,47 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
     padding: 16,
     borderRadius: 12,
-    marginBottom: 24,
     borderWidth: 1,
-    borderColor: "#FFD4D1", // Light coral border
+    borderColor: "#FFD4D1",
+  },
+
+  bankActions: {
+    alignItems: "center",
+  },
+
+  setupBankCard: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    backgroundColor: "#FFF8F7",
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#FFD4D1",
+    borderStyle: "dashed",
+  },
+
+  setupBankContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1,
+    gap: 12,
+  },
+
+  setupBankText: {
+    flex: 1,
+  },
+
+  setupBankTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#E85D54",
+    marginBottom: 2,
+  },
+
+  setupBankDesc: {
+    fontSize: 13,
+    color: "#999999",
   },
 
   bankInfo: {
@@ -378,43 +399,14 @@ const styles = StyleSheet.create({
 
   editText: {
     fontSize: 14,
-    color: "#E85D54", // I-SHELF coral red
+    color: "#E85D54",
     fontWeight: "500",
   },
 
-  withdrawalTitle: {
-    fontSize: 17,
-    fontWeight: "600",
-    color: "#000000",
-    marginBottom: 16,
-  },
-
-  withdrawalItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: 12,
-  },
-
-  withdrawalIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "#FFEBEE",
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 12,
-  },
-
-  withdrawalAmount: {
-    flex: 1,
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#000000",
-  },
-
-  withdrawalDate: {
+  setupLink: {
     fontSize: 14,
-    color: "#666666",
+    color: "#E85D54",
+    fontWeight: "500",
   },
 
   buttonContainer: {
@@ -424,7 +416,7 @@ const styles = StyleSheet.create({
 
   withdrawButton: {
     height: 56,
-    backgroundColor: "#E85D54", // I-SHELF coral red
+    backgroundColor: "#E85D54",
     borderRadius: 28,
     alignItems: "center",
     justifyContent: "center",
@@ -442,5 +434,17 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "600",
     color: "#FFFFFF",
+  },
+
+  loadingContainer: {
+    paddingVertical: 60,
+    alignItems: 'center',
+  },
+
+  emptyText: {
+    textAlign: 'center',
+    color: '#999',
+    fontSize: 14,
+    paddingVertical: 20,
   },
 });

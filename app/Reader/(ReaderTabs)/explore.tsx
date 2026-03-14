@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -14,6 +14,7 @@ import GestureRecognizer from "react-native-swipe-gestures";
 
 export default function Explore() {
   const router = useRouter();
+  const [search, setSearch] = useState("");
 
   const swipeConfig = {
     velocityThreshold: 0.25,
@@ -29,6 +30,16 @@ export default function Explore() {
     { id: 6, title: "Arts & Humanities", color: "#E5E5E5" },
     { id: 7, title: "Career & Professional Development", color: "#C4D9F4" },
   ];
+
+  const handleSearch = () => {
+    if (search.trim()) {
+      router.push(`/Reader/courses/CourseMaterials?search=${encodeURIComponent(search)}`);
+    }
+  };
+
+  const handleCategoryPress = (category: string) => {
+    router.push(`/Reader/courses/CourseMaterials?category=${encodeURIComponent(category)}`);
+  };
 
   return (
     <GestureRecognizer
@@ -54,6 +65,9 @@ export default function Explore() {
               style={styles.searchInput}
               placeholder="Search by course/author/Title ISBN"
               placeholderTextColor="#999"
+              value={search}
+              onChangeText={setSearch}
+              onSubmitEditing={handleSearch}
             />
           </View>
 
@@ -63,7 +77,7 @@ export default function Explore() {
               <TouchableOpacity
                 key={category.id}
                 style={[styles.categoryCard, { backgroundColor: category.color }]}
-                onPress={() => router.push("/Reader/courses/CourseMaterials")}
+                onPress={() => handleCategoryPress(category.title)}
               >
                 <Text style={styles.categoryText}>{category.title}</Text>
                 <View style={styles.categoryPattern}>

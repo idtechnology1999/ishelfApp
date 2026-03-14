@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { authorAPI } from '../../authorAPI';
 import axios from 'axios';
-import { useAuthorAuth } from '../useAuthorAuth';
+import { useAuthorAuth } from '../_useAuthorAuth';
 import {
   StyleSheet,
   Text,

@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   StyleSheet,
   Text,
@@ -11,19 +11,45 @@ import {
   KeyboardAvoidingView,
   Platform,
   Alert,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { authorAPI } from "../../authorAPI";
 
 export default function Upload5() {
   const router = useRouter();
-  const [price, setPrice] = useState("");
-  const [discountPrice, setDiscountPrice] = useState("");
+  const [description, setDescription] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleContinue = () => {
-    if (price) {
-      router.push("/Author/book/UploadContinue6");
-    } else {
-      Alert.alert("Required Field", "Please enter the pricing");
+  useEffect(() => {
+    loadDraftBook();
+  }, []);
+
+  const loadDraftBook = async () => {
+    try {
+      const response = await authorAPI.getDraftBook();
+      if (response.book) {
+        setDescription(response.book.description || "");
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const handleContinue = async () => {
+    if (!description) {
+      Alert.alert("Required Field", "Please enter a description");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await authorAPI.uploadBook({ description });
+      router.push("/Author/book/UploadContinue5");
+    } catch (error: any) {
+      Alert.alert("Error", error.response?.data?.message || "Failed to save book data");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -49,7 +75,7 @@ export default function Upload5() {
           {/* Progress Section */}
           <View style={styles.progressSection}>
             <View style={styles.progressHeader}>
-              <Text style={styles.progressTitle}>Pricing & Sales Settings</Text>
+              <Text style={styles.progressTitle}>Book Description</Text>
               <Text style={styles.progressCounter}>4/6</Text>
             </View>
             <View style={styles.progressBarContainer}>
@@ -60,27 +86,17 @@ export default function Upload5() {
 
           {/* Form */}
           <View style={styles.form}>
-            {/* Pricing & Sales Settings */}
+            {/* Description */}
             <View style={styles.inputContainer}>
-              <Text style={styles.label}>Pricing & Sales Settings</Text>
+              <Text style={styles.label}>Book Description</Text>
               <TextInput
-                style={styles.input}
-                value={price}
-                onChangeText={setPrice}
-                placeholder=""
-                keyboardType="numeric"
-              />
-            </View>
-
-            {/* Discount Price */}
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>Discount Price</Text>
-              <TextInput
-                style={styles.input}
-                value={discountPrice}
-                onChangeText={setDiscountPrice}
-                placeholder=""
-                keyboardType="numeric"
+                style={[styles.input, styles.textArea]}
+                value={description}
+                onChangeText={setDescription}
+                placeholder="Enter a detailed description of your book"
+                multiline
+                numberOfLines={6}
+                textAlignVertical="top"
               />
             </View>
           </View>
@@ -89,10 +105,15 @@ export default function Upload5() {
         {/* Continue Button - Fixed at bottom */}
         <View style={styles.footer}>
           <TouchableOpacity
-            style={styles.continueButton}
+            style={[styles.continueButton, loading && styles.buttonDisabled]}
             onPress={handleContinue}
+            disabled={loading}
           >
-            <Text style={styles.continueButtonText}>Continue</Text>
+            {loading ? (
+              <ActivityIndicator color="#FFFFFF" />
+            ) : (
+              <Text style={styles.continueButtonText}>Continue</Text>
+            )}
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
@@ -234,5 +255,14 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "600",
     color: "#FFFFFF",
+  },
+
+  buttonDisabled: {
+    opacity: 0.6,
+  },
+
+  textArea: {
+    height: 120,
+    paddingTop: 12,
   },
 });

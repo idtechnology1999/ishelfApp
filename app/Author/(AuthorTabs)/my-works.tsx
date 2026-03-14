@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   StyleSheet,
   Text,
@@ -9,63 +9,46 @@ import {
   ScrollView,
   Image,
   TextInput,
+  ActivityIndicator,
+  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import GestureRecognizer from "react-native-swipe-gestures";
+import { authorAPI } from "../../authorAPI";
 
 export default function MyWorksTab() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
+  const [books, setBooks] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
   const swipeConfig = {
     velocityThreshold: 0.25,
     directionalOffsetThreshold: 70,
   };
 
-  const uploadedBooks = [
-    {
-      id: "1",
-      title: "Abstract Color Poster",
-      author: "Dr Ade-Ajayi",
-      price: "₦1500",
-      thumbnail: require('../../../assets/images/book-placeholder.png'),
-    },
-    {
-      id: "2",
-      title: "Abstract Color Poster",
-      author: "Dr Ade-Ajayi",
-      price: "₦1500",
-      thumbnail: require('../../../assets/images/book-placeholder.png'),
-    },
-    {
-      id: "3",
-      title: "Abstract Color Poster",
-      author: "Dr Ade-Ajayi",
-      price: "₦1500",
-      thumbnail: require('../../../assets/images/book-placeholder.png'),
-    },
-    {
-      id: "4",
-      title: "Abstract Color Poster",
-      author: "Dr Ade-Ajayi",
-      price: "₦1500",
-      thumbnail: require('../../../assets/images/book-placeholder.png'),
-    },
-    {
-      id: "5",
-      title: "Abstract Color Poster",
-      author: "Dr Ade-Ajayi",
-      price: "₦1500",
-      thumbnail: require('../../../assets/images/book-placeholder.png'),
-    },
-    {
-      id: "6",
-      title: "Abstract Color Poster",
-      author: "Dr Ade-Ajayi",
-      price: "₦1500",
-      thumbnail: require('../../../assets/images/book-placeholder.png'),
-    },
-  ];
+  useEffect(() => {
+    fetchBooks();
+  }, []);
+
+  const fetchBooks = async () => {
+    try {
+      setLoading(true);
+      const response = await authorAPI.getMyBooks();
+      setBooks(response.books || []);
+    } catch (error: any) {
+      Alert.alert("Error", "Failed to load books");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getImageSource = (coverImage: string) => {
+    if (coverImage) {
+      return { uri: `${process.env.EXPO_PUBLIC_API_URL}/${coverImage}` };
+    }
+    return require('../../../assets/images/book-placeholder.png');
+  };
 
   return (
     <GestureRecognizer
@@ -117,37 +100,47 @@ export default function MyWorksTab() {
 
           {/* Uploaded Books Section */}
           <Text style={styles.sectionTitle}>Uploaded Books</Text>
-          <View style={styles.booksGrid}>
-            {uploadedBooks.map((book) => (
-              <View key={book.id} style={styles.bookCard}>
-                <TouchableOpacity>
-                  <View style={styles.bookThumbnail}>
-                    <Image
-                      source={book.thumbnail}
-                      style={styles.bookImage}
-                      resizeMode="cover"
-                    />
-                  </View>
-                </TouchableOpacity>
-                <Text style={styles.bookAuthor}>{book.author}</Text>
-                <Text style={styles.bookTitle} numberOfLines={2}>
-                  {book.title}
-                </Text>
-                <View style={styles.bookFooter}>
-                  <View>
-                    <Text style={styles.priceLabel}>Price</Text>
-                    <Text style={styles.priceValue}>{book.price}</Text>
-                  </View>
-                  <TouchableOpacity
-                    style={styles.editButton}
-                    onPress={() => router.push(`/Author/book/detail`)}
-                  >
-                    <Text style={styles.editButtonText}>Edit</Text>
+          {loading ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color="#E85D54" />
+            </View>
+          ) : books.length === 0 ? (
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyText}>No books uploaded yet</Text>
+            </View>
+          ) : (
+            <View style={styles.booksGrid}>
+              {books.map((book) => (
+                <View key={book._id} style={styles.bookCard}>
+                  <TouchableOpacity onPress={() => router.push(`/Author/book/detail?id=${book._id}`)}>
+                    <View style={styles.bookThumbnail}>
+                      <Image
+                        source={getImageSource(book.coverImage)}
+                        style={styles.bookImage}
+                        resizeMode="cover"
+                      />
+                    </View>
                   </TouchableOpacity>
+                  <Text style={styles.bookAuthor}>{book.coAuthors || 'Author'}</Text>
+                  <Text style={styles.bookTitle} numberOfLines={2}>
+                    {book.title}
+                  </Text>
+                  <View style={styles.bookFooter}>
+                    <View>
+                      <Text style={styles.priceLabel}>Price</Text>
+                      <Text style={styles.priceValue}>₦{book.price || 0}</Text>
+                    </View>
+                    <TouchableOpacity
+                      style={styles.editButton}
+                      onPress={() => router.push(`/Author/book/edit?id=${book._id}`)}
+                    >
+                      <Text style={styles.editButtonText}>Edit</Text>
+                    </TouchableOpacity>
+                  </View>
                 </View>
-              </View>
-            ))}
-          </View>
+              ))}
+            </View>
+          )}
         </ScrollView>
       </SafeAreaView>
     </GestureRecognizer>
@@ -315,5 +308,20 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "600",
     color: "#FFFFFF",
+  },
+
+  loadingContainer: {
+    padding: 40,
+    alignItems: "center",
+  },
+
+  emptyContainer: {
+    padding: 40,
+    alignItems: "center",
+  },
+
+  emptyText: {
+    fontSize: 16,
+    color: "#999",
   },
 });

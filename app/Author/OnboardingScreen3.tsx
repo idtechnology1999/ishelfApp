@@ -2,18 +2,15 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React from "react";
 import {
-    Dimensions,
-    Image,
     StyleSheet,
     Text,
     TouchableOpacity,
     View,
 } from "react-native";
+import Svg, { Path, Line } from "react-native-svg";
 import { SafeAreaView } from "react-native-safe-area-context";
 import GestureRecognizer from "react-native-swipe-gestures";
 import { DynamicBackgroundPattern } from "../../components/BackgroundPattern";
-
-const { width } = Dimensions.get("window");
 
 export default function OnboardingScreenThree() {
   const router = useRouter();
@@ -49,13 +46,14 @@ export default function OnboardingScreenThree() {
             screenshots, no unauthorized sharing. You stay in control.
           </Text>
 
-          {/* Image */}
           <View style={styles.imageWrapper}>
-            <Image
-              source={require("../../assets/images/onboard3.png")}
-              style={styles.image}
-              resizeMode="contain"
-            />
+            <Svg width={120} height={288} viewBox="0 0 24 58">
+              <Path d="M9 4 Q12 2 15 4 L16 36 Q12 38 8 36 Z" fill="none" stroke="#E85D54" strokeWidth={1.4} />
+              <Path d="M9 4 Q12 1 15 4" fill="none" stroke="#E85D54" strokeWidth={1.4} />
+              <Path d="M8 36 L12 54 L16 36" fill="none" stroke="#E85D54" strokeWidth={1.4} strokeLinejoin="round" />
+              <Line x1="12" y1="42" x2="12" y2="54" stroke="#E85D54" strokeWidth={0.8} />
+              <Path d="M8.5 32 Q12 33.5 15.5 32" fill="none" stroke="#E85D54" strokeWidth={1} />
+            </Svg>
           </View>
         </View>
 
@@ -82,7 +80,7 @@ export default function OnboardingScreenThree() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "transparent",
+    backgroundColor: 'transparent',
   },
 
   backButton: {
@@ -115,12 +113,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     marginTop: 20,
-    backgroundColor: "transparent",
-  },
-
-  image: {
-    width: width * 0.75,
-    height: width * 0.75,
   },
 
   footer: {

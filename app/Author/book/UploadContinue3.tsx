@@ -4,20 +4,24 @@ import React, { useState } from "react";
 import {
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
   ScrollView,
   Alert,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as DocumentPicker from "expo-document-picker";
 import * as ImagePicker from "expo-image-picker";
+import { authorAPI } from "../../authorAPI";
 
 export default function Upload4() {
   const router = useRouter();
   const [coverImage, setCoverImage] = useState<any>(null);
   const [pdfFile, setPdfFile] = useState<any>(null);
-  const [extraFiles, setExtraFiles] = useState<any>(null);
+  const [pageCount, setPageCount] = useState("");
+  const [uploading, setUploading] = useState(false);
 
   const pickCoverImage = async () => {
     try {
@@ -51,27 +55,38 @@ export default function Upload4() {
     }
   };
 
-  const pickExtraFiles = async () => {
-    try {
-      const result = await DocumentPicker.getDocumentAsync({
-        type: ["application/pdf", "text/csv", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"],
-        copyToCacheDirectory: true,
-        multiple: true,
-      });
 
-      if (!result.canceled) {
-        setExtraFiles(result);
-      }
-    } catch (error) {
-      Alert.alert("Error", "Failed to pick files");
-    }
-  };
 
-  const handleContinue = () => {
-    if (coverImage && pdfFile) {
-      router.push("/Author/book/UploadContinue4");
-    } else {
+  const handleContinue = async () => {
+    if (!coverImage || !pdfFile) {
       Alert.alert("Required Files", "Please upload cover image and PDF file");
+      return;
+    }
+
+    if (!pageCount) {
+      Alert.alert("Required Field", "Please enter the number of pages");
+      return;
+    }
+
+    setUploading(true);
+    try {
+      // Upload cover image
+      await authorAPI.uploadCoverImage(coverImage.uri);
+      
+      // Upload PDF file
+      const pdfUri = pdfFile.assets ? pdfFile.assets[0].uri : pdfFile.uri;
+      await authorAPI.uploadPdfFile(pdfUri);
+      
+      // Save page count
+      await authorAPI.uploadBook({ pageCount: parseInt(pageCount) });
+      
+      Alert.alert("Success", "Files uploaded successfully!");
+      router.push("/Author/book/UploadContinue4");
+    } catch (error: any) {
+      console.error('Upload error:', error);
+      Alert.alert("Error", error.response?.data?.message || "Failed to upload files");
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -156,43 +171,32 @@ export default function Upload4() {
           </TouchableOpacity>
         </View>
 
-        {/* Optional Extra Files */}
+        {/* Page Count */}
         <View style={styles.uploadSection}>
-          <Text style={styles.uploadLabel}>
-            Optional extra files (materials, slides, worksheets)
-          </Text>
-          <TouchableOpacity
-            style={styles.uploadBox}
-            onPress={pickExtraFiles}
-          >
-            <Ionicons name="document-outline" size={40} color="#E85D54" />
-            <View style={styles.uploadTextContainer}>
-              <Text style={styles.uploadMainText}>
-                <Text style={styles.uploadLink}>Choose a file</Text>
-                <Text style={styles.uploadOr}> Or </Text>
-                <Text style={styles.uploadDrag}>Drag and Drop</Text>
-              </Text>
-              <Text style={styles.uploadSubText}>
-                CSV and DOC Formats up to 50MB
-              </Text>
-            </View>
-            {extraFiles && (
-              <View style={styles.fileSelectedContainer}>
-                <Ionicons name="checkmark-circle" size={20} color="#4CAF50" />
-                <Text style={styles.fileSelectedText}>Files selected</Text>
-              </View>
-            )}
-          </TouchableOpacity>
+          <Text style={styles.uploadLabel}>Number of Pages</Text>
+          <TextInput
+            style={styles.pageInput}
+            value={pageCount}
+            onChangeText={setPageCount}
+            placeholder="Enter total number of pages"
+            keyboardType="numeric"
+          />
         </View>
+
       </ScrollView>
 
       {/* Continue Button - Fixed at bottom */}
       <View style={styles.footer}>
         <TouchableOpacity
-          style={styles.continueButton}
+          style={[styles.continueButton, uploading && styles.buttonDisabled]}
           onPress={handleContinue}
+          disabled={uploading}
         >
-          <Text style={styles.continueButtonText}>Continue</Text>
+          {uploading ? (
+            <ActivityIndicator color="#FFFFFF" />
+          ) : (
+            <Text style={styles.continueButtonText}>Continue</Text>
+          )}
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -361,5 +365,20 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "600",
     color: "#FFFFFF",
+  },
+
+  buttonDisabled: {
+    opacity: 0.6,
+  },
+
+  pageInput: {
+    height: 52,
+    borderWidth: 1,
+    borderColor: "#FFD4D1",
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    fontSize: 16,
+    color: "#333",
+    backgroundColor: "#FFFFFF",
   },
 });

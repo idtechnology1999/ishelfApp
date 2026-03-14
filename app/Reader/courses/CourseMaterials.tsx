@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -7,31 +7,66 @@ import {
   TouchableOpacity,
   ScrollView,
   Image,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import GestureRecognizer from "react-native-swipe-gestures";
+import { readerBooks } from "../../readerAPI";
 
 export default function CourseMaterials() {
   const router = useRouter();
+  const params = useLocalSearchParams();
+  const [books, setBooks] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [category, setCategory] = useState(params.category as string || "");
+
+  useEffect(() => {
+    loadBooks();
+  }, []);
+
+  const loadBooks = async () => {
+    try {
+      const searchParam = params.search as string || "";
+      const categoryParam = params.category as string || "";
+      const data = await readerBooks.getAllBooks(searchParam, categoryParam);
+      setBooks(data.books);
+      if (searchParam) setSearch(searchParam);
+    } catch (error) {
+      console.error('Failed to load books:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSearch = async () => {
+    if (!search.trim()) return;
+    setLoading(true);
+    try {
+      const data = await readerBooks.getAllBooks(search, category);
+      setBooks(data.books);
+    } catch (error) {
+      console.error('Search failed:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const swipeConfig = {
     velocityThreshold: 0.25,
     directionalOffsetThreshold: 70,
   };
 
-  const books = [
-    { id: 1, author: "Dr Ade-Ajayi", title: "Abstract Color Poster", price: "N1500" },
-    { id: 2, author: "Dr Ade-Ajayi", title: "Abstract Color Poster", price: "N1500" },
-    { id: 3, author: "Dr Ade-Ajayi", title: "Abstract Color Poster", price: "N1500" },
-    { id: 4, author: "Dr Ade-Ajayi", title: "Abstract Color Poster", price: "N1500" },
-    { id: 5, author: "Dr Ade-Ajayi", title: "Abstract Color Poster", price: "N1500" },
-    { id: 6, author: "Dr Ade-Ajayi", title: "Abstract Color Poster", price: "N1500" },
-  ];
+  const handleAddToCart = (bookId: string) => {
+    router.push(`/Reader/courses/PreviewAddToCart?bookId=${bookId}`);
+  };
 
-  const handleAddToCart = () => {
-    router.push("Reader/courses/PreviewAddToCart");
+  const getHeaderTitle = () => {
+    if (category) return category;
+    if (search) return "Search Results";
+    return "All Books";
   };
 
   return (
@@ -46,7 +81,7 @@ export default function CourseMaterials() {
           <TouchableOpacity onPress={() => router.back()}>
             <Ionicons name="chevron-back" size={24} color="#E85D55" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Textbooks and Course Materials</Text>
+          <Text style={styles.headerTitle}>{getHeaderTitle()}</Text>
           <View style={{ width: 24 }} />
         </View>
 
@@ -58,42 +93,63 @@ export default function CourseMaterials() {
               style={styles.searchInput}
               placeholder="Search by course/author/Title ISBN"
               placeholderTextColor="#999"
+              value={search}
+              onChangeText={setSearch}
+              onSubmitEditing={handleSearch}
             />
           </View>
 
           {/* Books Grid */}
-          <View style={styles.booksGrid}>
-            {books.map((book) => (
-              <View key={book.id} style={styles.bookCard}>
-                <Image
-                  source={require("../../../assets/images/book-placeholder.png")}
-                  style={styles.bookImage}
-                  resizeMode="cover"
-                />
-                <View style={styles.bookInfo}>
-                  <Text style={styles.authorText}>{book.author}</Text>
-                  <Text style={styles.bookTitle} numberOfLines={2}>
-                    {book.title}
-                  </Text>
-                  <View style={styles.priceContainer}>
-                    <Text style={styles.priceLabel}>Price</Text>
-                    <Text style={styles.price}>{book.price}</Text>
-                  </View>
-                  <View style={styles.bookActions}>
-                    <TouchableOpacity
-                      style={styles.addToCartButton}
-                      onPress={handleAddToCart}
-                    >
-                      <Text style={styles.addToCartText}>Add to Cart</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.favoriteButton}>
-                      <Ionicons name="heart-outline" size={20} color="#E85D55" />
-                    </TouchableOpacity>
+          {loading ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color="#E85D55" />
+            </View>
+          ) : books.length === 0 ? (
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyText}>No books found</Text>
+            </View>
+          ) : (
+            <View style={styles.booksGrid}>
+              {books.map((book: any) => (
+                <View key={book._id} style={styles.bookCard}>
+                  {book.coverImage ? (
+                    <Image
+                      source={{ uri: `${process.env.EXPO_PUBLIC_API_URL}/${book.coverImage}` }}
+                      style={styles.bookImage}
+                      resizeMode="cover"
+                    />
+                  ) : (
+                    <Image
+                      source={require("../../../assets/images/book-placeholder.png")}
+                      style={styles.bookImage}
+                      resizeMode="cover"
+                    />
+                  )}
+                  <View style={styles.bookInfo}>
+                    <Text style={styles.authorText}>{book.authorId?.displayName || 'Unknown'}</Text>
+                    <Text style={styles.bookTitle} numberOfLines={2}>
+                      {book.title}
+                    </Text>
+                    <View style={styles.priceContainer}>
+                      <Text style={styles.priceLabel}>Price</Text>
+                      <Text style={styles.price}>₦{book.price?.toLocaleString()}</Text>
+                    </View>
+                    <View style={styles.bookActions}>
+                      <TouchableOpacity
+                        style={styles.addToCartButton}
+                        onPress={() => handleAddToCart(book._id)}
+                      >
+                        <Text style={styles.addToCartText}>Add to Cart</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity style={styles.favoriteButton}>
+                        <Ionicons name="heart-outline" size={20} color="#E85D55" />
+                      </TouchableOpacity>
+                    </View>
                   </View>
                 </View>
-              </View>
-            ))}
-          </View>
+              ))}
+            </View>
+          )}
         </ScrollView>
       </SafeAreaView>
     </GestureRecognizer>
@@ -224,5 +280,17 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "#FFFFFF",
+  },
+  loadingContainer: {
+    paddingVertical: 60,
+    alignItems: 'center',
+  },
+  emptyContainer: {
+    paddingVertical: 60,
+    alignItems: 'center',
+  },
+  emptyText: {
+    fontSize: 16,
+    color: '#999',
   },
 });

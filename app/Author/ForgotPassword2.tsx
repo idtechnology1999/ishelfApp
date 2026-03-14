@@ -11,14 +11,24 @@ import {
   Platform,
   ScrollView,
   Image,
+  ActivityIndicator,
+  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { authorAPI } from "../authorAPI";
 
 export default function ForgotPassword2() {
   const router = useRouter();
-  const [code, setCode] = useState(["", "", "", ""]);
-  const [timer, setTimer] = useState(52);
+  const [code, setCode] = useState(["", "", "", "", "", ""]);
+  const [timer, setTimer] = useState(600);
+  const [loading, setLoading] = useState(false);
+  const [email, setEmail] = useState("");
   const inputRefs = useRef<(TextInput | null)[]>([]);
+
+  useEffect(() => {
+    AsyncStorage.getItem('resetEmail').then(e => e && setEmail(e));
+  }, []);
 
   // Timer countdown
   useEffect(() => {
@@ -41,7 +51,7 @@ export default function ForgotPassword2() {
     setCode(newCode);
 
     // Auto-focus next input
-    if (text && index < 3) {
+    if (text && index < 5) {
       inputRefs.current[index + 1]?.focus();
     }
   };
@@ -53,18 +63,40 @@ export default function ForgotPassword2() {
     }
   };
 
-  const handleResend = () => {
-    // Reset timer and resend code logic
-    setTimer(52);
-    setCode(["", "", "", ""]);
-    inputRefs.current[0]?.focus();
+  const handleResend = async () => {
+    if (!email) return;
+    
+    setLoading(true);
+    try {
+      await authorAPI.forgotPassword(email);
+      setTimer(600);
+      setCode(["", "", "", "", "", ""]);
+      inputRefs.current[0]?.focus();
+      Alert.alert("Success", "New code sent!");
+    } catch (error: any) {
+      Alert.alert("Error", "Failed to resend code");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const fullCode = code.join("");
-    if (fullCode.length === 4) {
-      // Verify code and navigate
+    if (fullCode.length !== 6) {
+      Alert.alert("Error", "Please enter complete code");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await authorAPI.verifyCode(email, fullCode);
+      await AsyncStorage.setItem('resetCode', fullCode);
+      Alert.alert("Success", "Code verified!");
       router.replace("/Author/ForgotPassword3");
+    } catch (error: any) {
+      Alert.alert("Error", error.response?.data?.message || "Invalid code");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -107,6 +139,9 @@ export default function ForgotPassword2() {
 
             <Text style={styles.title}>Forgot Password</Text>
             <Text style={styles.subtitle}>Enter Code</Text>
+            {email && (
+              <Text style={styles.emailText}>OTP sent to {email}</Text>
+            )}
           </View>
 
           {/* Code Input */}
@@ -142,11 +177,16 @@ export default function ForgotPassword2() {
 
           {/* Submit Button */}
           <TouchableOpacity
-            style={styles.submitButton}
+            style={[styles.submitButton, loading && styles.buttonDisabled]}
             onPress={handleSubmit}
+            disabled={loading}
             accessibilityLabel="Submit code"
           >
-            <Text style={styles.submitButtonText}>Submit</Text>
+            {loading ? (
+              <ActivityIndicator color="#FFFFFF" />
+            ) : (
+              <Text style={styles.submitButtonText}>Submit</Text>
+            )}
           </TouchableOpacity>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -208,6 +248,14 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
 
+  emailText: {
+    fontSize: 14,
+    color: "#E85D54",
+    textAlign: "center",
+    marginTop: 8,
+    fontWeight: "500",
+  },
+
   codeContainer: {
     flexDirection: "row",
     justifyContent: "center",
@@ -216,7 +264,7 @@ const styles = StyleSheet.create({
   },
 
   codeInput: {
-    width: 70,
+    width: 50,
     height: 70,
     borderWidth: 2,
     borderColor: "#FFD4D1", // Light coral border
@@ -263,5 +311,9 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "600",
     color: "#FFFFFF",
+  },
+
+  buttonDisabled: {
+    opacity: 0.6,
   },
 });

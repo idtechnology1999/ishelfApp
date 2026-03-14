@@ -1,31 +1,118 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
   ScrollView,
+  ActivityIndicator,
+  Alert,
+  Linking,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { authorAPI } from "../../authorAPI";
 
 export default function Payment() {
   const router = useRouter();
-  const [selectedMethod, setSelectedMethod] = useState("Card");
+  const [loading, setLoading] = useState(false);
+  const [verifying, setVerifying] = useState(false);
+  const [email, setEmail] = useState('');
+  const [paymentReference, setPaymentReference] = useState('');
 
-  const handleProceed = () => {
-    if (selectedMethod === "Card") {
-      router.push("/Author/book/payment-successful");
-    } else if (selectedMethod === "Bank Transfer") {
-      router.push("/Author/book/payment-successful");
+  useEffect(() => {
+    loadAuthorData();
+    checkExistingPayment();
+  }, []);
+
+  const loadAuthorData = async () => {
+    const data = await AsyncStorage.getItem('authorData');
+    if (data) {
+      const author = JSON.parse(data);
+      setEmail(author.email);
+    }
+  };
+
+  const checkExistingPayment = async () => {
+    try {
+      const response = await authorAPI.checkActivePayment();
+      if (response.hasActivePayment) {
+        Alert.alert(
+          'Payment Already Completed',
+          'You have already paid for book upload. Continue to upload your book.',
+          [
+            { text: 'Continue', onPress: () => router.replace('/Author/book/UploadContinue1') }
+          ]
+        );
+      } else {
+        const reference = await AsyncStorage.getItem('paymentReference');
+        if (reference) {
+          setPaymentReference(reference);
+        }
+      }
+    } catch (error) {
+      console.error('Error checking payment:', error);
+    }
+  };
+
+  const handlePayment = async () => {
+    if (!email) {
+      Alert.alert('Error', 'Email not found');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await authorAPI.initializePayment(email, 7000);
+      const { authorization_url, reference } = response.data;
+
+      setPaymentReference(reference);
+      await AsyncStorage.setItem('paymentReference', reference);
+
+      const supported = await Linking.canOpenURL(authorization_url);
+      if (supported) {
+        await Linking.openURL(authorization_url);
+      } else {
+        Alert.alert('Error', 'Cannot open payment page');
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Payment initialization failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerifyPayment = async () => {
+    const reference = paymentReference || await AsyncStorage.getItem('paymentReference');
+    if (!reference) {
+      Alert.alert('Error', 'No payment to verify');
+      return;
+    }
+    verifyPayment(reference);
+  };
+
+  const verifyPayment = async (reference: string) => {
+    setVerifying(true);
+    try {
+      const response = await authorAPI.verifyPayment(reference);
+      if (response.success) {
+        await AsyncStorage.removeItem('paymentReference');
+        router.replace('/Author/book/payment-successful');
+      } else {
+        Alert.alert('Payment Failed', 'Please try again');
+      }
+    } catch (error) {
+      Alert.alert('Verification Error', 'Please contact support');
+    } finally {
+      setVerifying(false);
     }
   };
 
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
-        {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity
             style={styles.backButton}
@@ -37,48 +124,40 @@ export default function Payment() {
           <View style={styles.headerSpacer} />
         </View>
 
-        {/* Payment Method Section */}
-        <Text style={styles.sectionTitle}>Choose Payment Method</Text>
+        <View style={styles.infoContainer}>
+          <Text style={styles.infoTitle}>Upload Fee Payment</Text>
+          <Text style={styles.infoAmount}>₦7,000</Text>
+          <Text style={styles.infoDescription}>
+            One-time payment to publish your book on iShelf
+          </Text>
+        </View>
 
-        {/* Card Option */}
-        <TouchableOpacity
-          style={[
-            styles.paymentOption,
-            selectedMethod === "Card" && styles.paymentOptionSelected,
-          ]}
-          onPress={() => setSelectedMethod("Card")}
+        <TouchableOpacity 
+          style={[styles.payButton, loading && styles.buttonDisabled]} 
+          onPress={handlePayment}
+          disabled={loading}
         >
-          <View style={styles.radioCircle}>
-            {selectedMethod === "Card" && (
-              <View style={styles.radioSelected} />
-            )}
-          </View>
-          <Text style={styles.paymentText}>Card</Text>
+          {loading ? (
+            <ActivityIndicator color="#FFFFFF" />
+          ) : (
+            <Text style={styles.payButtonText}>Pay with Paystack</Text>
+          )}
         </TouchableOpacity>
 
-        {/* Bank Transfer Option */}
-        <TouchableOpacity
-          style={[
-            styles.paymentOption,
-            selectedMethod === "Bank Transfer" && styles.paymentOptionSelected,
-          ]}
-          onPress={() => setSelectedMethod("Bank Transfer")}
-        >
-          <View style={styles.radioCircle}>
-            {selectedMethod === "Bank Transfer" && (
-              <View style={styles.radioSelected} />
+        {paymentReference && (
+          <TouchableOpacity 
+            style={[styles.verifyButton, verifying && styles.buttonDisabled]} 
+            onPress={handleVerifyPayment}
+            disabled={verifying}
+          >
+            {verifying ? (
+              <ActivityIndicator color="#E85D54" />
+            ) : (
+              <Text style={styles.verifyButtonText}>I've Completed Payment - Verify</Text>
             )}
-          </View>
-          <Text style={styles.paymentText}>Bank Transfer</Text>
-        </TouchableOpacity>
+          </TouchableOpacity>
+        )}
       </ScrollView>
-
-      {/* Continue Button - Fixed at bottom */}
-      <View style={styles.footer}>
-        <TouchableOpacity style={styles.continueButton} onPress={handleProceed}>
-          <Text style={styles.continueButtonText}>Continue</Text>
-        </TouchableOpacity>
-      </View>
     </SafeAreaView>
   );
 }
@@ -104,7 +183,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: "600",
-    color: "#E85D54", // I-SHELF coral red
+    color: "#E85D54",
     flex: 1,
     textAlign: "center",
   },
@@ -113,71 +192,40 @@ const styles = StyleSheet.create({
     width: 36,
   },
 
-  sectionTitle: {
-    fontSize: 18,
+  infoContainer: {
+    alignItems: "center",
+    paddingVertical: 40,
+    paddingHorizontal: 24,
+  },
+
+  infoTitle: {
+    fontSize: 20,
     fontWeight: "600",
-    color: "#E85D54", // I-SHELF coral red
-    paddingHorizontal: 24,
-    marginTop: 24,
-    marginBottom: 20,
-  },
-
-  paymentOption: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 24,
-    paddingVertical: 20,
-    marginHorizontal: 24,
-    marginBottom: 16,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#FFD4D1", // Light coral border
-    backgroundColor: "#FFFFFF",
-    gap: 16,
-  },
-
-  paymentOptionSelected: {
-    backgroundColor: "#FFE8E6", // Light coral
-    borderColor: "#E85D54", // I-SHELF coral red
-    borderWidth: 2,
-  },
-
-  radioCircle: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: "#E85D54", // I-SHELF coral red
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  radioSelected: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: "#E85D54", // I-SHELF coral red
-  },
-
-  paymentText: {
-    fontSize: 16,
-    fontWeight: "500",
     color: "#333",
+    marginBottom: 16,
   },
 
-  footer: {
-    paddingHorizontal: 24,
-    paddingVertical: 20,
-    borderTopWidth: 1,
-    borderTopColor: "#FFD4D1", // Light coral border
+  infoAmount: {
+    fontSize: 48,
+    fontWeight: "700",
+    color: "#E85D54",
+    marginBottom: 12,
   },
 
-  continueButton: {
+  infoDescription: {
+    fontSize: 14,
+    color: "#666",
+    textAlign: "center",
+  },
+
+  payButton: {
     height: 56,
-    backgroundColor: "#E85D54", // I-SHELF coral red
+    backgroundColor: "#E85D54",
     borderRadius: 28,
     alignItems: "center",
     justifyContent: "center",
+    marginHorizontal: 24,
+    marginTop: 32,
     shadowColor: "#E85D54",
     shadowOffset: {
       width: 0,
@@ -188,9 +236,31 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
 
-  continueButtonText: {
+  payButtonText: {
     fontSize: 18,
     fontWeight: "600",
     color: "#FFFFFF",
+  },
+
+  buttonDisabled: {
+    opacity: 0.6,
+  },
+
+  verifyButton: {
+    height: 56,
+    backgroundColor: "#FFFFFF",
+    borderWidth: 2,
+    borderColor: "#E85D54",
+    borderRadius: 28,
+    alignItems: "center",
+    justifyContent: "center",
+    marginHorizontal: 24,
+    marginTop: 16,
+  },
+
+  verifyButtonText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#E85D54",
   },
 });

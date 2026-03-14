@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   Image,
   ScrollView,
@@ -8,49 +8,42 @@ import {
   Text,
   TouchableOpacity,
   View,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import GestureRecognizer from "react-native-swipe-gestures";
+import { authorAPI } from "../../authorAPI";
 
 
 export default function HomeTab() {
   const router = useRouter();
+  const [stats, setStats] = useState({ totalBooks: 0, totalEarnings: 0 });
+  const [purchases, setPurchases] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadDashboardData();
+  }, []);
+
+  const loadDashboardData = async () => {
+    try {
+      const [statsData, purchasesData] = await Promise.all([
+        authorAPI.getDashboardStats(),
+        authorAPI.getLatestPurchases()
+      ]);
+      setStats(statsData);
+      setPurchases(purchasesData.purchases);
+    } catch (error) {
+      console.error('Failed to load dashboard data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const swipeConfig = {
     velocityThreshold: 0.25,
     directionalOffsetThreshold: 70,
   };
-
-  const purchases = [
-    {
-      id: "1",
-      title: "Abstract Color Poster",
-      date: "12 Nov 2025",
-      amount: "+₦1500",
-      status: "Successful",
-    },
-    {
-      id: "2",
-      title: "Abstract Color Poster",
-      date: "12 Nov 2025",
-      amount: "+₦1500",
-      status: "Successful",
-    },
-    {
-      id: "3",
-      title: "Abstract Color Poster",
-      date: "12 Nov 2025",
-      amount: "+₦1500",
-      status: "Successful",
-    },
-    {
-      id: "4",
-      title: "Abstract Color Poster",
-      date: "12 Nov 2025",
-      amount: "+₦1500",
-      status: "Successful",
-    },
-  ];
 
   return (
     <GestureRecognizer
@@ -78,21 +71,27 @@ export default function HomeTab() {
 
           {/* Overview Section */}
           <Text style={styles.sectionTitle}>Overview</Text>
-          <View style={styles.overviewContainer}>
-            {/* Total Uploads Card */}
-            <View style={[styles.card, styles.uploadsCard]}>
-              <Ionicons name="cloud-upload-outline" size={32} color="#DC143C" />
-              <Text style={styles.cardLabel}>Total Uploads</Text>
-              <Text style={styles.cardValue}>25</Text>
+          {loading ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color="#DC143C" />
             </View>
+          ) : (
+            <View style={styles.overviewContainer}>
+              {/* Total Uploads Card */}
+              <View style={[styles.card, styles.uploadsCard]}>
+                <Ionicons name="cloud-upload-outline" size={32} color="#DC143C" />
+                <Text style={styles.cardLabel}>Total Uploads</Text>
+                <Text style={styles.cardValue}>{stats.totalBooks}</Text>
+              </View>
 
-            {/* Total Earnings Card */}
-            <View style={[styles.card, styles.earningsCard]}>
-              <Ionicons name="wallet-outline" size={32} color="#DC143C" />
-              <Text style={styles.cardLabel}>Total Earnings</Text>
-              <Text style={styles.cardValue}>₦23,500</Text>
+              {/* Total Earnings Card */}
+              <View style={[styles.card, styles.earningsCard]}>
+                <Ionicons name="wallet-outline" size={32} color="#DC143C" />
+                <Text style={styles.cardLabel}>Total Earnings</Text>
+                <Text style={styles.cardValue}>₦{stats.totalEarnings.toLocaleString()}</Text>
+              </View>
             </View>
-          </View>
+          )}
 
           {/* Upload Your Book Section */}
           <Text style={styles.sectionTitle}>Upload Your Book</Text>
@@ -107,29 +106,42 @@ export default function HomeTab() {
           {/* Latest Purchases Section */}
           <Text style={styles.sectionTitle}>Latest Purchases</Text>
           <View style={styles.purchasesList}>
-            {purchases.map((purchase) => (
-              <TouchableOpacity
-                key={purchase.id}
-                style={styles.purchaseItem}
-                // onPress={() => router.push(`/book/${purchase.id}`)}
-              >
-                <View style={styles.bookThumbnail}>
-                  <Image
-                    source={require('../../../assets/images/book-placeholder.png')}
-                    style={styles.bookImage}
-                    resizeMode="cover"
-                  />
-                </View>
-                <View style={styles.purchaseInfo}>
-                  <Text style={styles.purchaseTitle}>{purchase.title}</Text>
-                  <Text style={styles.purchaseDate}>{purchase.date}</Text>
-                </View>
-                <View style={styles.purchaseRight}>
-                  <Text style={styles.purchaseAmount}>{purchase.amount}</Text>
-                  <Text style={styles.purchaseStatus}>{purchase.status}</Text>
-                </View>
-              </TouchableOpacity>
-            ))}
+            {purchases.length === 0 ? (
+              <Text style={styles.emptyText}>No purchases yet</Text>
+            ) : (
+              purchases.map((purchase) => (
+                <TouchableOpacity
+                  key={purchase.id}
+                  style={styles.purchaseItem}
+                >
+                  <View style={styles.bookThumbnail}>
+                    {purchase.coverImage ? (
+                      <Image
+                        source={{ uri: `${process.env.EXPO_PUBLIC_API_URL}/${purchase.coverImage}` }}
+                        style={styles.bookImage}
+                        resizeMode="cover"
+                      />
+                    ) : (
+                      <Image
+                        source={require('../../../assets/images/book-placeholder.png')}
+                        style={styles.bookImage}
+                        resizeMode="cover"
+                      />
+                    )}
+                  </View>
+                  <View style={styles.purchaseInfo}>
+                    <Text style={styles.purchaseTitle}>{purchase.title}</Text>
+                    <Text style={styles.purchaseDate}>
+                      {new Date(purchase.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                    </Text>
+                  </View>
+                  <View style={styles.purchaseRight}>
+                    <Text style={styles.purchaseAmount}>₦{purchase.amount.toLocaleString()}</Text>
+                    <Text style={styles.purchaseStatus}>Sold</Text>
+                  </View>
+                </TouchableOpacity>
+              ))
+            )}
           </View>
         </ScrollView>
       </SafeAreaView>
@@ -281,5 +293,17 @@ const styles = StyleSheet.create({
   purchaseStatus: {
     fontSize: 13,
     color: "#2ECC71", // Keep green for "Successful" status
+  },
+
+  loadingContainer: {
+    paddingVertical: 40,
+    alignItems: 'center',
+  },
+
+  emptyText: {
+    textAlign: 'center',
+    color: '#999',
+    fontSize: 14,
+    paddingVertical: 20,
   },
 });

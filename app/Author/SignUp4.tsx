@@ -56,6 +56,7 @@ export default function SignUp4() {
         areasOfExpertise: data.areasOfExpertise,
         shortBio: data.shortBio,
         password: password,
+        referralCode: data.referralCode || undefined,
       };
 
       await authorAPI.register(authorData);

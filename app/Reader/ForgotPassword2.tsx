@@ -148,6 +148,9 @@ export default function ForgotPassword2() {
 
             <Text style={styles.title}>Forgot Password</Text>
             <Text style={styles.subtitle}>Enter Code</Text>
+            {email && (
+              <Text style={styles.emailText}>OTP sent to {email}</Text>
+            )}
           </View>
 
           {/* Code Input */}
@@ -256,6 +259,14 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
 
+  emailText: {
+    fontSize: 14,
+    color: "#E85D54",
+    textAlign: "center",
+    marginTop: 8,
+    fontWeight: "500",
+  },
+
   codeContainer: {
     flexDirection: "row",
     justifyContent: "center",
@@ -264,7 +275,7 @@ const styles = StyleSheet.create({
   },
 
   codeInput: {
-    width: 70,
+    width: 50,
     height: 70,
     borderWidth: 2,
     borderColor: "#FFD4D1", // Light coral border

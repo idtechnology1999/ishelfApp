@@ -11,17 +11,39 @@ import {
   Platform,
   ScrollView,
   Image,
+  ActivityIndicator,
+  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { authorAPI } from "../authorAPI";
 
 export default function ForgotPassword1() {
   const router = useRouter();
   const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleProceed = () => {
-    // Add email validation here if needed
-    if (email) {
+  const handleProceed = async () => {
+    if (!email) {
+      Alert.alert("Error", "Please enter your email");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await authorAPI.forgotPassword(email);
+      await AsyncStorage.setItem('resetEmail', email);
+      Alert.alert("Success", "Code sent to your email!");
       router.replace("/Author/ForgotPassword2");
+    } catch (error: any) {
+      const status = error.response?.status;
+      if (status === 404) {
+        Alert.alert("Error", "Email not registered");
+      } else {
+        Alert.alert("Error", error.response?.data?.message || "Failed to send code");
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -81,11 +103,16 @@ export default function ForgotPassword1() {
 
             {/* Proceed Button */}
             <TouchableOpacity
-              style={styles.proceedButton}
+              style={[styles.proceedButton, loading && styles.buttonDisabled]}
               onPress={handleProceed}
+              disabled={loading}
               accessibilityLabel="Proceed button"
             >
-              <Text style={styles.proceedButtonText}>Proceed</Text>
+              {loading ? (
+                <ActivityIndicator color="#FFFFFF" />
+              ) : (
+                <Text style={styles.proceedButtonText}>Proceed</Text>
+              )}
             </TouchableOpacity>
           </View>
         </ScrollView>
@@ -197,5 +224,9 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "600",
     color: "#FFFFFF",
+  },
+
+  buttonDisabled: {
+    opacity: 0.6,
   },
 });

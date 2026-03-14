@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   StyleSheet,
   Text,
@@ -10,8 +10,11 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
+  Alert,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { authorAPI } from "../../authorAPI";
 
 export default function Upload2() {
   const router = useRouter();
@@ -22,13 +25,71 @@ export default function Upload2() {
   const [publisher, setPublisher] = useState("");
   const [publicationYear, setPublicationYear] = useState("");
   const [language, setLanguage] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleContinue = () => {
-    // Validate required fields
-    if (bookTitle && publicationYear && language) {
+  useEffect(() => {
+    checkPaymentStatus();
+    loadDraftBook();
+  }, []);
+
+  const checkPaymentStatus = async () => {
+    try {
+      const response = await authorAPI.checkActivePayment();
+      if (!response.hasActivePayment) {
+        Alert.alert(
+          'Payment Required',
+          'You need to complete payment before uploading a book.',
+          [
+            { text: 'Make Payment', onPress: () => router.replace('/Author/book/payment') },
+            { text: 'Cancel', onPress: () => router.back(), style: 'cancel' }
+          ]
+        );
+      }
+    } catch (error) {
+      console.error('Error checking payment:', error);
+    }
+  };
+
+  const loadDraftBook = async () => {
+    try {
+      const response = await authorAPI.getDraftBook();
+      if (response.book) {
+        const book = response.book;
+        setBookTitle(book.title || "");
+        setSubtitle(book.subtitle || "");
+        setCoAuthors(book.coAuthors || "");
+        setEdition(book.edition || "");
+        setPublisher(book.publisher || "");
+        setPublicationYear(book.publicationYear || "");
+        setLanguage(book.language || "");
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const handleContinue = async () => {
+    if (!bookTitle || !publicationYear || !language) {
+      Alert.alert("Error", "Please fill in all required fields");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await authorAPI.uploadBook({
+        title: bookTitle,
+        subtitle,
+        coAuthors,
+        edition,
+        publisher,
+        publicationYear,
+        language
+      });
       router.push("/Author/book/UploadContinue2");
-    } else {
-      alert("Please fill in all required fields");
+    } catch (error: any) {
+      Alert.alert("Error", error.response?.data?.message || "Failed to save book data");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -148,10 +209,15 @@ export default function Upload2() {
         {/* Continue Button - Fixed at bottom */}
         <View style={styles.footer}>
           <TouchableOpacity
-            style={styles.continueButton}
+            style={[styles.continueButton, loading && styles.buttonDisabled]}
             onPress={handleContinue}
+            disabled={loading}
           >
-            <Text style={styles.continueButtonText}>Continue</Text>
+            {loading ? (
+              <ActivityIndicator color="#FFFFFF" />
+            ) : (
+              <Text style={styles.continueButtonText}>Continue</Text>
+            )}
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
@@ -293,5 +359,9 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "600",
     color: "#FFFFFF",
+  },
+
+  buttonDisabled: {
+    opacity: 0.6,
   },
 });

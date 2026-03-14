@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   StyleSheet,
   Text,
@@ -11,41 +11,50 @@ import {
   KeyboardAvoidingView,
   Platform,
   Alert,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import * as DocumentPicker from "expo-document-picker";
+import { authorAPI } from "../../authorAPI";
 
 export default function Upload7() {
   const router = useRouter();
-  const [pastQuestions, setPastQuestions] = useState<any>(null);
   const [tags, setTags] = useState("");
   const [acceptTerms, setAcceptTerms] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const pickPastQuestions = async () => {
+  useEffect(() => {
+    loadDraftBook();
+  }, []);
+
+  const loadDraftBook = async () => {
     try {
-      const result = await DocumentPicker.getDocumentAsync({
-        type: [
-          "application/pdf",
-          "text/csv",
-          "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-        ],
-        copyToCacheDirectory: true,
-      });
-
-      if (!result.canceled) {
-        setPastQuestions(result);
+      const response = await authorAPI.getDraftBook();
+      if (response.book && response.book.keywords) {
+        setTags(response.book.keywords.join(", "));
       }
     } catch (error) {
-      Alert.alert("Error", "Failed to pick document");
+      console.error(error);
     }
   };
 
-  const handleUpload = () => {
-    if (acceptTerms) {
-      // Submit all upload data
-      router.replace("/Author/book/UploadSuccessful");
-    } else {
+  const handleUpload = async () => {
+    if (!acceptTerms) {
       Alert.alert("Terms & Conditions", "Please accept the terms and conditions");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const keywords = tags.split(",").map(k => k.trim()).filter(k => k);
+      // Save final keywords
+      await authorAPI.uploadBook({ keywords });
+      // Complete the book upload (marks payment as exhausted)
+      await authorAPI.completeBookUpload();
+      router.replace("/Author/book/UploadSuccessful");
+    } catch (error: any) {
+      Alert.alert("Error", error.response?.data?.message || "Failed to complete upload");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -83,47 +92,14 @@ export default function Upload7() {
 
           {/* Form */}
           <View style={styles.form}>
-            {/* Attach Related Past Questions */}
-            <View style={styles.uploadSection}>
-              <Text style={styles.uploadLabel}>
-                Attach related Past Questions
-              </Text>
-              <TouchableOpacity
-                style={styles.uploadBox}
-                onPress={pickPastQuestions}
-              >
-                <Ionicons name="document-outline" size={40} color="#E85D54" />
-                <View style={styles.uploadTextContainer}>
-                  <Text style={styles.uploadMainText}>
-                    <Text style={styles.uploadLink}>Choose a file</Text>
-                    <Text style={styles.uploadOr}> Or </Text>
-                    <Text style={styles.uploadDrag}>Drag and Drop</Text>
-                  </Text>
-                  <Text style={styles.uploadSubText}>
-                    CSV and DOC Formats up to 50MB
-                  </Text>
-                </View>
-                {pastQuestions && (
-                  <View style={styles.fileSelectedContainer}>
-                    <Ionicons
-                      name="checkmark-circle"
-                      size={20}
-                      color="#4CAF50"
-                    />
-                    <Text style={styles.fileSelectedText}>File selected</Text>
-                  </View>
-                )}
-              </TouchableOpacity>
-            </View>
-
             {/* Tag/Keyword */}
             <View style={styles.inputContainer}>
-              <Text style={styles.label}>Tag/Keyword</Text>
+              <Text style={styles.label}>Keywords (comma separated)</Text>
               <TextInput
                 style={styles.input}
                 value={tags}
                 onChangeText={setTags}
-                placeholder=""
+                placeholder="e.g. Mathematics, Calculus, Engineering"
               />
             </View>
 
@@ -147,8 +123,16 @@ export default function Upload7() {
 
         {/* Upload Button - Fixed at bottom */}
         <View style={styles.footer}>
-          <TouchableOpacity style={styles.uploadButton} onPress={handleUpload}>
-            <Text style={styles.uploadButtonText}>Upload</Text>
+          <TouchableOpacity 
+            style={[styles.uploadButton, loading && styles.buttonDisabled]} 
+            onPress={handleUpload}
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator color="#FFFFFF" />
+            ) : (
+              <Text style={styles.uploadButtonText}>Upload</Text>
+            )}
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
@@ -381,5 +365,9 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "600",
     color: "#FFFFFF",
+  },
+
+  buttonDisabled: {
+    opacity: 0.6,
   },
 });

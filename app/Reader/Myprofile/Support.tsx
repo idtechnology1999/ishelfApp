@@ -7,7 +7,6 @@ import {
   TouchableOpacity,
   View,
   ScrollView,
-  Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -69,10 +68,9 @@ export default function Support() {
         {/* Support Team Section */}
         <View style={styles.supportSection}>
           <View style={styles.avatarsContainer}>
-            <Image
-              source={require("../../../assets/images/support.png")}
-              style={styles.supportImage}
-            />
+            <View style={styles.teamIconWrapper}>
+              <Ionicons name="people" size={72} color="#E85D54" />
+            </View>
           </View>
           <Text style={styles.supportText}>Chat with our support team</Text>
           <TouchableOpacity style={styles.chatButton} onPress={handleChatNow}>
@@ -146,10 +144,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
 
-  supportImage: {
-    width: 280,
-    height: 100,
-    resizeMode: "contain",
+  teamIconWrapper: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: "#FFE8E6",
+    alignItems: "center",
+    justifyContent: "center",
   },
 
   supportText: {

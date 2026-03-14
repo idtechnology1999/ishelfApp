@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   StyleSheet,
   Text,
@@ -11,8 +11,11 @@ import {
   Modal,
   KeyboardAvoidingView,
   Platform,
+  Alert,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { authorAPI } from "../../authorAPI";
 
 export default function Upload3() {
   const router = useRouter();
@@ -20,17 +23,38 @@ export default function Upload3() {
   const [discipline, setDiscipline] = useState("");
   const [courseCode, setCourseCode] = useState("");
   const [level, setLevel] = useState("");
+  const [isbn, setIsbn] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const [categoryModalVisible, setCategoryModalVisible] = useState(false);
   const [disciplineModalVisible, setDisciplineModalVisible] = useState(false);
   const [levelModalVisible, setLevelModalVisible] = useState(false);
 
+  useEffect(() => {
+    loadDraftBook();
+  }, []);
+
+  const loadDraftBook = async () => {
+    try {
+      const response = await authorAPI.getDraftBook();
+      if (response.book) {
+        const book = response.book;
+        setCategory(book.category || "");
+        setIsbn(book.isbn || "");
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   const categories = [
-    "Textbook",
-    "Journal",
-    "Research Paper/Articles",
-    "Handout/Working Document",
-    "Past Questions",
+    "Textbooks and Course Materials",
+    "Journals & Research Papers",
+    "Past Questions & Exam Guides",
+    "General Studies (GNS/GST)",
+    "Science & Technology",
+    "Arts & Humanities",
+    "Career & Professional Development",
   ];
 
   const disciplines = [
@@ -50,11 +74,36 @@ export default function Upload3() {
     "Post-Graduates",
   ];
 
-  const handleContinue = () => {
-    if (category && discipline && level) {
+  const handleContinue = async () => {
+    if (!category || !discipline || !level) {
+      Alert.alert("Error", "Please fill in all required fields");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await authorAPI.uploadBook({
+        category,
+        isbn: isbn || undefined
+      });
       router.push("/Author/book/UploadContinue3");
+    } catch (error: any) {
+      Alert.alert("Error", error.response?.data?.message || "Failed to save book data");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const validateISBN = (value: string) => {
+    // Remove hyphens and spaces
+    const cleaned = value.replace(/[-\s]/g, '');
+    
+    // Check if it's ISBN-10 or ISBN-13
+    if (cleaned.length === 10 || cleaned.length === 13) {
+      setIsbn(value);
+      // Optional: You can add API verification here
     } else {
-      alert("Please fill in all required fields");
+      setIsbn(value);
     }
   };
 
@@ -187,6 +236,21 @@ export default function Upload3() {
               />
             </View>
 
+            {/* ISBN/ISSN */}
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>ISBN or ISSN (optional)</Text>
+              <TextInput
+                style={styles.input}
+                value={isbn}
+                onChangeText={validateISBN}
+                placeholder="Enter ISBN or ISSN number"
+                keyboardType="default"
+              />
+              {isbn && isbn.replace(/[-\s]/g, '').length !== 10 && isbn.replace(/[-\s]/g, '').length !== 13 && isbn.replace(/[-\s]/g, '').length !== 8 && (
+                <Text style={styles.helperText}>ISBN should be 10 or 13 digits, ISSN should be 8 digits</Text>
+              )}
+            </View>
+
             {/* Level / Audience Dropdown */}
             <View style={styles.inputContainer}>
               <Text style={styles.label}>Level / Audience</Text>
@@ -211,10 +275,15 @@ export default function Upload3() {
         {/* Continue Button - Fixed at bottom */}
         <View style={styles.footer}>
           <TouchableOpacity
-            style={styles.continueButton}
+            style={[styles.continueButton, loading && styles.buttonDisabled]}
             onPress={handleContinue}
+            disabled={loading}
           >
-            <Text style={styles.continueButtonText}>Continue</Text>
+            {loading ? (
+              <ActivityIndicator color="#FFFFFF" />
+            ) : (
+              <Text style={styles.continueButtonText}>Continue</Text>
+            )}
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
@@ -405,6 +474,10 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
   },
 
+  buttonDisabled: {
+    opacity: 0.6,
+  },
+
   // Modal Styles
   modalOverlay: {
     flex: 1,
@@ -441,5 +514,11 @@ const styles = StyleSheet.create({
   optionText: {
     fontSize: 16,
     color: "#333",
+  },
+
+  helperText: {
+    fontSize: 12,
+    color: "#ff6b6b",
+    marginTop: 4,
   },
 });

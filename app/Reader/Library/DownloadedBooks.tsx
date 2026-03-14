@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -6,36 +6,133 @@ import {
   TouchableOpacity,
   ScrollView,
   Image,
+  ActivityIndicator,
+  Alert,
+  Platform,
+  RefreshControl,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
+import { useRouter, useFocusEffect } from "expo-router";
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as FileSystem from 'expo-file-system';
+import { readerBooks } from "../../readerAPI";
 
 export default function DownloadedBooks() {
   const router = useRouter();
   const [viewMode, setViewMode] = useState<"list" | "grid">("list");
+  const [books, setBooks] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
-  const books = [
-    {
-      id: 1,
-      author: "Dr Ade-Ajayi",
-      title: "Abstract Color Poster",
-    },
-    {
-      id: 2,
-      author: "Dr Ade-Ajayi",
-      title: "Abstract Color Poster",
-    },
-  ];
+  useEffect(() => {
+    loadDownloadedBooks();
+  }, []);
 
-  const handleReadNow = (bookId: number) => {
-    // router.push(`/ReadBook/${bookId}`);
-    alert("read book now")
+  // Refresh when screen comes into focus
+  useFocusEffect(
+    React.useCallback(() => {
+      loadDownloadedBooks();
+    }, [])
+  );
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await loadDownloadedBooks();
+    setRefreshing(false);
   };
 
-  const handleDelete = (bookId: number) => {
-    // Handle delete logic
-    console.log("Deleting book:", bookId);
+  const loadDownloadedBooks = async () => {
+    try {
+      // Get downloaded books from AsyncStorage
+      const downloadedBooksData = await AsyncStorage.getItem('downloadedBooks');
+      if (downloadedBooksData) {
+        const downloadedBooks = JSON.parse(downloadedBooksData);
+        
+        // Verify files still exist and get book details
+        const validBooks = [];
+        for (const book of downloadedBooks) {
+          if (Platform.OS !== 'web') {
+            // For mobile, check if file exists
+            const fileInfo = await FileSystem.getInfoAsync(book.localPath);
+            if (fileInfo.exists) {
+              validBooks.push(book);
+            }
+          } else {
+            // For web, just add all books (web doesn't have persistent file storage)
+            validBooks.push(book);
+          }
+        }
+        
+        setBooks(validBooks);
+        
+        // Update AsyncStorage with valid books only
+        if (validBooks.length !== downloadedBooks.length) {
+          await AsyncStorage.setItem('downloadedBooks', JSON.stringify(validBooks));
+        }
+      }
+    } catch (error) {
+      console.error('Failed to load downloaded books:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleReadNow = (book: any) => {
+    if (Platform.OS === 'web') {
+      // For web, redirect to online reader
+      router.push(`/Reader/Library/BookReader?bookId=${book.bookId}`);
+    } else {
+      // For mobile, open local file
+      if (book.localPath) {
+        // You could implement a local PDF viewer here
+        // For now, we'll use the online reader
+        router.push(`/Reader/Library/BookReader?bookId=${book.bookId}`);
+      } else {
+        Alert.alert('Error', 'Local file not found');
+      }
+    }
+  };
+
+  const handleDelete = async (book: any) => {
+    Alert.alert(
+      'Delete Downloaded Book',
+      `Are you sure you want to delete "${book.title}" from your device?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              // Remove from local storage
+              const downloadedBooksData = await AsyncStorage.getItem('downloadedBooks');
+              if (downloadedBooksData) {
+                const downloadedBooks = JSON.parse(downloadedBooksData);
+                const updatedBooks = downloadedBooks.filter((b: any) => b.bookId !== book.bookId);
+                await AsyncStorage.setItem('downloadedBooks', JSON.stringify(updatedBooks));
+              }
+              
+              // Delete local file if exists
+              if (Platform.OS !== 'web' && book.localPath) {
+                try {
+                  await FileSystem.deleteAsync(book.localPath);
+                } catch (fileError) {
+                  console.error('Error deleting file:', fileError);
+                }
+              }
+              
+              // Update UI
+              setBooks(books.filter((b: any) => b.bookId !== book.bookId));
+              
+            } catch (error) {
+              console.error('Error deleting book:', error);
+              Alert.alert('Error', 'Failed to delete book');
+            }
+          }
+        }
+      ]
+    );
   };
 
   return (
@@ -70,38 +167,81 @@ export default function DownloadedBooks() {
         </View>
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false}>
-        <View style={styles.booksContainer}>
-          {books.map((book) => (
-            <View key={book.id} style={styles.bookCard}>
-              <Image
-                source={require("../../../assets/images/book-placeholder.png")}
-                style={styles.bookImage}
-                resizeMode="cover"
-              />
-              <View style={styles.bookDetails}>
-                <View style={styles.bookInfo}>
-                  <Text style={styles.authorText}>{book.author}</Text>
-                  <Text style={styles.bookTitle}>{book.title}</Text>
+      <ScrollView 
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={['#E85D54']}
+            tintColor="#E85D54"
+          />
+        }
+      >
+        {loading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#E85D54" />
+          </View>
+        ) : books.length === 0 ? (
+          <View style={styles.emptyContainer}>
+            <Ionicons name="download-outline" size={80} color="#ccc" />
+            <Text style={styles.emptyTitle}>No Downloaded Books</Text>
+            <Text style={styles.emptyText}>Books you download will appear here for offline reading</Text>
+            <TouchableOpacity 
+              style={styles.browseButton} 
+              onPress={() => router.push('/Reader/Library/PurchasedBooks')}
+            >
+              <Text style={styles.browseButtonText}>View Purchased Books</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <View style={styles.booksContainer}>
+            {books.map((book: any) => (
+              <View key={book.bookId} style={styles.bookCard}>
+                {book.coverImage ? (
+                  <Image
+                    source={{ uri: book.coverImage.startsWith('http') ? book.coverImage : `${process.env.EXPO_PUBLIC_API_URL}/${book.coverImage}` }}
+                    style={styles.bookImage}
+                    resizeMode="cover"
+                  />
+                ) : (
+                  <Image
+                    source={require("../../../assets/images/book-placeholder.png")}
+                    style={styles.bookImage}
+                    resizeMode="cover"
+                  />
+                )}
+                <View style={styles.bookDetails}>
+                  <View style={styles.bookInfo}>
+                    <Text style={styles.authorText}>{book.author || 'Unknown Author'}</Text>
+                    <Text style={styles.bookTitle}>{book.title || 'Untitled'}</Text>
+                    <View style={styles.downloadInfo}>
+                      <Ionicons name="download" size={16} color="#22c55e" />
+                      <Text style={styles.downloadedText}>Downloaded</Text>
+                      <Text style={styles.downloadDate}>
+                        {new Date(book.downloadedAt).toLocaleDateString()}
+                      </Text>
+                    </View>
+                  </View>
+                  <TouchableOpacity
+                    style={styles.deleteButton}
+                    onPress={() => handleDelete(book)}
+                  >
+                    <Ionicons name="trash-outline" size={24} color="#FF4444" />
+                  </TouchableOpacity>
                 </View>
-                <TouchableOpacity
-                  style={styles.deleteButton}
-                  onPress={() => handleDelete(book.id)}
-                >
-                  <Ionicons name="trash-outline" size={24} color="#FF4444" />
-                </TouchableOpacity>
+                <View style={styles.bookActions}>
+                  <TouchableOpacity
+                    style={styles.readButton}
+                    onPress={() => handleReadNow(book)}
+                  >
+                    <Text style={styles.readButtonText}>Read Now</Text>
+                  </TouchableOpacity>
+                </View>
               </View>
-              <View style={styles.bookActions}>
-                <TouchableOpacity
-                  style={styles.readButton}
-                  onPress={() => handleReadNow(book.id)}
-                >
-                  <Text style={styles.readButtonText}>Read Now</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          ))}
-        </View>
+            ))}
+          </View>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -171,6 +311,21 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: "#2C2C2C",
     lineHeight: 24,
+    marginBottom: 8,
+  },
+  downloadInfo: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  downloadedText: {
+    fontSize: 12,
+    color: "#22c55e",
+    fontWeight: "600",
+  },
+  downloadDate: {
+    fontSize: 12,
+    color: "#999",
   },
   deleteButton: {
     alignSelf: "flex-end",
@@ -200,5 +355,38 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "700",
     color: "#FFFFFF",
+  },
+  loadingContainer: {
+    paddingVertical: 60,
+    alignItems: 'center',
+  },
+  emptyContainer: {
+    paddingVertical: 60,
+    alignItems: 'center',
+    paddingHorizontal: 40,
+  },
+  emptyTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#333',
+    marginTop: 20,
+    marginBottom: 8,
+  },
+  emptyText: {
+    fontSize: 16,
+    color: '#999',
+    textAlign: 'center',
+    marginBottom: 30,
+  },
+  browseButton: {
+    backgroundColor: '#E85D55',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 25,
+  },
+  browseButtonText: {
+    color: '#FFFFFF',
+    fontWeight: '600',
+    fontSize: 16,
   },
 });

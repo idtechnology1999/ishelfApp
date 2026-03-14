@@ -8,135 +8,11 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import Svg, { Rect } from "react-native-svg";
 import GestureRecognizer from "react-native-swipe-gestures";
+import { DynamicBackgroundPattern } from "../components/BackgroundPattern";
+import Svg, { Path, Line } from "react-native-svg";
 
 type UserRole = "author" | "student";
-
-// Scattered hollow squares — mirroring the FCMB background pattern
-// Each entry: { x, y, size, opacity, strokeWidth }
-const SQUARES = [
-  // Top-right cluster
-  { x: 290, y: 20,  size: 55, opacity: 0.35, strokeWidth: 2 },
-  { x: 330, y: 50,  size: 35, opacity: 0.28, strokeWidth: 1.5 },
-  { x: 310, y: 90,  size: 22, opacity: 0.40, strokeWidth: 1.5 },
-  { x: 355, y: 18,  size: 18, opacity: 0.25, strokeWidth: 1 },
-  { x: 270, y: 65,  size: 28, opacity: 0.30, strokeWidth: 1.5 },
-
-  // Top-left area
-  { x: 10,  y: 30,  size: 40, opacity: 0.28, strokeWidth: 1.5 },
-  { x: 40,  y: 10,  size: 20, opacity: 0.32, strokeWidth: 1.5 },
-  { x: 5,   y: 80,  size: 25, opacity: 0.25, strokeWidth: 1 },
-
-  // Middle-right
-  { x: 340, y: 180, size: 45, opacity: 0.25, strokeWidth: 2 },
-  { x: 365, y: 220, size: 25, opacity: 0.30, strokeWidth: 1.5 },
-
-  // Middle-left
-  { x: 0,   y: 200, size: 50, opacity: 0.22, strokeWidth: 2 },
-  { x: 20,  y: 250, size: 22, opacity: 0.28, strokeWidth: 1.5 },
-
-  // Bottom-left cluster
-  { x: 5,   y: 600, size: 60, opacity: 0.30, strokeWidth: 2 },
-  { x: 50,  y: 640, size: 35, opacity: 0.25, strokeWidth: 1.5 },
-  { x: 15,  y: 680, size: 20, opacity: 0.35, strokeWidth: 1.5 },
-  { x: 70,  y: 600, size: 15, opacity: 0.28, strokeWidth: 1 },
-
-  // Bottom-right cluster
-  { x: 300, y: 620, size: 50, opacity: 0.30, strokeWidth: 2 },
-  { x: 340, y: 660, size: 30, opacity: 0.25, strokeWidth: 1.5 },
-  { x: 310, y: 700, size: 18, opacity: 0.35, strokeWidth: 1 },
-  { x: 355, y: 590, size: 22, opacity: 0.28, strokeWidth: 1.5 },
-
-  // Scattered mid-screen
-  { x: 150, y: 120, size: 18, opacity: 0.22, strokeWidth: 1 },
-  { x: 200, y: 500, size: 14, opacity: 0.20, strokeWidth: 1 },
-  { x: 80,  y: 400, size: 20, opacity: 0.22, strokeWidth: 1 },
-  { x: 330, y: 400, size: 16, opacity: 0.22, strokeWidth: 1 },
-];
-
-const ACCENT = "#E85D55";
-
-function AnimatedSquare({ sq, index }: { sq: typeof SQUARES[0]; index: number }) {
-  const animX = useRef(new Animated.Value(0)).current;
-  const animY = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    const randomDelay = Math.random() * 2000;
-    const randomDuration = 3000 + Math.random() * 2000;
-    const randomX = (Math.random() - 0.5) * 40;
-    const randomY = (Math.random() - 0.5) * 40;
-
-    setTimeout(() => {
-      Animated.loop(
-        Animated.sequence([
-          Animated.parallel([
-            Animated.timing(animX, {
-              toValue: randomX,
-              duration: randomDuration,
-              useNativeDriver: true,
-            }),
-            Animated.timing(animY, {
-              toValue: randomY,
-              duration: randomDuration,
-              useNativeDriver: true,
-            }),
-          ]),
-          Animated.parallel([
-            Animated.timing(animX, {
-              toValue: 0,
-              duration: randomDuration,
-              useNativeDriver: true,
-            }),
-            Animated.timing(animY, {
-              toValue: 0,
-              duration: randomDuration,
-              useNativeDriver: true,
-            }),
-          ]),
-        ])
-      ).start();
-    }, randomDelay);
-  }, []);
-
-  return (
-    <Animated.View
-      style={{
-        position: 'absolute',
-        transform: [{ translateX: animX }, { translateY: animY }],
-      }}
-    >
-      <Svg
-        width={sq.size + 10}
-        height={sq.size + 10}
-        style={{ position: 'absolute', left: sq.x - 5, top: sq.y - 5 }}
-      >
-        <Rect
-          x={5}
-          y={5}
-          width={sq.size}
-          height={sq.size}
-          rx={3}
-          ry={3}
-          fill="none"
-          stroke={ACCENT}
-          strokeWidth={sq.strokeWidth}
-          opacity={sq.opacity}
-        />
-      </Svg>
-    </Animated.View>
-  );
-}
-
-function BackgroundPattern() {
-  return (
-    <View style={StyleSheet.absoluteFill}>
-      {SQUARES.map((sq, i) => (
-        <AnimatedSquare key={i} sq={sq} index={i} />
-      ))}
-    </View>
-  );
-}
 
 export default function ContinueAsScreen() {
   const router = useRouter();
@@ -199,9 +75,7 @@ export default function ContinueAsScreen() {
 
   return (
     <GestureRecognizer style={styles.container} config={swipeConfig}>
-      {/* Decorative background */}
-      <BackgroundPattern />
-
+      <DynamicBackgroundPattern />
       {/* Content */}
       <Animated.View
         style={{
@@ -264,11 +138,19 @@ export default function ContinueAsScreen() {
             onPress={() => handleSelect("author")}
             activeOpacity={0.8}
           >
-            <Image
-              source={require("../assets/images/author.png")}
-              style={styles.image}
-            />
-            <Text style={styles.label}>Author / Lecturer</Text>
+            <View style={styles.cardBody}>
+              {/* Fountain pen icon */}
+              <Svg width={44} height={90} viewBox="0 0 24 58">
+                <Path d="M9 4 Q12 2 15 4 L16 36 Q12 38 8 36 Z" fill="none" stroke="rgba(255,255,255,0.85)" strokeWidth={1.4} />
+                <Path d="M9 4 Q12 1 15 4" fill="none" stroke="rgba(255,255,255,0.85)" strokeWidth={1.4} />
+                <Path d="M8 36 L12 54 L16 36" fill="none" stroke="rgba(255,255,255,0.85)" strokeWidth={1.4} strokeLinejoin="round" />
+                <Line x1="12" y1="42" x2="12" y2="54" stroke="rgba(255,255,255,0.85)" strokeWidth={0.8} />
+                <Path d="M8.5 32 Q12 33.5 15.5 32" fill="none" stroke="rgba(255,255,255,0.85)" strokeWidth={1} />
+              </Svg>
+            </View>
+            <View style={styles.cardFooter}>
+              <Text style={styles.label}>Author / Lecturer</Text>
+            </View>
           </TouchableOpacity>
         </Animated.View>
 
@@ -278,11 +160,18 @@ export default function ContinueAsScreen() {
             onPress={() => handleSelect("student")}
             activeOpacity={0.8}
           >
-            <Image
-              source={require("../assets/images/student.png")}
-              style={styles.image}
-            />
-            <Text style={styles.label}>Student / Reader</Text>
+            <View style={styles.cardBody}>
+              {/* Open book icon */}
+              <Svg width={80} height={44} viewBox="0 0 52 28">
+                <Path d="M26 6 Q14 2 2 6 L2 24 Q14 20 26 24 Z" fill="none" stroke="rgba(255,255,255,0.85)" strokeWidth={1.4} strokeLinejoin="round" />
+                <Path d="M26 6 Q38 2 50 6 L50 24 Q38 20 26 24 Z" fill="none" stroke="rgba(255,255,255,0.85)" strokeWidth={1.4} strokeLinejoin="round" />
+                <Path d="M26 6 Q25 15 26 24" fill="none" stroke="rgba(255,255,255,0.85)" strokeWidth={1} />
+                <Path d="M6 26 Q26 32 46 26" fill="none" stroke="#E8C96A" strokeWidth={2} strokeLinecap="round" />
+              </Svg>
+            </View>
+            <View style={styles.cardFooter}>
+              <Text style={styles.label}>Student / Reader</Text>
+            </View>
           </TouchableOpacity>
         </Animated.View>
       </Animated.View>
@@ -315,34 +204,36 @@ const styles = StyleSheet.create({
   },
   card: {
     width: 140,
+    height: 160,
     borderRadius: 18,
-    padding: 16,
-    alignItems: "center",
-    backgroundColor: "#FFFFFF",
-    borderWidth: 2,
-    borderColor: "#E0E0E0",
-    shadowColor: "#000",
-    shadowOpacity: 0.08,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 8,
-    elevation: 2,
+    overflow: 'hidden',
+    backgroundColor: "#E85D55",
+    shadowColor: "#E85D55",
+    shadowOpacity: 0.25,
+    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 10,
+    elevation: 5,
+    justifyContent: 'flex-end',
   },
   activeCard: {
-    borderWidth: 3,
-    borderColor: "#E85D55",
-    shadowColor: "#E85D55",
-    shadowOpacity: 0.15,
+    shadowOpacity: 0.45,
+    elevation: 8,
   },
-  image: {
-    width: 100,
-    height: 100,
-    borderRadius: 14,
-    marginBottom: 10,
+  cardBody: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cardFooter: {
+    backgroundColor: '#C9A84C',
+    paddingVertical: 12,
+    paddingHorizontal: 8,
+    alignItems: 'center',
   },
   label: {
     fontSize: 14,
-    fontWeight: "600",
-    color: "#2C2C2C",
-    textAlign: "center",
+    fontWeight: '700',
+    color: '#FFFFFF',
+    textAlign: 'center',
   },
 });

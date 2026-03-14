@@ -1,11 +1,30 @@
-import { Tabs } from "expo-router";
+import { Tabs, useFocusEffect } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useReaderAuth } from '../useReaderAuth';
+import { useReaderAuth } from '../_useReaderAuth';
+import { useState, useCallback, useEffect } from "react";
+import { View, Text } from "react-native";
+import { readerCart } from "../../readerAPI";
 
 export default function ReaderTabLayout() {
   useReaderAuth();
   const insets = useSafeAreaInsets();
+  const [cartCount, setCartCount] = useState(0);
+
+  const fetchCartCount = useCallback(async () => {
+    try {
+      const data = await readerCart.getCartItems();
+      setCartCount(data.cartItems?.length || 0);
+    } catch {
+      setCartCount(0);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchCartCount();
+    const interval = setInterval(fetchCartCount, 10000);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <Tabs
@@ -63,11 +82,31 @@ export default function ReaderTabLayout() {
         options={{
           title: "Cart",
           tabBarIcon: ({ color, size, focused }) => (
-            <Ionicons
-              name={focused ? "cart" : "cart-outline"}
-              size={size}
-              color={color}
-            />
+            <View>
+              <Ionicons
+                name={focused ? "cart" : "cart-outline"}
+                size={size}
+                color={color}
+              />
+              {cartCount > 0 && (
+                <View style={{
+                  position: 'absolute',
+                  top: -4,
+                  right: -6,
+                  backgroundColor: '#E85D54',
+                  borderRadius: 10,
+                  minWidth: 18,
+                  height: 18,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  paddingHorizontal: 3,
+                }}>
+                  <Text style={{ color: '#fff', fontSize: 10, fontWeight: '700' }}>
+                    {cartCount > 99 ? '99+' : cartCount}
+                  </Text>
+                </View>
+              )}
+            </View>
           ),
         }}
       />

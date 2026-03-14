@@ -15,7 +15,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as ImagePicker from 'expo-image-picker';
 import axios from 'axios';
-import { useAuthorAuth } from '../useAuthorAuth';
+import { useAuthorAuth } from '../_useAuthorAuth';
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
