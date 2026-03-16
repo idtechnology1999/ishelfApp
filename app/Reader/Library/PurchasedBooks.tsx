@@ -49,16 +49,36 @@ export default function PurchasedBooks() {
     try {
       setDownloading(bookId);
       
+      // Get current reader ID (MUST have valid ID)
+      const readerData = await AsyncStorage.getItem('readerData');
+      console.log('Raw readerData for download:', readerData);
+      
+      if (!readerData) {
+        Alert.alert('Error', 'Please login again to download books');
+        setDownloading(null);
+        return;
+      }
+      
+      const reader = JSON.parse(readerData);
+      console.log('Parsed reader for download:', reader);
+      console.log('Reader keys:', Object.keys(reader));
+      
+      // Try different possible ID fields
+      const readerId = reader._id || reader.id || reader.readerId;
+      console.log('Extracted readerId:', readerId);
+      
+      if (!readerId) {
+        Alert.alert('Error', 'Unable to identify user. Please logout and login again.');
+        setDownloading(null);
+        return;
+      }
+      
+      console.log('Downloading book for reader:', readerId);
+      
       // For web platform, open download link
       if (Platform.OS === 'web') {
         const token = await AsyncStorage.getItem('readerToken');
         const downloadUrl = `${process.env.EXPO_PUBLIC_API_URL}/api/readers/books/download/${bookId}`;
-        
-        // Create a form to submit with authorization header
-        const form = document.createElement('form');
-        form.method = 'GET';
-        form.action = downloadUrl;
-        form.target = '_blank';
         
         // Add token as a query parameter for web downloads
         const urlWithToken = `${downloadUrl}?token=${encodeURIComponent(token || '')}`;
@@ -66,21 +86,24 @@ export default function PurchasedBooks() {
         // Open in new window
         window.open(urlWithToken, '_blank');
         
-        // Add to downloaded list for web
+        // Add to downloaded list for web (user-specific)
         const downloadedBook = {
           bookId,
+          readerId,
           title: bookTitle,
-          author: book.authorId?.displayName || 'Unknown Author',
-          coverImage: book.coverImage,
+          author: book?.authorId?.displayName || book?.authorId?.fullName || 'Unknown Author',
+          coverImage: book?.coverImage,
           localPath: null,
           downloadedAt: new Date().toISOString(),
           fileSize: 'Unknown'
         };
         
+        console.log('Saving downloaded book:', downloadedBook);
+        
         const existingDownloads = await AsyncStorage.getItem('downloadedBooks');
         const downloadedBooks = existingDownloads ? JSON.parse(existingDownloads) : [];
         
-        const existingIndex = downloadedBooks.findIndex((b: any) => b.bookId === bookId);
+        const existingIndex = downloadedBooks.findIndex((b: any) => b.bookId === bookId && b.readerId === readerId);
         if (existingIndex >= 0) {
           downloadedBooks[existingIndex] = downloadedBook;
         } else {
@@ -88,7 +111,10 @@ export default function PurchasedBooks() {
         }
         
         await AsyncStorage.setItem('downloadedBooks', JSON.stringify(downloadedBooks));
+        console.log('Saved to AsyncStorage, total downloads:', downloadedBooks.length);
+        
         Alert.alert('Success', 'Download started in new tab');
+        setDownloading(null);
         return;
       }
       
@@ -109,9 +135,10 @@ export default function PurchasedBooks() {
       if (downloadResult.status === 200) {
         const downloadedBook = {
           bookId,
+          readerId,
           title: bookTitle,
-          author: book.authorId?.displayName || 'Unknown Author',
-          coverImage: book.coverImage,
+          author: book?.authorId?.displayName || book?.authorId?.fullName || 'Unknown Author',
+          coverImage: book?.coverImage,
           localPath: downloadResult.uri,
           downloadedAt: new Date().toISOString(),
           fileSize: downloadResult.headers?.['content-length'] || 'Unknown'
@@ -120,7 +147,7 @@ export default function PurchasedBooks() {
         const existingDownloads = await AsyncStorage.getItem('downloadedBooks');
         const downloadedBooks = existingDownloads ? JSON.parse(existingDownloads) : [];
         
-        const existingIndex = downloadedBooks.findIndex((b: any) => b.bookId === bookId);
+        const existingIndex = downloadedBooks.findIndex((b: any) => b.bookId === bookId && b.readerId === readerId);
         if (existingIndex >= 0) {
           downloadedBooks[existingIndex] = downloadedBook;
         } else {
@@ -152,20 +179,7 @@ export default function PurchasedBooks() {
   };
 
   const handleDelete = (purchaseId: string) => {
-    Alert.alert(
-      'Remove Book',
-      'Are you sure you want to remove this book from your library?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Remove',
-          style: 'destructive',
-          onPress: () => {
-            setBooks(books.filter((book: any) => book._id !== purchaseId));
-          }
-        }
-      ]
-    );
+    // Removed delete functionality
   };
 
   return (
@@ -213,52 +227,55 @@ export default function PurchasedBooks() {
           <View style={styles.booksContainer}>
             {books.map((purchase: any) => (
               <View key={purchase._id} style={styles.bookCard}>
-                {purchase.book?.coverImage ? (
-                  <Image
-                    source={{ uri: `${process.env.EXPO_PUBLIC_API_URL}/${purchase.book.coverImage}` }}
-                    style={styles.bookImage}
-                    resizeMode="cover"
-                  />
-                ) : (
-                  <Image
-                    source={require("../../../assets/images/book-placeholder.png")}
-                    style={styles.bookImage}
-                    resizeMode="cover"
-                  />
-                )}
-                <View style={styles.bookDetails}>
+                <Image
+                  source={{ 
+                    uri: purchase.book?.coverImage?.startsWith('http') 
+                      ? purchase.book.coverImage 
+                      : purchase.book?.coverImage?.startsWith('/') 
+                        ? `${process.env.EXPO_PUBLIC_API_URL}${purchase.book.coverImage}` 
+                        : `${process.env.EXPO_PUBLIC_API_URL}/${purchase.book.coverImage}` 
+                  }}
+                  style={styles.bookImage}
+                  resizeMode="cover"
+                  defaultSource={require("../../../assets/images/book-placeholder.png")}
+                />
+                <View style={styles.bookContent}>
                   <View style={styles.bookInfo}>
-                    <Text style={styles.authorText}>{purchase.author?.displayName || 'Unknown Author'}</Text>
-                    <Text style={styles.bookTitle}>{purchase.book?.title || 'Untitled'}</Text>
+                    <Text style={styles.authorText}>{purchase.book?.authorId?.displayName || purchase.book?.authorId?.fullName || 'Unknown Author'}</Text>
+                    <Text style={styles.bookTitle} numberOfLines={2} ellipsizeMode="tail">{purchase.book?.title || 'Untitled'}</Text>
+                    <View style={styles.purchaseInfo}>
+                      <Ionicons name="checkmark-circle" size={16} color="#22c55e" />
+                      <Text style={styles.purchasedText}>Purchased</Text>
+                      <Text style={styles.purchaseDate}>
+                        {new Date(purchase.createdAt).toLocaleDateString()}
+                      </Text>
+                    </View>
                   </View>
-                  <TouchableOpacity
-                    style={styles.deleteButton}
-                    onPress={() => handleDelete(purchase._id)}
-                  >
-                    <Ionicons name="trash-outline" size={24} color="#FF4444" />
-                  </TouchableOpacity>
-                </View>
-                <View style={styles.bookActions}>
-                  <TouchableOpacity
-                    style={styles.readButton}
-                    onPress={() => handleReadNow(purchase.book?._id)}
-                  >
-                    <Text style={styles.readButtonText}>Read Now</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[
-                      styles.downloadButton,
-                      downloading === purchase.book?._id && styles.downloadingButton
-                    ]}
-                    onPress={() => handleDownload(purchase.book?._id, purchase.book?.title, purchase.book)}
-                    disabled={downloading === purchase.book?._id}
-                  >
-                    {downloading === purchase.book?._id ? (
-                      <ActivityIndicator size="small" color="#E85D55" />
-                    ) : (
-                      <Text style={styles.downloadButtonText}>Download</Text>
-                    )}
-                  </TouchableOpacity>
+                  <View style={styles.bookActions}>
+                    <TouchableOpacity
+                      style={styles.readButton}
+                      onPress={() => handleReadNow(purchase.book?._id)}
+                    >
+                      <Text style={styles.readButtonText}>Read Now</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[
+                        styles.downloadButton,
+                        downloading === purchase.book?._id && styles.downloadingButton
+                      ]}
+                      onPress={() => handleDownload(purchase.book?._id, purchase.book?.title, purchase.book)}
+                      disabled={downloading === purchase.book?._id}
+                    >
+                      {downloading === purchase.book?._id ? (
+                        <ActivityIndicator size="small" color="#E85D55" />
+                      ) : (
+                        <>
+                          <Ionicons name="download-outline" size={16} color="#E85D55" />
+                          <Text style={styles.downloadButtonText}>Download</Text>
+                        </>
+                      )}
+                    </TouchableOpacity>
+                  </View>
                 </View>
               </View>
             ))}
@@ -310,14 +327,17 @@ const styles = StyleSheet.create({
     gap: 12,
     borderWidth: 1,
     borderColor: "#FFE5E3",
+    overflow: "hidden",
   },
   bookImage: {
-    width: 120,
-    height: 160,
+    width: 100,
+    height: 140,
     borderRadius: 8,
+    flexShrink: 0,
   },
-  bookDetails: {
+  bookContent: {
     flex: 1,
+    flexDirection: "column",
     justifyContent: "space-between",
   },
   bookInfo: {
@@ -329,21 +349,30 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   bookTitle: {
-    fontSize: 18,
+    fontSize: 14,
     fontWeight: "700",
     color: "#2C2C2C",
-    lineHeight: 24,
+    lineHeight: 20,
+    marginBottom: 8,
   },
-  deleteButton: {
-    alignSelf: "flex-end",
-    padding: 4,
+  purchaseInfo: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  purchasedText: {
+    fontSize: 12,
+    color: "#22c55e",
+    fontWeight: "600",
+  },
+  purchaseDate: {
+    fontSize: 12,
+    color: "#999",
   },
   bookActions: {
-    position: "absolute",
-    bottom: 12,
-    right: 12,
-    left: 144,
+    flexDirection: "column",
     gap: 8,
+    marginTop: 8,
   },
   readButton: {
     backgroundColor: "#E85D55",
@@ -369,6 +398,9 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 25,
     alignItems: "center",
+    justifyContent: "center",
+    flexDirection: "row",
+    gap: 6,
     borderWidth: 2,
     borderColor: "#E85D55",
   },

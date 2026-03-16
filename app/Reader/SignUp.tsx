@@ -42,8 +42,8 @@ export default function SignUp() {
     setLoading(true);
     try {
       await readerAuth.register(fullName, email, institution, password);
-      showToast("Registration successful! Wait for admin verification.", "success");
-      setTimeout(() => router.push("/Reader/Login"), 2000);
+      showToast("Registration successful! Please wait for admin verification. You can login within 30 minutes after verification.", "success");
+      setTimeout(() => router.push("/Reader/Login"), 3000);
     } catch (error: any) {
       showToast(error.response?.data?.message || "Registration failed", "error");
     } finally {

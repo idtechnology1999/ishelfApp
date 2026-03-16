@@ -57,7 +57,7 @@ export default function Profile() {
     }
   };
 
-  const handleLogOut = () => {
+  const handleLogOut = async () => {
     Alert.alert(
       'Log Out',
       'Are you sure you want to log out?',
@@ -67,8 +67,19 @@ export default function Profile() {
           text: 'Log Out',
           style: 'destructive',
           onPress: async () => {
-            await readerAuth.logout();
-            router.replace('/Reader/Login');
+            try {
+              // Clear all AsyncStorage data
+              await AsyncStorage.removeItem('readerToken');
+              await AsyncStorage.removeItem('readerData');
+              await AsyncStorage.removeItem('readerProfileImage');
+              await AsyncStorage.removeItem('downloadedBooks');
+              
+              // Navigate to login screen
+              router.replace('/Reader/Login');
+            } catch (error) {
+              console.error('Logout error:', error);
+              Alert.alert('Error', 'Failed to logout. Please try again.');
+            }
           },
         },
       ]

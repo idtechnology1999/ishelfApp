@@ -8,10 +8,12 @@ import {
   Alert,
   Dimensions,
   Platform,
+  Linking,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { readerBooks } from '../../readerAPI';
 
 const { width, height } = Dimensions.get('window');
@@ -36,7 +38,15 @@ export default function BookReader() {
       }
 
       const data = await readerBooks.getBookContent(bookId);
-      setBook(data.book);
+      const token = await AsyncStorage.getItem('readerToken');
+      
+      // Use stream endpoint with token for authenticated PDF access
+      const streamUrl = `${process.env.EXPO_PUBLIC_API_URL}/api/readers/books/stream/${bookId}?token=${encodeURIComponent(token || '')}`;
+      
+      setBook({
+        ...data.book,
+        pdfUrl: streamUrl
+      });
     } catch (error: any) {
       console.error('Failed to load book:', error);
       setError(error.response?.data?.message || 'Failed to load book');
@@ -50,21 +60,7 @@ export default function BookReader() {
       if (Platform.OS === 'web') {
         window.open(book.pdfUrl, '_blank');
       } else {
-        Alert.alert(
-          'Open PDF',
-          'This will open the PDF in your default browser.',
-          [
-            { text: 'Cancel', style: 'cancel' },
-            {
-              text: 'Open',
-              onPress: () => {
-                // For mobile, you might want to use Linking
-                // Linking.openURL(book.pdfUrl);
-                console.log('Opening PDF:', book.pdfUrl);
-              }
-            }
-          ]
-        );
+        Linking.openURL(book.pdfUrl);
       }
     }
   };

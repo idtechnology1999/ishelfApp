@@ -29,13 +29,21 @@ export default function SignUpSuccessful() {
         <Text style={styles.subtitle}>
           Your account has been created successfully
         </Text>
+        
+        {/* Verification Notice */}
+        <View style={styles.noticeCard}>
+          <Ionicons name="time-outline" size={24} color="#FF9800" />
+          <Text style={styles.noticeText}>
+            Please wait for admin verification. You can login within the next 30 minutes after your account is verified.
+          </Text>
+        </View>
 
         {/* Login Button */}
         <TouchableOpacity 
           style={styles.loginButton}
           onPress={handleLogin}
         >
-          <Text style={styles.loginButtonText}>Login to Your Account</Text>
+          <Text style={styles.loginButtonText}>Go to Login</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -71,7 +79,26 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#666",
     textAlign: "center",
-    marginBottom: 48,
+    marginBottom: 24,
+  },
+
+  noticeCard: {
+    flexDirection: "row",
+    backgroundColor: "#FFF3E0",
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#FFE0B2",
+    marginBottom: 32,
+    alignItems: "center",
+    gap: 12,
+  },
+
+  noticeText: {
+    flex: 1,
+    fontSize: 14,
+    color: "#E65100",
+    lineHeight: 20,
   },
 
   loginButton: {

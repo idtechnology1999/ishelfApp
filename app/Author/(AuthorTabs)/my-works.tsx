@@ -125,6 +125,10 @@ export default function MyWorksTab() {
                   <Text style={styles.bookTitle} numberOfLines={2}>
                     {book.title}
                   </Text>
+                  <View style={styles.salesBadge}>
+                    <Ionicons name="people" size={14} color="#4CAF50" />
+                    <Text style={styles.salesText}>{book.salesCount || 0} {book.salesCount === 1 ? 'buyer' : 'buyers'}</Text>
+                  </View>
                   <View style={styles.bookFooter}>
                     <View>
                       <Text style={styles.priceLabel}>Price</Text>
@@ -277,6 +281,24 @@ const styles = StyleSheet.create({
     color: "#333",
     marginBottom: 8,
     minHeight: 36,
+  },
+
+  salesBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#E8F5E9",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    gap: 4,
+    alignSelf: "flex-start",
+    marginBottom: 8,
+  },
+
+  salesText: {
+    fontSize: 11,
+    fontWeight: "600",
+    color: "#4CAF50",
   },
 
   bookFooter: {

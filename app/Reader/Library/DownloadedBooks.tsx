@@ -42,21 +42,93 @@ export default function DownloadedBooks() {
     setRefreshing(false);
   };
 
+  // Debug function to check AsyncStorage
+  const debugStorage = async () => {
+    try {
+      const readerData = await AsyncStorage.getItem('readerData');
+      const downloadedBooksData = await AsyncStorage.getItem('downloadedBooks');
+      
+      console.log('=== DEBUG INFO ===');
+      console.log('Reader Data:', readerData);
+      console.log('Downloaded Books:', downloadedBooksData);
+      
+      if (readerData) {
+        const reader = JSON.parse(readerData);
+        console.log('Reader ID:', reader._id);
+      }
+      
+      if (downloadedBooksData) {
+        const books = JSON.parse(downloadedBooksData);
+        console.log('Total books in storage:', books.length);
+        books.forEach((book: any, index: number) => {
+          console.log(`Book ${index + 1}:`, {
+            title: book.title,
+            bookId: book.bookId,
+            readerId: book.readerId
+          });
+        });
+      }
+      
+      Alert.alert('Debug Info', 'Check browser console (F12) for details');
+    } catch (error) {
+      console.error('Debug error:', error);
+      Alert.alert('Error', 'Failed to read storage');
+    }
+  };
+
   const loadDownloadedBooks = async () => {
     try {
+      // Get current reader ID
+      const readerData = await AsyncStorage.getItem('readerData');
+      console.log('Raw readerData:', readerData);
+      
+      if (!readerData) {
+        console.log('No readerData in storage');
+        setBooks([]);
+        setLoading(false);
+        return;
+      }
+      
+      const reader = JSON.parse(readerData);
+      console.log('Parsed reader object:', reader);
+      console.log('Reader keys:', Object.keys(reader));
+      
+      // Try different possible ID fields
+      const readerId = reader._id || reader.id || reader.readerId;
+      console.log('Current readerId:', readerId);
+      
+      if (!readerId) {
+        console.log('No reader ID found, showing empty');
+        setBooks([]);
+        setLoading(false);
+        return;
+      }
+      
       // Get downloaded books from AsyncStorage
       const downloadedBooksData = await AsyncStorage.getItem('downloadedBooks');
+      console.log('Downloaded books data:', downloadedBooksData);
+      
       if (downloadedBooksData) {
-        const downloadedBooks = JSON.parse(downloadedBooksData);
+        const allDownloadedBooks = JSON.parse(downloadedBooksData);
+        console.log('All downloaded books:', allDownloadedBooks);
+        
+        // Filter books ONLY for current user (strict match)
+        const userBooks = allDownloadedBooks.filter((book: any) => 
+          book.readerId === readerId
+        );
+        
+        console.log('User books after filter:', userBooks);
         
         // Verify files still exist and get book details
         const validBooks = [];
-        for (const book of downloadedBooks) {
+        for (const book of userBooks) {
           if (Platform.OS !== 'web') {
             // For mobile, check if file exists
-            const fileInfo = await FileSystem.getInfoAsync(book.localPath);
-            if (fileInfo.exists) {
-              validBooks.push(book);
+            if (book.localPath) {
+              const fileInfo = await FileSystem.getInfoAsync(book.localPath);
+              if (fileInfo.exists) {
+                validBooks.push(book);
+              }
             }
           } else {
             // For web, just add all books (web doesn't have persistent file storage)
@@ -64,12 +136,18 @@ export default function DownloadedBooks() {
           }
         }
         
+        console.log('Valid books:', validBooks);
         setBooks(validBooks);
         
-        // Update AsyncStorage with valid books only
-        if (validBooks.length !== downloadedBooks.length) {
-          await AsyncStorage.setItem('downloadedBooks', JSON.stringify(validBooks));
+        // Update AsyncStorage with valid books only (keep all users' books)
+        if (validBooks.length !== userBooks.length) {
+          const otherUsersBooks = allDownloadedBooks.filter((book: any) => book.readerId !== readerId);
+          const updatedBooks = [...otherUsersBooks, ...validBooks];
+          await AsyncStorage.setItem('downloadedBooks', JSON.stringify(updatedBooks));
         }
+      } else {
+        console.log('No downloaded books in storage');
+        setBooks([]);
       }
     } catch (error) {
       console.error('Failed to load downloaded books:', error);
@@ -79,19 +157,7 @@ export default function DownloadedBooks() {
   };
 
   const handleReadNow = (book: any) => {
-    if (Platform.OS === 'web') {
-      // For web, redirect to online reader
-      router.push(`/Reader/Library/BookReader?bookId=${book.bookId}`);
-    } else {
-      // For mobile, open local file
-      if (book.localPath) {
-        // You could implement a local PDF viewer here
-        // For now, we'll use the online reader
-        router.push(`/Reader/Library/BookReader?bookId=${book.bookId}`);
-      } else {
-        Alert.alert('Error', 'Local file not found');
-      }
-    }
+    router.push(`/Reader/Library/BookReader?bookId=${book.bookId}`);
   };
 
   const handleDelete = async (book: any) => {
@@ -105,11 +171,17 @@ export default function DownloadedBooks() {
           style: 'destructive',
           onPress: async () => {
             try {
+              // Get current reader ID
+              const readerData = await AsyncStorage.getItem('readerData');
+              const readerId = readerData ? JSON.parse(readerData)._id : null;
+              
               // Remove from local storage
               const downloadedBooksData = await AsyncStorage.getItem('downloadedBooks');
               if (downloadedBooksData) {
                 const downloadedBooks = JSON.parse(downloadedBooksData);
-                const updatedBooks = downloadedBooks.filter((b: any) => b.bookId !== book.bookId);
+                const updatedBooks = downloadedBooks.filter((b: any) => 
+                  !(b.bookId === book.bookId && b.readerId === readerId)
+                );
                 await AsyncStorage.setItem('downloadedBooks', JSON.stringify(updatedBooks));
               }
               
@@ -144,6 +216,9 @@ export default function DownloadedBooks() {
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Downloaded Books</Text>
         <View style={styles.viewToggle}>
+          <TouchableOpacity onPress={debugStorage}>
+            <Ionicons name="bug" size={24} color="#999" />
+          </TouchableOpacity>
           <TouchableOpacity
             onPress={() => setViewMode("list")}
             style={viewMode === "list" && styles.activeView}
@@ -198,29 +273,39 @@ export default function DownloadedBooks() {
           <View style={styles.booksContainer}>
             {books.map((book: any) => (
               <View key={book.bookId} style={styles.bookCard}>
-                {book.coverImage ? (
-                  <Image
-                    source={{ uri: book.coverImage.startsWith('http') ? book.coverImage : `${process.env.EXPO_PUBLIC_API_URL}/${book.coverImage}` }}
-                    style={styles.bookImage}
-                    resizeMode="cover"
-                  />
-                ) : (
-                  <Image
-                    source={require("../../../assets/images/book-placeholder.png")}
-                    style={styles.bookImage}
-                    resizeMode="cover"
-                  />
-                )}
+                <Image
+                  source={{ 
+                    uri: book.coverImage?.startsWith('http') 
+                      ? book.coverImage 
+                      : book.coverImage?.startsWith('/') 
+                        ? `${process.env.EXPO_PUBLIC_API_URL}${book.coverImage}` 
+                        : `${process.env.EXPO_PUBLIC_API_URL}/${book.coverImage}` 
+                  }}
+                  style={styles.bookImage}
+                  resizeMode="cover"
+                  defaultSource={require("../../../assets/images/book-placeholder.png")}
+                />
                 <View style={styles.bookDetails}>
                   <View style={styles.bookInfo}>
                     <Text style={styles.authorText}>{book.author || 'Unknown Author'}</Text>
-                    <Text style={styles.bookTitle}>{book.title || 'Untitled'}</Text>
+                    <Text style={styles.bookTitle} numberOfLines={2} ellipsizeMode="tail">{book.title || 'Untitled'}</Text>
                     <View style={styles.downloadInfo}>
                       <Ionicons name="download" size={16} color="#22c55e" />
                       <Text style={styles.downloadedText}>Downloaded</Text>
                       <Text style={styles.downloadDate}>
                         {new Date(book.downloadedAt).toLocaleDateString()}
                       </Text>
+                    </View>
+                    <View style={styles.readerAvatars}>
+                      <View style={[styles.avatar, { backgroundColor: '#E85D55' }]}>
+                        <Ionicons name="person" size={12} color="#FFFFFF" />
+                      </View>
+                      <View style={[styles.avatar, { backgroundColor: '#4CAF50', marginLeft: -8 }]}>
+                        <Ionicons name="person" size={12} color="#FFFFFF" />
+                      </View>
+                      <View style={[styles.avatar, { backgroundColor: '#2196F3', marginLeft: -8 }]}>
+                        <Ionicons name="person" size={12} color="#FFFFFF" />
+                      </View>
                     </View>
                   </View>
                   <TouchableOpacity
@@ -288,11 +373,13 @@ const styles = StyleSheet.create({
     gap: 12,
     borderWidth: 1,
     borderColor: "#FFE5E3",
+    overflow: "hidden",
   },
   bookImage: {
-    width: 120,
-    height: 160,
+    width: 100,
+    height: 140,
     borderRadius: 8,
+    flexShrink: 0,
   },
   bookDetails: {
     flex: 1,
@@ -307,10 +394,10 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   bookTitle: {
-    fontSize: 18,
+    fontSize: 14,
     fontWeight: "700",
     color: "#2C2C2C",
-    lineHeight: 24,
+    lineHeight: 20,
     marginBottom: 8,
   },
   downloadInfo: {
@@ -327,6 +414,20 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "#999",
   },
+  readerAvatars: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 8,
+  },
+  avatar: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 2,
+    borderColor: "#FFFFFF",
+  },
   deleteButton: {
     alignSelf: "flex-end",
     padding: 4,
@@ -335,7 +436,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     bottom: 12,
     right: 12,
-    left: 144,
+    left: 124,
   },
   readButton: {
     backgroundColor: "#E85D55",

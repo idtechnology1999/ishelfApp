@@ -65,7 +65,7 @@ export default function Payment() {
 
     setLoading(true);
     try {
-      const response = await authorAPI.initializePayment(email, 7000);
+      const response = await authorAPI.initializePayment(email, 4800);
       const { authorization_url, reference } = response.data;
 
       setPaymentReference(reference);
@@ -126,7 +126,7 @@ export default function Payment() {
 
         <View style={styles.infoContainer}>
           <Text style={styles.infoTitle}>Upload Fee Payment</Text>
-          <Text style={styles.infoAmount}>₦7,000</Text>
+          <Text style={styles.infoAmount}>₦4,800</Text>
           <Text style={styles.infoDescription}>
             One-time payment to publish your book on iShelf
           </Text>

@@ -46,8 +46,8 @@ export default function Login() {
       const message = error.response?.data?.message;
       
       if (status === 403) {
-        if (message?.includes('verified')) {
-          showToast("Account pending verification", "warning");
+        if (message?.includes('verified') || message?.toLowerCase().includes('pending')) {
+          showToast("Account pending verification. Login back on or before 30 minutes.", "warning");
         } else {
           showToast("Account suspended. Contact support.", "error");
         }

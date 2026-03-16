@@ -56,7 +56,12 @@ export default function LoginScreen() {
       const message = error.response?.data?.message || 'Invalid credentials';
       
       if (status === 403) {
-        showToast(message, 'warning');
+        // Account pending verification
+        if (message.toLowerCase().includes('pending') || message.toLowerCase().includes('verification')) {
+          showToast('Account pending verification. Login back on or before 30 minutes.', 'warning');
+        } else {
+          showToast(message, 'warning');
+        }
       } else {
         showToast(message, 'error');
       }

@@ -111,10 +111,20 @@ export default function Earning() {
                 )}
                 <View style={styles.transactionDetails}>
                   <Text style={styles.transactionTitle}>{transaction.title}</Text>
-                  <Text style={styles.transactionDate}>{new Date(transaction.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</Text>
+                  <View style={styles.badgesContainer}>
+                    <View style={styles.buyersBadge}>
+                      <Ionicons name="people" size={12} color="#4CAF50" />
+                      <Text style={styles.badgeText}>{transaction.uniqueBuyers || 0} {transaction.uniqueBuyers === 1 ? 'buyer' : 'buyers'}</Text>
+                    </View>
+                    <View style={styles.salesBadge}>
+                      <Ionicons name="cart" size={12} color="#2196F3" />
+                      <Text style={styles.badgeText}>{transaction.salesCount || 0} {transaction.salesCount === 1 ? 'sale' : 'sales'}</Text>
+                    </View>
+                  </View>
+                  <Text style={styles.transactionDate}>Last sale: {new Date(transaction.lastSaleDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</Text>
                 </View>
                 <View style={styles.transactionRight}>
-                  <Text style={styles.transactionAmount}>₦{transaction.amount.toLocaleString()}</Text>
+                  <Text style={styles.transactionAmount}>₦{transaction.totalEarnings.toLocaleString()}</Text>
                   <Text style={[styles.transactionStatus, { color: '#4CAF50' }]}>Completed</Text>
                 </View>
               </View>
@@ -301,11 +311,43 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: "600",
     color: "#000000",
+    marginBottom: 6,
+  },
+
+  badgesContainer: {
+    flexDirection: "row",
+    gap: 8,
     marginBottom: 4,
   },
 
+  buyersBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#E8F5E9",
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 10,
+    gap: 4,
+  },
+
+  salesBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#E3F2FD",
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 10,
+    gap: 4,
+  },
+
+  badgeText: {
+    fontSize: 10,
+    fontWeight: "600",
+    color: "#666666",
+  },
+
   transactionDate: {
-    fontSize: 13,
+    fontSize: 12,
     color: "#666666",
   },
 

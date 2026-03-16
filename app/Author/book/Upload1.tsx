@@ -34,7 +34,7 @@ export default function Upload1() {
 
   const handleProceed = () => {
     if (hasPaid) {
-      router.push("/Author/book/UploadContinue1");
+      router.push("/Author/book/UploadContinue1?new=true");
     } else {
       router.push("/Author/book/payment");
     }
@@ -74,7 +74,7 @@ export default function Upload1() {
             </View>
           ) : (
             <Text style={styles.infoText}>
-              To Publish your book on i-shelf, a one-time upload fee of ₦7,000 is required
+              To Publish your book on i-shelf, a one-time upload fee of ₦4,800 is required
             </Text>
           )}
         </View>
@@ -84,7 +84,7 @@ export default function Upload1() {
           onPress={handleProceed}
         >
           <Text style={styles.proceedButtonText}>
-            {hasPaid ? "Continue Upload" : "Proceed to Payment (₦7,000)"}
+            {hasPaid ? "Continue Upload" : "Proceed to Payment (₦4,800)"}
           </Text>
         </TouchableOpacity>
       </ScrollView>

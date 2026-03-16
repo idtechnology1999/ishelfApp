@@ -18,7 +18,6 @@ import { authorAPI } from "../../authorAPI";
 
 export default function WithdrawScreen() {
   const router = useRouter();
-  const [withdrawAmount, setWithdrawAmount] = useState("");
   const [bankAccount, setBankAccount] = useState(null);
   const [banks, setBanks] = useState([]);
   const [filteredBanks, setFilteredBanks] = useState([]);
@@ -91,7 +90,16 @@ export default function WithdrawScreen() {
       setAccountName("");
       setSelectedBank(null);
       setBankSearch("");
-      Alert.alert("Success", "Bank account setup successfully!");
+      Alert.alert(
+        "Success", 
+        "Bank account setup successfully! Payments will be automatically sent to your account within 1-2 business days.",
+        [
+          {
+            text: "OK",
+            onPress: () => router.back()
+          }
+        ]
+      );
     } catch (error: any) {
       Alert.alert("Error", error.response?.data?.message || "Failed to setup account");
     } finally {
@@ -122,30 +130,6 @@ export default function WithdrawScreen() {
     }
   };
 
-  const handleWithdraw = async () => {
-    if (!withdrawAmount || parseFloat(withdrawAmount) <= 0) {
-      Alert.alert("Error", "Please enter a valid amount");
-      return;
-    }
-
-    if (!bankAccount) {
-      Alert.alert("Error", "No bank account setup. Please setup your bank account first.");
-      return;
-    }
-
-    setProcessing(true);
-    try {
-      await authorAPI.initiateWithdrawal(parseFloat(withdrawAmount));
-      Alert.alert("Success", "Withdrawal request submitted successfully!");
-      setWithdrawAmount("");
-      router.back();
-    } catch (error: any) {
-      Alert.alert("Error", error.response?.data?.message || "Failed to process withdrawal");
-    } finally {
-      setProcessing(false);
-    }
-  };
-
   if (loading) {
     return (
       <SafeAreaView style={styles.container}>
@@ -171,22 +155,40 @@ export default function WithdrawScreen() {
             >
               <Ionicons name="chevron-back" size={28} color="#E85D54" />
             </TouchableOpacity>
-            <Text style={styles.headerTitle}>Withdraw Funds</Text>
+            <Text style={styles.headerTitle}>Setup Payment Account</Text>
             <View style={styles.headerSpacer} />
           </View>
 
           {/* Bank Account Info or Setup Form */}
           {bankAccount && bankAccount.accountNumber ? (
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Bank Account</Text>
+              <Text style={styles.sectionTitle}>Payment Account</Text>
               <View style={styles.bankInfoCard}>
                 <View style={{ flex: 1 }}>
+                  <View style={styles.autoSettlementBadge}>
+                    <Ionicons name="flash" size={14} color="#4CAF50" />
+                    <Text style={styles.autoSettlementText}>Auto Settlement Enabled</Text>
+                  </View>
                   <Text style={styles.bankName}>{bankAccount.bankName}</Text>
                   <Text style={styles.accountNumber}>{bankAccount.accountNumber}</Text>
                   <Text style={styles.accountName}>{bankAccount.accountName || 'Account Name'}</Text>
                 </View>
                 <Ionicons name="checkmark-circle" size={24} color="#4CAF50" />
               </View>
+              
+              <View style={styles.infoCard}>
+                <Ionicons name="information-circle" size={20} color="#E85D54" />
+                <Text style={styles.infoText}>
+                  Payments are automatically transferred to your account within 1-2 business days after each sale. No withdrawal needed!
+                </Text>
+              </View>
+              
+              <TouchableOpacity
+                style={styles.doneButton}
+                onPress={() => router.back()}
+              >
+                <Text style={styles.doneButtonText}>Done</Text>
+              </TouchableOpacity>
             </View>
           ) : showSetupForm ? (
             <View style={styles.section}>
@@ -278,9 +280,6 @@ export default function WithdrawScreen() {
                   </>
                 )}
               </TouchableOpacity>
-              <TouchableOpacity onPress={() => setShowSetupForm(false)}>
-                <Text style={styles.cancelText}>Cancel</Text>
-              </TouchableOpacity>
             </View>
           ) : (
             <View style={styles.section}>
@@ -300,54 +299,7 @@ export default function WithdrawScreen() {
               </TouchableOpacity>
             </View>
           )}
-
-          {/* Withdrawal Amount */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Withdrawal Amount</Text>
-            <View style={styles.inputContainer}>
-              <Text style={styles.currencySymbol}>₦</Text>
-              <TextInput
-                style={styles.amountInput}
-                value={withdrawAmount}
-                onChangeText={setWithdrawAmount}
-                placeholder="0.00"
-                keyboardType="decimal-pad"
-                editable={!!bankAccount}
-              />
-            </View>
-            <Text style={styles.helperText}>Minimum withdrawal: ₦1,000</Text>
-          </View>
-
-          {/* Withdrawal Info */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Withdrawal Details</Text>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Processing Time:</Text>
-              <Text style={styles.infoValue}>1-2 Business Days</Text>
-            </View>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Commission:</Text>
-              <Text style={styles.infoValue}>None</Text>
-            </View>
-          </View>
         </ScrollView>
-
-        {/* Withdraw Button */}
-        {bankAccount && (
-          <View style={styles.footer}>
-            <TouchableOpacity
-              style={[styles.withdrawButton, processing && styles.buttonDisabled]}
-              onPress={handleWithdraw}
-              disabled={processing}
-            >
-              {processing ? (
-                <ActivityIndicator color="#FFFFFF" />
-              ) : (
-                <Text style={styles.withdrawButtonText}>Withdraw Now</Text>
-              )}
-            </TouchableOpacity>
-          </View>
-        )}
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -414,6 +366,25 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 1,
     borderColor: "#FFD4D1",
+    marginBottom: 16,
+  },
+
+  autoSettlementBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#E8F5E9",
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+    gap: 4,
+    alignSelf: "flex-start",
+    marginBottom: 12,
+  },
+
+  autoSettlementText: {
+    fontSize: 11,
+    fontWeight: "600",
+    color: "#4CAF50",
   },
 
   bankName: {
@@ -628,6 +599,46 @@ const styles = StyleSheet.create({
   },
 
   setupAccountButtonText: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#FFFFFF",
+  },
+
+  infoCard: {
+    flexDirection: "row",
+    backgroundColor: "#FFF5F4",
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#FFD4D1",
+    gap: 12,
+    marginBottom: 16,
+  },
+
+  infoText: {
+    flex: 1,
+    fontSize: 13,
+    color: "#666666",
+    lineHeight: 18,
+  },
+
+  doneButton: {
+    height: 56,
+    backgroundColor: "#E85D54",
+    borderRadius: 28,
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#E85D54",
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+
+  doneButtonText: {
     fontSize: 18,
     fontWeight: "600",
     color: "#FFFFFF",

@@ -1,5 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import React, { useState, useEffect } from "react";
 import {
   StyleSheet,
@@ -18,6 +18,7 @@ import { authorAPI } from "../../authorAPI";
 
 export default function Upload2() {
   const router = useRouter();
+  const { new: isNew } = useLocalSearchParams();
   const [bookTitle, setBookTitle] = useState("");
   const [subtitle, setSubtitle] = useState("");
   const [coAuthors, setCoAuthors] = useState("");
@@ -29,7 +30,7 @@ export default function Upload2() {
 
   useEffect(() => {
     checkPaymentStatus();
-    loadDraftBook();
+    if (!isNew) loadDraftBook();
   }, []);
 
   const checkPaymentStatus = async () => {

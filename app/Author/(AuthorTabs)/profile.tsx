@@ -48,9 +48,17 @@ export default function Profile() {
   };
 
   const handleLogOut = async () => {
-    await AsyncStorage.removeItem('authorToken');
-    await AsyncStorage.removeItem('authorData');
-    router.push("/Author/Login");
+    try {
+      // Clear all AsyncStorage data
+      await AsyncStorage.removeItem('authorToken');
+      await AsyncStorage.removeItem('authorData');
+      await AsyncStorage.removeItem('authorProfileImage');
+      
+      // Navigate to login screen
+      router.replace('/Author/Login');
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
   };
 
   return (

@@ -17,7 +17,7 @@ import { authorAPI } from "../../authorAPI";
 
 export default function HomeTab() {
   const router = useRouter();
-  const [stats, setStats] = useState({ totalBooks: 0, totalEarnings: 0 });
+  const [stats, setStats] = useState({ totalBooks: 0, totalEarnings: 0, totalSales: 0 });
   const [purchases, setPurchases] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -32,7 +32,7 @@ export default function HomeTab() {
         authorAPI.getLatestPurchases()
       ]);
       setStats(statsData);
-      setPurchases(purchasesData.purchases);
+      setPurchases(purchasesData.purchases || []);
     } catch (error) {
       console.error('Failed to load dashboard data:', error);
     } finally {
@@ -76,21 +76,30 @@ export default function HomeTab() {
               <ActivityIndicator size="large" color="#DC143C" />
             </View>
           ) : (
-            <View style={styles.overviewContainer}>
-              {/* Total Uploads Card */}
-              <View style={[styles.card, styles.uploadsCard]}>
-                <Ionicons name="cloud-upload-outline" size={32} color="#DC143C" />
-                <Text style={styles.cardLabel}>Total Uploads</Text>
-                <Text style={styles.cardValue}>{stats.totalBooks}</Text>
+            <>
+              <View style={styles.overviewContainer}>
+                {/* Total Uploads Card */}
+                <View style={[styles.card, styles.uploadsCard]}>
+                  <Ionicons name="cloud-upload-outline" size={32} color="#DC143C" />
+                  <Text style={styles.cardLabel}>Total Uploads</Text>
+                  <Text style={styles.cardValue}>{stats.totalBooks}</Text>
+                </View>
+
+                {/* Total Sales Card */}
+                <View style={[styles.card, styles.salesCard]}>
+                  <Ionicons name="people-outline" size={32} color="#DC143C" />
+                  <Text style={styles.cardLabel}>Total Sales</Text>
+                  <Text style={styles.cardValue}>{stats.totalSales || 0}</Text>
+                </View>
               </View>
 
-              {/* Total Earnings Card */}
-              <View style={[styles.card, styles.earningsCard]}>
+              {/* Earnings Card - Full Width */}
+              <View style={styles.earningsFullCard}>
                 <Ionicons name="wallet-outline" size={32} color="#DC143C" />
                 <Text style={styles.cardLabel}>Total Earnings</Text>
                 <Text style={styles.cardValue}>₦{stats.totalEarnings.toLocaleString()}</Text>
               </View>
-            </View>
+            </>
           )}
 
           {/* Upload Your Book Section */}
@@ -131,13 +140,22 @@ export default function HomeTab() {
                   </View>
                   <View style={styles.purchaseInfo}>
                     <Text style={styles.purchaseTitle}>{purchase.title}</Text>
-                    <Text style={styles.purchaseDate}>
-                      {new Date(purchase.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
-                    </Text>
+                    <View style={styles.purchaseMetaRow}>
+                      <View style={styles.soldBadge}>
+                        <Ionicons name="checkmark-circle" size={14} color="#4CAF50" />
+                        <Text style={styles.soldText}>Sold</Text>
+                      </View>
+                      <View style={styles.salesCountBadge}>
+                        <Ionicons name="people" size={12} color="#666" />
+                        <Text style={styles.salesCountText}>{purchase.uniqueBuyers || 0}</Text>
+                      </View>
+                    </View>
                   </View>
                   <View style={styles.purchaseRight}>
-                    <Text style={styles.purchaseAmount}>₦{purchase.amount.toLocaleString()}</Text>
-                    <Text style={styles.purchaseStatus}>Sold</Text>
+                    <Text style={styles.purchaseAmount}>₦{purchase.totalEarnings.toLocaleString()}</Text>
+                    <Text style={styles.purchaseDate}>
+                      {new Date(purchase.lastSaleDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                    </Text>
                   </View>
                 </TouchableOpacity>
               ))
@@ -199,8 +217,17 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFE5E5", // Light red/pink
   },
 
-  earningsCard: {
-    backgroundColor: "#FFF0F0", // Very light red/pink
+  salesCard: {
+    backgroundColor: "#E8F5E9", // Light green
+  },
+
+  earningsFullCard: {
+    backgroundColor: "#FFF0F0",
+    marginHorizontal: 24,
+    marginTop: 16,
+    padding: 20,
+    borderRadius: 16,
+    minHeight: 120,
   },
 
   cardLabel: {
@@ -267,6 +294,45 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 
+  purchaseMetaRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginTop: 4,
+  },
+
+  soldBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#E8F5E9",
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 8,
+    gap: 3,
+  },
+
+  soldText: {
+    fontSize: 11,
+    fontWeight: "600",
+    color: "#4CAF50",
+  },
+
+  salesCountBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#F5F5F5",
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 8,
+    gap: 3,
+  },
+
+  salesCountText: {
+    fontSize: 11,
+    fontWeight: "600",
+    color: "#666",
+  },
+
   purchaseTitle: {
     fontSize: 15,
     fontWeight: "600",
@@ -275,8 +341,9 @@ const styles = StyleSheet.create({
   },
 
   purchaseDate: {
-    fontSize: 13,
-    color: "#666",
+    fontSize: 11,
+    color: "#999",
+    marginTop: 4,
   },
 
   purchaseRight: {
@@ -286,13 +353,7 @@ const styles = StyleSheet.create({
   purchaseAmount: {
     fontSize: 15,
     fontWeight: "600",
-    color: "#DC143C", // Crimson red for amounts
-    marginBottom: 4,
-  },
-
-  purchaseStatus: {
-    fontSize: 13,
-    color: "#2ECC71", // Keep green for "Successful" status
+    color: "#DC143C",
   },
 
   loadingContainer: {
