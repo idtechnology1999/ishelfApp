@@ -39,13 +39,18 @@ export default function BookReader() {
 
       const data = await readerBooks.getBookContent(bookId);
       const token = await AsyncStorage.getItem('readerToken');
-      
-      // Use stream endpoint with token for authenticated PDF access
+
+      // Use stream endpoint — server pipes file inline with correct Content-Type
       const streamUrl = `${process.env.EXPO_PUBLIC_API_URL}/api/readers/books/stream/${bookId}?token=${encodeURIComponent(token || '')}`;
-      
+
+      // Detect file type from pdfUrl stored on book
+      const rawUrl = data.book?.pdfUrl || '';
+      const ext = rawUrl.split('?')[0].split('.').pop()?.toLowerCase() || 'pdf';
+
       setBook({
         ...data.book,
-        pdfUrl: streamUrl
+        pdfUrl: streamUrl,
+        fileExt: ext,
       });
     } catch (error: any) {
       console.error('Failed to load book:', error);
@@ -113,18 +118,22 @@ export default function BookReader() {
         </TouchableOpacity>
       </View>
 
-      {/* PDF Viewer */}
+      {/* File Viewer */}
       <View style={styles.pdfContainer}>
         {Platform.OS === 'web' ? (
-          <iframe
-            src={book.pdfUrl}
-            style={{
-              width: '100%',
-              height: '100%',
-              border: 'none',
-            }}
-            title={book.title}
-          />
+          book.fileExt === 'docx' || book.fileExt === 'doc' ? (
+            <iframe
+              src={`https://docs.google.com/gview?url=${encodeURIComponent(book.pdfUrl)}&embedded=true`}
+              style={{ width: '100%', height: '100%', border: 'none' }}
+              title={book.title}
+            />
+          ) : (
+            <iframe
+              src={book.pdfUrl}
+              style={{ width: '100%', height: '100%', border: 'none' }}
+              title={book.title}
+            />
+          )
         ) : (
           <View style={styles.mobileContainer}>
             <Ionicons name="document-text-outline" size={80} color="#E85D54" />

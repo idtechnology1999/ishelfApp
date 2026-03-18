@@ -87,7 +87,7 @@ export default function Cart() {
             <View key={item._id} style={styles.cartItem}>
               <TouchableOpacity onPress={() => handleViewBook(item.bookId._id)}>
                 {item.bookId.coverImage ? (
-                  <Image source={{ uri: `${process.env.EXPO_PUBLIC_API_URL}/${item.bookId.coverImage}` }} style={styles.bookImage} resizeMode="cover" />
+                  <Image source={{ uri: item.bookId.coverImage?.startsWith('http') ? item.bookId.coverImage : `${process.env.EXPO_PUBLIC_API_URL}/${item.bookId.coverImage}` }} style={styles.bookImage} resizeMode="cover" />
                 ) : (
                   <Image source={require("../../../assets/images/book-placeholder.png")} style={styles.bookImage} resizeMode="cover" />
                 )}

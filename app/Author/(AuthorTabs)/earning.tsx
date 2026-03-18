@@ -105,7 +105,7 @@ export default function Earning() {
             transactions.map((transaction) => (
               <View key={transaction.id} style={styles.transactionCard}>
                 {transaction.coverImage ? (
-                  <Image source={{ uri: `${process.env.EXPO_PUBLIC_API_URL}/${transaction.coverImage}` }} style={styles.transactionImage} />
+                  <Image source={{ uri: transaction.coverImage.startsWith('http') ? transaction.coverImage : `${process.env.EXPO_PUBLIC_API_URL}/${transaction.coverImage}` }} style={styles.transactionImage} />
                 ) : (
                   <Image source={require('../../../assets/images/book-placeholder.png')} style={styles.transactionImage} />
                 )}

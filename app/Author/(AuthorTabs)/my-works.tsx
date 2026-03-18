@@ -45,7 +45,9 @@ export default function MyWorksTab() {
 
   const getImageSource = (coverImage: string) => {
     if (coverImage) {
-      return { uri: `${process.env.EXPO_PUBLIC_API_URL}/${coverImage}` };
+      // Cloudinary returns full URL, local storage returns path
+      const uri = coverImage.startsWith('http') ? coverImage : `${process.env.EXPO_PUBLIC_API_URL}/${coverImage}`;
+      return { uri };
     }
     return require('../../../assets/images/book-placeholder.png');
   };

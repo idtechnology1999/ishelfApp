@@ -52,7 +52,7 @@ export default function PersonaInformation() {
           headers: { Authorization: `Bearer ${token}` }
         });
         if (imgResponse.data.imageUrl) {
-          setProfileImage(`${API_URL}${imgResponse.data.imageUrl}`);
+          setProfileImage(imgResponse.data.imageUrl);
         }
       }
     } catch (error) {
@@ -82,17 +82,10 @@ export default function PersonaInformation() {
         const token = await AsyncStorage.getItem('readerToken');
         const response = await axios.post(
           `${API_URL}/api/readers/profile/upload-image`,
-          {
-            image: `data:image/jpeg;base64,${result.assets[0].base64}`,
-          },
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
+          { image: `data:image/jpeg;base64,${result.assets[0].base64}` },
+          { headers: { Authorization: `Bearer ${token}` } }
         );
-
-        setProfileImage(`${API_URL}${response.data.imageUrl}`);
+        setProfileImage(response.data.imageUrl);
         Alert.alert('Success', 'Profile image updated successfully');
       } catch (error) {
         console.error('Error uploading image:', error);

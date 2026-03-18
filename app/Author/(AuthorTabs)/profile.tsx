@@ -39,7 +39,9 @@ export default function Profile() {
           headers: { Authorization: `Bearer ${token}` }
         });
         if (response.data.imageUrl) {
-          setProfileImage(`${API_URL}${response.data.imageUrl}`);
+          // Cloudinary returns full URL, legacy returns path
+          const url = response.data.imageUrl;
+          setProfileImage(url.startsWith('http') ? url : `${API_URL}${url}`);
         }
       }
     } catch (error) {

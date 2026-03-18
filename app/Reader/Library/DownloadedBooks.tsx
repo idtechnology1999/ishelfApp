@@ -136,7 +136,8 @@ export default function DownloadedBooks() {
           }
         }
         
-        console.log('Valid books:', validBooks);
+        // Sort by most recently downloaded first
+        validBooks.sort((a: any, b: any) => new Date(b.downloadedAt).getTime() - new Date(a.downloadedAt).getTime());
         setBooks(validBooks);
         
         // Update AsyncStorage with valid books only (keep all users' books)
@@ -216,9 +217,6 @@ export default function DownloadedBooks() {
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Downloaded Books</Text>
         <View style={styles.viewToggle}>
-          <TouchableOpacity onPress={debugStorage}>
-            <Ionicons name="bug" size={24} color="#999" />
-          </TouchableOpacity>
           <TouchableOpacity
             onPress={() => setViewMode("list")}
             style={viewMode === "list" && styles.activeView}

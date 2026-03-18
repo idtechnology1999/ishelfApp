@@ -124,19 +124,14 @@ export default function HomeTab() {
                   style={styles.purchaseItem}
                 >
                   <View style={styles.bookThumbnail}>
-                    {purchase.coverImage ? (
-                      <Image
-                        source={{ uri: `${process.env.EXPO_PUBLIC_API_URL}/${purchase.coverImage}` }}
+                    <Image
+                        source={purchase.coverImage
+                          ? { uri: purchase.coverImage.startsWith('http') ? purchase.coverImage : `${process.env.EXPO_PUBLIC_API_URL}/${purchase.coverImage}` }
+                          : require('../../../assets/images/book-placeholder.png')
+                        }
                         style={styles.bookImage}
                         resizeMode="cover"
                       />
-                    ) : (
-                      <Image
-                        source={require('../../../assets/images/book-placeholder.png')}
-                        style={styles.bookImage}
-                        resizeMode="cover"
-                      />
-                    )}
                   </View>
                   <View style={styles.purchaseInfo}>
                     <Text style={styles.purchaseTitle}>{purchase.title}</Text>

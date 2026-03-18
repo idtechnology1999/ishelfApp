@@ -255,7 +255,7 @@ export default function Home() {
                 <View key={book._id} style={styles.bookCard}>
                   {book.coverImage ? (
                     <Image
-                      source={{ uri: `${process.env.EXPO_PUBLIC_API_URL}/${book.coverImage}` }}
+                      source={{ uri: book.coverImage.startsWith('http') ? book.coverImage : `${process.env.EXPO_PUBLIC_API_URL}/${book.coverImage}` }}
                       style={styles.bookImage}
                       resizeMode="cover"
                     />

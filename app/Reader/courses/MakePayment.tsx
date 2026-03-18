@@ -68,7 +68,7 @@ export default function MakePayment() {
       } else {
         response = await readerPayment.initializePayment(book._id, email);
       }
-      const { authorization_url, reference } = response.data;
+      const { authorization_url, reference } = response.data || response;
       setPaymentReference(reference);
       await AsyncStorage.setItem('paymentReference', reference);
       const supported = await Linking.canOpenURL(authorization_url);

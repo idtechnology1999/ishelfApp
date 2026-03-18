@@ -134,7 +134,7 @@ export default function PreviewAddToCart() {
         <View style={styles.imageContainer}>
           {book.coverImage ? (
             <Image
-              source={{ uri: `${process.env.EXPO_PUBLIC_API_URL}/${book.coverImage}` }}
+              source={{ uri: book.coverImage.startsWith('http') ? book.coverImage : `${process.env.EXPO_PUBLIC_API_URL}/${book.coverImage}` }}
               style={styles.bookImage}
               resizeMode="contain"
             />

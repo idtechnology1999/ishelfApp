@@ -40,7 +40,8 @@ export default function BookDetail() {
 
   const getImageSource = (coverImage: string) => {
     if (coverImage) {
-      return { uri: `${process.env.EXPO_PUBLIC_API_URL}/${coverImage}` };
+      const uri = coverImage.startsWith('http') ? coverImage : `${process.env.EXPO_PUBLIC_API_URL}/${coverImage}`;
+      return { uri };
     }
     return require('../../../assets/images/book-placeholder.png');
   };

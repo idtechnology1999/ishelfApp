@@ -25,15 +25,35 @@ export default function PurchasedBooks() {
   const [books, setBooks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [downloading, setDownloading] = useState<string | null>(null);
+  const [downloadCounts, setDownloadCounts] = useState<Record<string, number>>({});
 
   useEffect(() => {
     loadPurchasedBooks();
   }, []);
 
+  const loadDownloadCounts = async (purchases: any[]) => {
+    const readerData = await AsyncStorage.getItem('readerData');
+    if (!readerData) return;
+    const reader = JSON.parse(readerData);
+    const readerId = reader._id || reader.id || reader.readerId;
+    const existingDownloads = await AsyncStorage.getItem('downloadedBooks');
+    const downloadedBooks = existingDownloads ? JSON.parse(existingDownloads) : [];
+    const counts: Record<string, number> = {};
+    purchases.forEach((p: any) => {
+      const bookId = p.book?._id;
+      if (bookId) {
+        counts[bookId] = downloadedBooks.filter((b: any) => b.bookId === bookId && b.readerId === readerId).length;
+      }
+    });
+    setDownloadCounts(counts);
+  };
+
   const loadPurchasedBooks = async () => {
     try {
       const data = await readerBooks.getMyPurchases();
-      setBooks(data.purchases || []);
+      const purchases = data.purchases || [];
+      setBooks(purchases);
+      await loadDownloadCounts(purchases);
     } catch (error) {
       console.error('Failed to load purchased books:', error);
     } finally {
@@ -48,45 +68,63 @@ export default function PurchasedBooks() {
   const handleDownload = async (bookId: string, bookTitle: string, book: any) => {
     try {
       setDownloading(bookId);
-      
-      // Get current reader ID (MUST have valid ID)
+
       const readerData = await AsyncStorage.getItem('readerData');
-      console.log('Raw readerData for download:', readerData);
-      
       if (!readerData) {
         Alert.alert('Error', 'Please login again to download books');
         setDownloading(null);
         return;
       }
-      
+
       const reader = JSON.parse(readerData);
-      console.log('Parsed reader for download:', reader);
-      console.log('Reader keys:', Object.keys(reader));
-      
-      // Try different possible ID fields
       const readerId = reader._id || reader.id || reader.readerId;
-      console.log('Extracted readerId:', readerId);
-      
       if (!readerId) {
         Alert.alert('Error', 'Unable to identify user. Please logout and login again.');
         setDownloading(null);
         return;
       }
-      
-      console.log('Downloading book for reader:', readerId);
-      
-      // For web platform, open download link
+
+      // Check download count limit (max 2)
+      const existingDownloads = await AsyncStorage.getItem('downloadedBooks');
+      const downloadedBooks = existingDownloads ? JSON.parse(existingDownloads) : [];
+      const bookDownloads = downloadedBooks.filter((b: any) => b.bookId === bookId && b.readerId === readerId);
+
+      if (bookDownloads.length >= 2) {
+        Alert.alert(
+          'Download Limit Reached',
+          'You have already downloaded this book twice. You can only read it on your iShelf account now.'
+        );
+        setDownloading(null);
+        return;
+      }
+
+      const token = await AsyncStorage.getItem('readerToken');
+      const downloadUrl = `${process.env.EXPO_PUBLIC_API_URL}/api/readers/books/download/${bookId}`;
+
       if (Platform.OS === 'web') {
-        const token = await AsyncStorage.getItem('readerToken');
-        const downloadUrl = `${process.env.EXPO_PUBLIC_API_URL}/api/readers/books/download/${bookId}`;
-        
-        // Add token as a query parameter for web downloads
-        const urlWithToken = `${downloadUrl}?token=${encodeURIComponent(token || '')}`;
-        
-        // Open in new window
-        window.open(urlWithToken, '_blank');
-        
-        // Add to downloaded list for web (user-specific)
+        // Fetch as blob to preserve server-set filename
+        const response = await fetch(`${downloadUrl}?token=${encodeURIComponent(token || '')}`);
+        if (!response.ok) throw new Error('Download failed');
+
+        const blob = await response.blob();
+        // Use stored extension from DB, fall back to last segment of URL, default pdf
+        const rawUrl = book.pdfFile || '';
+        const lastSegment = rawUrl.split('?')[0].split('/').pop() || '';
+        const dotIndex = lastSegment.lastIndexOf('.');
+        const ext = book.pdfFileExt || (dotIndex !== -1 ? lastSegment.substring(dotIndex + 1).toLowerCase() : 'pdf');
+        const safeTitle = (bookTitle || 'book').replace(/[^a-zA-Z0-9 _-]/g, '').trim();
+        const filename = `${safeTitle}.${ext}`;
+
+        const blobUrl = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = blobUrl;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(blobUrl);
+
+        // Save to downloaded books list
         const downloadedBook = {
           bookId,
           readerId,
@@ -97,41 +135,27 @@ export default function PurchasedBooks() {
           downloadedAt: new Date().toISOString(),
           fileSize: 'Unknown'
         };
-        
-        console.log('Saving downloaded book:', downloadedBook);
-        
-        const existingDownloads = await AsyncStorage.getItem('downloadedBooks');
-        const downloadedBooks = existingDownloads ? JSON.parse(existingDownloads) : [];
-        
-        const existingIndex = downloadedBooks.findIndex((b: any) => b.bookId === bookId && b.readerId === readerId);
-        if (existingIndex >= 0) {
-          downloadedBooks[existingIndex] = downloadedBook;
-        } else {
-          downloadedBooks.push(downloadedBook);
-        }
-        
+        downloadedBooks.push(downloadedBook);
         await AsyncStorage.setItem('downloadedBooks', JSON.stringify(downloadedBooks));
-        console.log('Saved to AsyncStorage, total downloads:', downloadedBooks.length);
-        
-        Alert.alert('Success', 'Download started in new tab');
+
+        Alert.alert('Success', 'Book downloaded successfully!');
         setDownloading(null);
         return;
       }
-      
-      // For mobile platforms, use FileSystem
-      const token = await AsyncStorage.getItem('readerToken');
-      const downloadUrl = `${process.env.EXPO_PUBLIC_API_URL}/api/readers/books/download/${bookId}`;
-      
+
+      // Mobile: use FileSystem
+      const rawUrl = book.pdfFile || '';
+      const lastSegment = rawUrl.split('?')[0].split('/').pop() || '';
+      const dotIndex = lastSegment.lastIndexOf('.');
+      const ext = book.pdfFileExt || (dotIndex !== -1 ? lastSegment.substring(dotIndex + 1).toLowerCase() : 'pdf');
+      const safeTitle = (bookTitle || 'book').replace(/[^a-zA-Z0-9 _-]/g, '').trim();
+
       const downloadResult = await FileSystem.downloadAsync(
-        downloadUrl,
-        FileSystem.documentDirectory + `${bookTitle}.pdf`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        }
+        `${downloadUrl}?token=${encodeURIComponent(token || '')}`,
+        FileSystem.documentDirectory + `${safeTitle}.${ext}`,
+        { headers: { Authorization: `Bearer ${token}` } }
       );
-      
+
       if (downloadResult.status === 200) {
         const downloadedBook = {
           bookId,
@@ -143,19 +167,9 @@ export default function PurchasedBooks() {
           downloadedAt: new Date().toISOString(),
           fileSize: downloadResult.headers?.['content-length'] || 'Unknown'
         };
-        
-        const existingDownloads = await AsyncStorage.getItem('downloadedBooks');
-        const downloadedBooks = existingDownloads ? JSON.parse(existingDownloads) : [];
-        
-        const existingIndex = downloadedBooks.findIndex((b: any) => b.bookId === bookId && b.readerId === readerId);
-        if (existingIndex >= 0) {
-          downloadedBooks[existingIndex] = downloadedBook;
-        } else {
-          downloadedBooks.push(downloadedBook);
-        }
-        
+        downloadedBooks.push(downloadedBook);
         await AsyncStorage.setItem('downloadedBooks', JSON.stringify(downloadedBooks));
-        
+
         Alert.alert('Success', 'Book downloaded successfully!', [
           {
             text: 'Open',
@@ -182,105 +196,107 @@ export default function PurchasedBooks() {
     // Removed delete functionality
   };
 
+  const renderDownloadContent = (purchase: any) => {
+    const bookId = purchase.book?._id;
+    const used = downloadCounts[bookId] || 0;
+    const remaining = 2 - used;
+    if (downloading === bookId) {
+      return <ActivityIndicator size="small" color="#E85D55" />;
+    }
+    if (remaining <= 0) {
+      return (
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+          <Ionicons name="lock-closed-outline" size={16} color="#999" />
+          <Text style={[styles.downloadButtonText, { color: '#999' }]}>No downloads left</Text>
+        </View>
+      );
+    }
+    return (
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+        <Ionicons name="download-outline" size={16} color="#E85D55" />
+        <Text style={styles.downloadButtonText}>Download ({remaining} left)</Text>
+      </View>
+    );
+  };
+
+  const renderContent = () => {
+    if (loading) {
+      return (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#E85D54" />
+        </View>
+      );
+    }
+    if (books.length === 0) {
+      return (
+        <View style={styles.emptyContainer}>
+          <Text style={styles.emptyText}>No purchased books yet</Text>
+        </View>
+      );
+    }
+    return (
+      <View style={styles.booksContainer}>
+        {books.filter((purchase: any) => purchase.book).map((purchase: any) => (
+          <View key={purchase._id} style={styles.bookCard}>
+            <Image
+              source={{
+                uri: purchase.book?.coverImage?.startsWith('http')
+                  ? purchase.book.coverImage
+                  : purchase.book?.coverImage?.startsWith('/')
+                    ? `${process.env.EXPO_PUBLIC_API_URL}${purchase.book.coverImage}`
+                    : `${process.env.EXPO_PUBLIC_API_URL}/${purchase.book.coverImage}`
+              }}
+              style={styles.bookImage}
+              resizeMode="cover"
+              defaultSource={require("../../../assets/images/book-placeholder.png")}
+            />
+            <View style={styles.bookContent}>
+              <View style={styles.bookInfo}>
+                <Text style={styles.authorText}>{purchase.book?.authorId?.displayName || purchase.book?.authorId?.fullName || 'Unknown Author'}</Text>
+                <Text style={styles.bookTitle} numberOfLines={2} ellipsizeMode="tail">{purchase.book?.title || 'Untitled'}</Text>
+                <View style={styles.purchaseInfo}>
+                  <Ionicons name="checkmark-circle" size={16} color="#22c55e" />
+                  <Text style={styles.purchasedText}>Purchased</Text>
+                  <Text style={styles.purchaseDate}>{new Date(purchase.createdAt).toLocaleDateString()}</Text>
+                </View>
+              </View>
+              <View style={styles.bookActions}>
+                <TouchableOpacity style={styles.readButton} onPress={() => handleReadNow(purchase.book?._id)}>
+                  <Text style={styles.readButtonText}>Read Now</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.downloadButton, (downloading === purchase.book?._id || (downloadCounts[purchase.book?._id] || 0) >= 2) && styles.downloadingButton]}
+                  onPress={() => handleDownload(purchase.book?._id, purchase.book?.title, purchase.book)}
+                  disabled={downloading === purchase.book?._id || (downloadCounts[purchase.book?._id] || 0) >= 2}
+                >
+                  {renderDownloadContent(purchase)}
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        ))}
+      </View>
+    );
+  };
+
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()}>
           <Ionicons name="chevron-back" size={28} color="#E85D55" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Purchased Books</Text>
         <View style={styles.viewToggle}>
-          <TouchableOpacity
-            onPress={() => setViewMode("list")}
-            style={viewMode === "list" && styles.activeView}
-          >
-            <Ionicons
-              name="list"
-              size={24}
-              color={viewMode === "list" ? "#E85D55" : "#999"}
-            />
+          <TouchableOpacity onPress={() => setViewMode("list")} style={viewMode === "list" && styles.activeView}>
+            <Ionicons name="list" size={24} color={viewMode === "list" ? "#E85D55" : "#999"} />
           </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => setViewMode("grid")}
-            style={viewMode === "grid" && styles.activeView}
-          >
-            <Ionicons
-              name="grid"
-              size={24}
-              color={viewMode === "grid" ? "#E85D55" : "#999"}
-            />
+          <TouchableOpacity onPress={() => setViewMode("grid")} style={viewMode === "grid" && styles.activeView}>
+            <Ionicons name="grid" size={24} color={viewMode === "grid" ? "#E85D55" : "#999"} />
           </TouchableOpacity>
         </View>
       </View>
-
       <ScrollView showsVerticalScrollIndicator={false}>
-        {loading ? (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color="#E85D54" />
-          </View>
-        ) : books.length === 0 ? (
-          <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>No purchased books yet</Text>
-          </View>
-        ) : (
-          <View style={styles.booksContainer}>
-            {books.map((purchase: any) => (
-              <View key={purchase._id} style={styles.bookCard}>
-                <Image
-                  source={{ 
-                    uri: purchase.book?.coverImage?.startsWith('http') 
-                      ? purchase.book.coverImage 
-                      : purchase.book?.coverImage?.startsWith('/') 
-                        ? `${process.env.EXPO_PUBLIC_API_URL}${purchase.book.coverImage}` 
-                        : `${process.env.EXPO_PUBLIC_API_URL}/${purchase.book.coverImage}` 
-                  }}
-                  style={styles.bookImage}
-                  resizeMode="cover"
-                  defaultSource={require("../../../assets/images/book-placeholder.png")}
-                />
-                <View style={styles.bookContent}>
-                  <View style={styles.bookInfo}>
-                    <Text style={styles.authorText}>{purchase.book?.authorId?.displayName || purchase.book?.authorId?.fullName || 'Unknown Author'}</Text>
-                    <Text style={styles.bookTitle} numberOfLines={2} ellipsizeMode="tail">{purchase.book?.title || 'Untitled'}</Text>
-                    <View style={styles.purchaseInfo}>
-                      <Ionicons name="checkmark-circle" size={16} color="#22c55e" />
-                      <Text style={styles.purchasedText}>Purchased</Text>
-                      <Text style={styles.purchaseDate}>
-                        {new Date(purchase.createdAt).toLocaleDateString()}
-                      </Text>
-                    </View>
-                  </View>
-                  <View style={styles.bookActions}>
-                    <TouchableOpacity
-                      style={styles.readButton}
-                      onPress={() => handleReadNow(purchase.book?._id)}
-                    >
-                      <Text style={styles.readButtonText}>Read Now</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={[
-                        styles.downloadButton,
-                        downloading === purchase.book?._id && styles.downloadingButton
-                      ]}
-                      onPress={() => handleDownload(purchase.book?._id, purchase.book?.title, purchase.book)}
-                      disabled={downloading === purchase.book?._id}
-                    >
-                      {downloading === purchase.book?._id ? (
-                        <ActivityIndicator size="small" color="#E85D55" />
-                      ) : (
-                        <>
-                          <Ionicons name="download-outline" size={16} color="#E85D55" />
-                          <Text style={styles.downloadButtonText}>Download</Text>
-                        </>
-                      )}
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              </View>
-            ))}
-          </View>
-        )}
+        {renderContent()}
       </ScrollView>
     </SafeAreaView>
   );
