@@ -12,16 +12,26 @@ import {
   Platform,
   Alert,
   ActivityIndicator,
+  Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import * as ImagePicker from "expo-image-picker";
+import * as DocumentPicker from "expo-document-picker";
 import { authorAPI } from "../../authorAPI";
+
+const API_URL = process.env.EXPO_PUBLIC_API_URL || 'https://api.i-shelf.app';
 
 export default function EditBook() {
   const router = useRouter();
   const { id } = useLocalSearchParams();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  
+
+  const [currentCoverImage, setCurrentCoverImage] = useState<string | null>(null);
+  const [newCoverImage, setNewCoverImage] = useState<any>(null);
+  const [currentPdfName, setCurrentPdfName] = useState<string | null>(null);
+  const [newPdfFile, setNewPdfFile] = useState<any>(null);
+
   const [bookTitle, setBookTitle] = useState("");
   const [subtitle, setSubtitle] = useState("");
   const [coAuthors, setCoAuthors] = useState("");
@@ -56,11 +66,50 @@ export default function EditBook() {
         setDescription(book.description || "");
         setPrice(book.price?.toString() || "");
         setPageCount(book.pageCount?.toString() || "");
+        if (book.coverImage) {
+          const url = book.coverImage.startsWith('http')
+            ? book.coverImage
+            : `${API_URL}${book.coverImage.startsWith('/') ? '' : '/'}${book.coverImage}`;
+          setCurrentCoverImage(url);
+        }
+        if (book.pdfFile) {
+          setCurrentPdfName(book.pdfFile.split('/').pop() || 'book.pdf');
+        }
       }
     } catch (error) {
       Alert.alert("Error", "Failed to load book");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const pickCoverImage = async () => {
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [3, 4],
+        quality: 1,
+      });
+      if (!result.canceled) {
+        setNewCoverImage(result.assets[0]);
+      }
+    } catch {
+      Alert.alert("Error", "Failed to pick image");
+    }
+  };
+
+  const pickPdfFile = async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: ["application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"],
+        copyToCacheDirectory: true,
+      });
+      if (!result.canceled) {
+        setNewPdfFile(result);
+      }
+    } catch {
+      Alert.alert("Error", "Failed to pick document");
     }
   };
 
@@ -72,6 +121,13 @@ export default function EditBook() {
 
     setSaving(true);
     try {
+      if (newCoverImage) {
+        await authorAPI.updateBookCoverImage(id as string, newCoverImage.uri);
+      }
+      if (newPdfFile) {
+        const pdfUri = newPdfFile.assets ? newPdfFile.assets[0].uri : newPdfFile.uri;
+        await authorAPI.updateBookPdfFile(id as string, pdfUri);
+      }
       await authorAPI.updateBook(id as string, {
         title: bookTitle,
         subtitle,
@@ -125,6 +181,50 @@ export default function EditBook() {
 
           {/* Form */}
           <View style={styles.form}>
+
+            {/* Cover Image */}
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Cover Image</Text>
+              <TouchableOpacity style={styles.fileBox} onPress={pickCoverImage}>
+                {newCoverImage ? (
+                  <Image source={{ uri: newCoverImage.uri }} style={styles.coverPreview} resizeMode="cover" />
+                ) : currentCoverImage ? (
+                  <Image source={{ uri: currentCoverImage }} style={styles.coverPreview} resizeMode="cover" />
+                ) : (
+                  <Ionicons name="image-outline" size={36} color="#E85D54" />
+                )}
+                <View style={styles.fileBoxOverlay}>
+                  <Ionicons name="camera-outline" size={18} color="#fff" />
+                  <Text style={styles.fileBoxOverlayText}>
+                    {newCoverImage ? 'Image selected' : 'Change Cover'}
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            </View>
+
+            {/* PDF File */}
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Book File (PDF)</Text>
+              <TouchableOpacity style={styles.pdfBox} onPress={pickPdfFile}>
+                <Ionicons
+                  name={newPdfFile ? "checkmark-circle" : "document-outline"}
+                  size={28}
+                  color={newPdfFile ? "#22c55e" : "#E85D54"}
+                />
+                <View style={{ flex: 1, marginLeft: 12 }}>
+                  <Text style={styles.pdfBoxTitle}>
+                    {newPdfFile
+                      ? (newPdfFile.assets ? newPdfFile.assets[0].name : newPdfFile.name) || 'File selected'
+                      : currentPdfName || 'No file uploaded'}
+                  </Text>
+                  <Text style={styles.pdfBoxSub}>Tap to {currentPdfName ? 're-upload' : 'upload'} PDF</Text>
+                </View>
+                <Ionicons name="cloud-upload-outline" size={22} color="#E85D54" />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.divider} />
+
             <View style={styles.inputContainer}>
               <Text style={styles.label}>Book Title *</Text>
               <TextInput
@@ -360,5 +460,67 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+  },
+
+  fileBox: {
+    height: 160,
+    borderWidth: 2,
+    borderColor: "#FFD4D1",
+    borderRadius: 12,
+    overflow: 'hidden',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFF9F8',
+  },
+
+  coverPreview: {
+    width: '100%',
+    height: '100%',
+    position: 'absolute',
+  },
+
+  fileBoxOverlay: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(232,93,84,0.75)',
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderRadius: 20,
+  },
+
+  fileBoxOverlayText: {
+    color: '#fff',
+    fontSize: 13,
+    fontWeight: '600',
+  },
+
+  pdfBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#FFD4D1',
+    borderRadius: 12,
+    padding: 16,
+    backgroundColor: '#FFF9F8',
+  },
+
+  pdfBoxTitle: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#333',
+  },
+
+  pdfBoxSub: {
+    fontSize: 12,
+    color: '#999',
+    marginTop: 2,
+  },
+
+  divider: {
+    height: 1,
+    backgroundColor: '#FFD4D1',
+    marginVertical: 8,
+    marginBottom: 20,
   },
 });

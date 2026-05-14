@@ -1,18 +1,26 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:5000';
+const API_URL = process.env.EXPO_PUBLIC_API_URL || 'https://api.i-shelf.app';
 
 const readerAPI = axios.create({
   baseURL: `${API_URL}/api/readers`,
-  headers: {
-    'Content-Type': 'application/json',
-  },
 });
 
+readerAPI.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    if (error.response?.status === 401 && error.response?.data?.message?.includes('Session expired')) {
+      await AsyncStorage.multiRemove(['readerToken', 'readerData', 'readerProfileImage']);
+    }
+    return Promise.reject(error);
+  }
+);
+
 export const readerAuth = {
-  register: async (fullName: string, email: string, institution: string, password: string) => {
+  register: async (title: string, fullName: string, email: string, institution: string, password: string) => {
     const response = await readerAPI.post('/register', {
+      title,
       fullName,
       email,
       institution,
