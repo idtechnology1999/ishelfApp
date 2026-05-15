@@ -83,7 +83,15 @@ export default function SignUp4() {
         router.replace("/Author/SignUpSuccessful");
       }, 1500);
     } catch (error: any) {
-      showToast(error.response?.data?.message || 'Registration failed', 'error');
+      console.log('========================================');
+      console.log('AUTHOR REGISTRATION ERROR:');
+      console.log('Full error:', JSON.stringify(error, Object.getOwnPropertyNames(error)));
+      console.log('Response:', JSON.stringify(error.response?.data));
+      console.log('Status:', error.response?.status);
+      console.log('Message:', error.message);
+      console.log('========================================');
+      const errMsg = error.response?.data?.message || error.message || 'Registration failed';
+      showToast(`${errMsg} (${error.response?.status || 'network'})`, 'error');
     } finally {
       setLoading(false);
     }
