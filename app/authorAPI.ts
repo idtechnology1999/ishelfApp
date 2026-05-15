@@ -21,12 +21,16 @@ api.interceptors.response.use(
 
 export const authorAPI = {
   register: async (authorData: any) => {
-    // Pass FormData through without transformation — axios auto-sets multipart boundary
-    const response = await api.post('/api/authors/register', authorData, {
-      transformRequest: [(data) => data],
-      maxBodyLength: Infinity,
+    // Use fetch instead of axios — axios has known issues with FormData on React Native Android
+    const response = await fetch(`${API_URL}/api/authors/register`, {
+      method: 'POST',
+      body: authorData,
     });
-    return response.data;
+    const data = await response.json();
+    if (!response.ok) {
+      throw { response: { data, status: response.status } };
+    }
+    return data;
   },
 
   login: async (email: string, password: string) => {
