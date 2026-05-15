@@ -48,7 +48,8 @@ export default function PersonaInformation() {
           headers: { Authorization: `Bearer ${token}` }
         });
         if (imgResponse.data.imageUrl) {
-          setProfileImage(imgResponse.data.imageUrl);
+          const url = imgResponse.data.imageUrl;
+          setProfileImage(url.startsWith('http') ? url : `${API_URL}${url}`);
         }
       }
     } catch (error) {
@@ -81,7 +82,8 @@ export default function PersonaInformation() {
           { image: `data:image/jpeg;base64,${result.assets[0].base64}` },
           { headers: { Authorization: `Bearer ${token}` } }
         );
-        setProfileImage(response.data.imageUrl);
+        const url = response.data.imageUrl;
+        setProfileImage(url.startsWith('http') ? url : `${API_URL}${url}`);
         Alert.alert('Success', 'Profile image updated successfully');
       } catch (error) {
         console.error('Error uploading image:', error);

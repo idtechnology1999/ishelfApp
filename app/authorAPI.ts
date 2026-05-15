@@ -271,6 +271,21 @@ export const authorAPI = {
     return response.data;
   },
 
+  forgotPassword: async (email: string) => {
+    const response = await api.post('/api/authors/forgot-password', { email });
+    return response.data;
+  },
+
+  verifyCode: async (email: string, code: string) => {
+    const response = await api.post('/api/authors/verify-code', { email, code });
+    return response.data;
+  },
+
+  resetPassword: async (email: string, code: string, newPassword: string) => {
+    const response = await api.post('/api/authors/reset-password', { email, code, newPassword });
+    return response.data;
+  },
+
   completeBookUpload: async () => {
     const token = await AsyncStorage.getItem('authorToken');
     const response = await api.post('/api/authors/book/complete', {}, {
