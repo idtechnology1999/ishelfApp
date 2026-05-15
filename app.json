@@ -17,11 +17,11 @@
 
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.owolabi.ishelf"
+      "bundleIdentifier": "com.ishelf.app"
     },
 
     "android": {
-      "package": "com.owolabi.ishelf",
+      "package": "com.ishelf.app",
       "jsEngine": "hermes",
       "enableProguardInReleaseBuilds": true,
       "adaptiveIcon": {
