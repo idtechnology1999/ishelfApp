@@ -9,6 +9,12 @@
 
     "icon": "./assets/images/logo.png",
 
+    "splash": {
+      "image": "./assets/images/logo.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#FFFFFF"
+    },
+
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.owolabi.ishelf"
@@ -16,6 +22,8 @@
 
     "android": {
       "package": "com.owolabi.ishelf",
+      "jsEngine": "hermes",
+      "enableProguardInReleaseBuilds": true,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/logo.png",
         "backgroundColor": "#E6F4FE"

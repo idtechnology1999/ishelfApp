@@ -105,7 +105,7 @@ export const readerProfile = {
     const token = await AsyncStorage.getItem('readerToken');
     const formData = new FormData();
     const filename = imageUri.split('/').pop();
-    const match = /\.(\ w+)$/.exec(filename || '');
+    const match = /\.(\w+)$/.exec(filename || '');
     const type = match ? `image/${match[1]}` : 'image/jpeg';
 
     formData.append('profileImage', {
@@ -117,7 +117,6 @@ export const readerProfile = {
     const response = await readerAPI.post('/profile/image', formData, {
       headers: {
         Authorization: `Bearer ${token}`,
-        'Content-Type': 'multipart/form-data',
       },
     });
     return response.data;

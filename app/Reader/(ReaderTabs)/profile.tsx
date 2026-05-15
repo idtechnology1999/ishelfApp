@@ -76,6 +76,8 @@ export default function Profile() {
               await AsyncStorage.removeItem('readerProfileImage');
               await AsyncStorage.removeItem('downloadedBooks');
               
+              // Clear nav stack so back button can't return
+              if (router.dismissAll) router.dismissAll();
               // Navigate to login screen
               router.replace('/Reader/Login');
             } catch (error) {

@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import GestureRecognizer from "react-native-swipe-gestures";
 import { DynamicBackgroundPattern } from "../components/BackgroundPattern";
-import Svg, { Path, Line } from "react-native-svg";
+import Svg, { Path } from "react-native-svg";
 
 type UserRole = "author" | "student";
 
@@ -139,14 +139,11 @@ export default function ContinueAsScreen() {
             activeOpacity={0.8}
           >
             <View style={styles.cardBody}>
-              {/* Fountain pen icon */}
-              <Svg width={44} height={90} viewBox="0 0 24 58">
-                <Path d="M9 4 Q12 2 15 4 L16 36 Q12 38 8 36 Z" fill="none" stroke="rgba(255,255,255,0.85)" strokeWidth={1.4} />
-                <Path d="M9 4 Q12 1 15 4" fill="none" stroke="rgba(255,255,255,0.85)" strokeWidth={1.4} />
-                <Path d="M8 36 L12 54 L16 36" fill="none" stroke="rgba(255,255,255,0.85)" strokeWidth={1.4} strokeLinejoin="round" />
-                <Line x1="12" y1="42" x2="12" y2="54" stroke="rgba(255,255,255,0.85)" strokeWidth={0.8} />
-                <Path d="M8.5 32 Q12 33.5 15.5 32" fill="none" stroke="rgba(255,255,255,0.85)" strokeWidth={1} />
-              </Svg>
+              <Image
+                source={require("../assets/images/pen.png")}
+                style={styles.penImage}
+                resizeMode="contain"
+              />
             </View>
             <View style={styles.cardFooter}>
               <Text style={styles.label}>Author / Lecturer</Text>
@@ -162,7 +159,7 @@ export default function ContinueAsScreen() {
           >
             <View style={styles.cardBody}>
               {/* Open book icon */}
-              <Svg width={80} height={44} viewBox="0 0 52 28">
+              <Svg width={52} height={30} viewBox="0 0 52 28">
                 <Path d="M26 6 Q14 2 2 6 L2 24 Q14 20 26 24 Z" fill="none" stroke="rgba(255,255,255,0.85)" strokeWidth={1.4} strokeLinejoin="round" />
                 <Path d="M26 6 Q38 2 50 6 L50 24 Q38 20 26 24 Z" fill="none" stroke="rgba(255,255,255,0.85)" strokeWidth={1.4} strokeLinejoin="round" />
                 <Path d="M26 6 Q25 15 26 24" fill="none" stroke="rgba(255,255,255,0.85)" strokeWidth={1} />
@@ -184,27 +181,29 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#FFFFFF",
     alignItems: "center",
-    paddingTop: 120,
+    paddingTop: 180,
   },
   logo: {
-    width: 330,
-    height: 90,
-    marginBottom: 60,
+    width: 320,
+    height: 100,
+    marginBottom: 50,
   },
   subtitle: {
-    fontSize: 18,
-    color: "#333333",
-    marginBottom: 65,
-    fontWeight: "600",
+    fontSize: 15,
+    color: "#666",
+    marginBottom: 60,
+    fontWeight: "500",
+    letterSpacing: 0.4,
   },
   cardRow: {
     flexDirection: "row",
-    gap: 20,
-    paddingHorizontal: 20,
+    gap: 16,
+    paddingHorizontal: 24,
+    justifyContent: "center",
   },
   card: {
-    width: 140,
-    height: 160,
+    width: 110,
+    height: 140,
     borderRadius: 18,
     overflow: 'hidden',
     backgroundColor: "#E85D55",
@@ -217,23 +216,29 @@ const styles = StyleSheet.create({
   },
   activeCard: {
     shadowOpacity: 0.45,
-    elevation: 8,
+    elevation: 9,
   },
   cardBody: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    paddingTop: 10,
   },
   cardFooter: {
     backgroundColor: '#C9A84C',
-    paddingVertical: 12,
+    paddingVertical: 10,
     paddingHorizontal: 8,
     alignItems: 'center',
   },
   label: {
-    fontSize: 14,
+    fontSize: 11,
     fontWeight: '700',
     color: '#FFFFFF',
     textAlign: 'center',
+    letterSpacing: 0.2,
+  },
+  penImage: {
+    width: 44,
+    height: 68,
   },
 });

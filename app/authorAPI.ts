@@ -5,13 +5,22 @@ const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
 const api = axios.create({
   baseURL: API_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
 });
+
+api.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    if (error.response?.status === 401 && error.response?.data?.message?.includes('Session expired')) {
+      await AsyncStorage.multiRemove(['authorToken', 'authorData', 'authorProfileImage']);
+    }
+    return Promise.reject(error);
+  }
+);
 
 export const authorAPI = {
   register: async (authorData: any) => {
+    // Do NOT set Content-Type manually for FormData — the browser/RN must add
+    // the multipart boundary automatically, or multer will silently drop all files.
     const response = await api.post('/api/authors/register', authorData);
     return response.data;
   },
@@ -90,7 +99,6 @@ export const authorAPI = {
     const response = await api.post('/api/authors/book/upload-cover', formData, {
       headers: {
         Authorization: `Bearer ${token}`,
-        'Content-Type': 'multipart/form-data',
       },
     });
     return response.data;
@@ -118,8 +126,47 @@ export const authorAPI = {
     const response = await api.post('/api/authors/book/upload-pdf', formData, {
       headers: {
         Authorization: `Bearer ${token}`,
-        'Content-Type': 'multipart/form-data',
       },
+    });
+    return response.data;
+  },
+
+  updateBookCoverImage: async (bookId: string, imageUri: string) => {
+    const token = await AsyncStorage.getItem('authorToken');
+    const formData = new FormData();
+
+    if (imageUri.startsWith('blob:') || imageUri.startsWith('http')) {
+      const response = await fetch(imageUri);
+      const blob = await response.blob();
+      formData.append('coverImage', blob, 'cover.jpg');
+    } else {
+      const filename = imageUri.split('/').pop();
+      const match = /\.(\w+)$/.exec(filename || '');
+      const type = match ? `image/${match[1]}` : 'image/jpeg';
+      formData.append('coverImage', { uri: imageUri, name: filename || 'cover.jpg', type } as any);
+    }
+
+    const response = await api.post(`/api/authors/book/${bookId}/upload-cover`, formData, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return response.data;
+  },
+
+  updateBookPdfFile: async (bookId: string, fileUri: string) => {
+    const token = await AsyncStorage.getItem('authorToken');
+    const formData = new FormData();
+
+    if (fileUri.startsWith('blob:') || fileUri.startsWith('http')) {
+      const response = await fetch(fileUri);
+      const blob = await response.blob();
+      formData.append('pdfFile', blob, 'book.pdf');
+    } else {
+      const filename = fileUri.split('/').pop();
+      formData.append('pdfFile', { uri: fileUri, name: filename || 'book.pdf', type: 'application/pdf' } as any);
+    }
+
+    const response = await api.post(`/api/authors/book/${bookId}/upload-pdf`, formData, {
+      headers: { Authorization: `Bearer ${token}` },
     });
     return response.data;
   },
@@ -167,6 +214,22 @@ export const authorAPI = {
     return response.data;
   },
 
+  getPaymentMode: async () => {
+    const token = await AsyncStorage.getItem('authorToken');
+    const response = await api.get('/api/authors/withdrawal/payment-mode', {
+      headers: { Authorization: `Bearer ${token}` } }
+    );
+    return response.data;
+  },
+
+  getWithdrawalHistory: async () => {
+    const token = await AsyncStorage.getItem('authorToken');
+    const response = await api.get('/api/authors/withdrawal/history', {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data;
+  },
+
   getDashboardStats: async () => {
     const token = await AsyncStorage.getItem('authorToken');
     const response = await api.get('/api/authors/dashboard/stats', {
@@ -211,6 +274,30 @@ export const authorAPI = {
   completeBookUpload: async () => {
     const token = await AsyncStorage.getItem('authorToken');
     const response = await api.post('/api/authors/book/complete', {}, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data;
+  },
+
+  getNotifications: async () => {
+    const token = await AsyncStorage.getItem('authorToken');
+    const response = await api.get('/api/authors/notifications', {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data;
+  },
+
+  markNotificationRead: async (notificationId: string) => {
+    const token = await AsyncStorage.getItem('authorToken');
+    const response = await api.patch(`/api/authors/notifications/${notificationId}/read`, {}, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data;
+  },
+
+  markAllNotificationsRead: async () => {
+    const token = await AsyncStorage.getItem('authorToken');
+    const response = await api.patch('/api/authors/notifications/read-all', {}, {
       headers: { Authorization: `Bearer ${token}` }
     });
     return response.data;

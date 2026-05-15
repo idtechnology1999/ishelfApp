@@ -56,6 +56,8 @@ export default function Profile() {
       await AsyncStorage.removeItem('authorData');
       await AsyncStorage.removeItem('authorProfileImage');
       
+      // Clear nav stack so back button can't return
+      if (router.dismissAll) router.dismissAll();
       // Navigate to login screen
       router.replace('/Author/Login');
     } catch (error) {
