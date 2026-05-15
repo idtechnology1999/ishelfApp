@@ -3,6 +3,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL || 'https://api.i-shelf.app';
 
+console.log('[authorAPI] Using API_URL:', API_URL);
+
 const api = axios.create({
   baseURL: API_URL,
 });

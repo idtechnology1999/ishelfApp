@@ -45,6 +45,8 @@ export default function SignUp4() {
       const saved = await AsyncStorage.getItem('signupData');
       const data = saved ? JSON.parse(saved) : {};
 
+      console.log('Signup data loaded:', JSON.stringify({ ...data, idFile: data.idFile ? { name: data.idFile.name, mimeType: data.idFile.mimeType, uri: data.idFile.uri?.substring(0, 50) } : null }));
+
       const formData = new FormData();
       if (data.title) formData.append('title', data.title);
       formData.append('fullName', data.fullName);
@@ -60,12 +62,12 @@ export default function SignUp4() {
 
       if (data.idFile) {
         if (Platform.OS === 'web') {
-          // On web, blob: URIs must be fetched and converted to a File object
           const fetchRes = await fetch(data.idFile.uri);
           const blob = await fetchRes.blob();
           const file = new File([blob], data.idFile.name, { type: data.idFile.mimeType || blob.type });
           formData.append('ninSlip', file);
         } else {
+          console.log('File URI scheme:', data.idFile.uri?.substring(0, 10));
           formData.append('ninSlip', {
             uri: data.idFile.uri,
             name: data.idFile.name,
@@ -74,6 +76,7 @@ export default function SignUp4() {
         }
       }
 
+      console.log('Sending request to:', API_URL);
       await authorAPI.register(formData);
       await AsyncStorage.removeItem('signupData');
       
