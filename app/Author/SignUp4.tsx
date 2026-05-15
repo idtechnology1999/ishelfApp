@@ -76,7 +76,6 @@ export default function SignUp4() {
         }
       }
 
-      console.log('Sending request to:', API_URL);
       await authorAPI.register(formData);
       await AsyncStorage.removeItem('signupData');
       
