@@ -42,7 +42,7 @@ export default function ForgotPassword1() {
     try {
       const response = await readerAuth.forgotPassword(email);
       await AsyncStorage.setItem('resetEmail', email);
-      showToast("Code sent to your email!", "success");
+      showToast("Code sent! Kindly check your spam folder if not seen.", "success");
       setTimeout(() => router.replace("/Reader/ForgotPassword2"), 1000);
     } catch (error: any) {
       const status = error.response?.status;

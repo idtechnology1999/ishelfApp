@@ -29,6 +29,7 @@ export default function SignUp() {
   const [email, setEmail] = useState("");
   const [institution, setInstitution] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState({ visible: false, message: "", type: "success" as "success" | "error" | "warning" });
 
@@ -146,13 +147,25 @@ export default function SignUp() {
             />
 
             <Text style={styles.label}>Password</Text>
-            <TextInput
-              style={styles.input}
-              value={password}
-              onChangeText={setPassword}
-              placeholder=""
-              secureTextEntry
-            />
+            <View style={styles.passwordWrapper}>
+              <TextInput
+                style={[styles.input, styles.passwordInput]}
+                value={password}
+                onChangeText={setPassword}
+                placeholder=""
+                secureTextEntry={!showPassword}
+              />
+              <TouchableOpacity
+                style={styles.eyeIcon}
+                onPress={() => setShowPassword(!showPassword)}
+              >
+                <Ionicons
+                  name={showPassword ? "eye-off-outline" : "eye-outline"}
+                  size={22}
+                  color="#888"
+                />
+              </TouchableOpacity>
+            </View>
           </View>
 
           {/* Sign Up Button */}
@@ -223,6 +236,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
   },
   pickerText: { fontSize: 14, color: '#333' },
+  passwordWrapper: { position: "relative" },
+  passwordInput: { paddingRight: 50 },
+  eyeIcon: { position: "absolute", right: 14, top: 11 },
   signUpButton: {
     marginHorizontal: 24, marginTop: 20, height: 50,
     backgroundColor: "#E85D54", borderRadius: 25,

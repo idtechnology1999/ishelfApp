@@ -33,7 +33,7 @@ export default function ForgotPassword1() {
     try {
       await authorAPI.forgotPassword(email);
       await AsyncStorage.setItem('resetEmail', email);
-      Alert.alert("Success", "Code sent to your email!");
+      Alert.alert("Success", "Code sent! Kindly check your spam folder if not seen.");
       router.replace("/Author/ForgotPassword2");
     } catch (error: any) {
       const status = error.response?.status;

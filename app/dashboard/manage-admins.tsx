@@ -17,7 +17,7 @@ export default function ManageAdmins() {
       Alert.alert('Error', 'Please enter email');
       return;
     }
-    Alert.alert('Success', 'Invitation sent to ' + email);
+    Alert.alert('Success', 'Invitation sent to ' + email + '. Kindly remind them to check spam folder if not seen.');
     setEmail('');
     setShowAddForm(false);
   };

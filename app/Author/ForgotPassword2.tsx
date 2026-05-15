@@ -72,7 +72,7 @@ export default function ForgotPassword2() {
       setTimer(600);
       setCode(["", "", "", "", "", ""]);
       inputRefs.current[0]?.focus();
-      Alert.alert("Success", "New code sent!");
+      Alert.alert("Success", "New code sent! Check spam if not seen.");
     } catch (error: any) {
       Alert.alert("Error", "Failed to resend code");
     } finally {
@@ -142,6 +142,7 @@ export default function ForgotPassword2() {
             {email && (
               <Text style={styles.emailText}>OTP sent to {email}</Text>
             )}
+            <Text style={styles.spamNote}>Didn't see it? Check your spam folder</Text>
           </View>
 
           {/* Code Input */}
@@ -255,6 +256,13 @@ const styles = StyleSheet.create({
     marginTop: 8,
     fontWeight: "500",
   },
+  spamNote: {
+    fontSize: 12,
+    color: "#856404",
+    textAlign: "center",
+    marginTop: 4,
+    fontWeight: "500",
+  },
 
   codeContainer: {
     flexDirection: "row",
@@ -264,12 +272,12 @@ const styles = StyleSheet.create({
   },
 
   codeInput: {
-    width: 50,
-    height: 70,
-    borderWidth: 2,
-    borderColor: "#FFD4D1", // Light coral border
+    width: 48,
+    height: 56,
+    borderWidth: 1.5,
+    borderColor: "#FFD4D1",
     borderRadius: 12,
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: "600",
     color: "#333",
     textAlign: "center",
