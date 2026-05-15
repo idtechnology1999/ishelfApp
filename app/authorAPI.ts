@@ -21,9 +21,11 @@ api.interceptors.response.use(
 
 export const authorAPI = {
   register: async (authorData: any) => {
-    // Do NOT set Content-Type manually for FormData — the browser/RN must add
-    // the multipart boundary automatically, or multer will silently drop all files.
-    const response = await api.post('/api/authors/register', authorData);
+    // Pass FormData through without transformation — axios auto-sets multipart boundary
+    const response = await api.post('/api/authors/register', authorData, {
+      transformRequest: [(data) => data],
+      maxBodyLength: Infinity,
+    });
     return response.data;
   },
 

@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { authorAPI } from '../authorAPI';
 import Toast from '../Toast';
@@ -24,6 +24,10 @@ export default function SignUp4() {
   const [isConfirmPasswordVisible, setIsConfirmPasswordVisible] = useState(false);
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState({ visible: false, message: '', type: 'success' as 'success' | 'error' });
+
+  const clearSignupData = useCallback(async () => {
+    await AsyncStorage.removeItem('signupData');
+  }, []);
 
   const showToast = (message: string, type: 'success' | 'error') => {
     setToast({ visible: true, message, type });
@@ -94,6 +98,7 @@ export default function SignUp4() {
       console.log('========================================');
       const errMsg = error.response?.data?.message || error.message || 'Registration failed';
       showToast(`${errMsg} (${error.response?.status || 'network'})`, 'error');
+      await clearSignupData();
     } finally {
       setLoading(false);
     }
@@ -119,8 +124,8 @@ export default function SignUp4() {
           {/* Back Button */}
           <TouchableOpacity
             style={styles.backButton}
-            onPress={() => router.replace("/Author/SignUp3")}
-            accessibilityLabel="Go back to previous step"
+            onPress={async () => { await clearSignupData(); router.replace("/Author/Login"); }}
+            accessibilityLabel="Go back to login"
           >
             <Ionicons name="chevron-back" size={28} color="#E85D54" />
           </TouchableOpacity>

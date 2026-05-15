@@ -86,7 +86,7 @@ export default function SignUp2() {
           {/* Back Button */}
           <TouchableOpacity
             style={styles.backButton}
-            onPress={() => router.replace("/Author/SignUp1")}
+            onPress={async () => { await AsyncStorage.removeItem('signupData'); router.replace("/Author/Login"); }}
           >
             <Ionicons name="chevron-back" size={28} color="#E85D54" />
           </TouchableOpacity>

@@ -56,8 +56,8 @@ export default function SignUp3() {
           {/* Back Button */}
           <TouchableOpacity
             style={styles.backButton}
-            onPress={() => router.replace("/Author/SignUp2")}
-            accessibilityLabel="Go back to previous step"
+            onPress={async () => { await AsyncStorage.removeItem('signupData'); router.replace("/Author/Login"); }}
+            accessibilityLabel="Go back to login"
           >
             <Ionicons name="chevron-back" size={28} color="#E85D54" />
           </TouchableOpacity>
