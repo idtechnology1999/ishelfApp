@@ -2,6 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useState, useEffect } from "react";
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Toast from '../Toast';
 import {
   StyleSheet,
   Text,
@@ -19,6 +20,7 @@ export default function SignUp3() {
   const [displayName, setDisplayName] = useState("");
   const [areasOfExpertise, setAreasOfExpertise] = useState("");
   const [shortBio, setShortBio] = useState("");
+  const [toast, setToast] = useState({ visible: false, message: '', type: 'error' as 'error' | 'success' });
 
   useEffect(() => {
     const loadData = async () => {
@@ -34,16 +36,24 @@ export default function SignUp3() {
   }, []);
 
   const handleContinue = async () => {
-    if (displayName && areasOfExpertise && shortBio) {
-      const saved = await AsyncStorage.getItem('signupData');
-      const data = saved ? JSON.parse(saved) : {};
-      await AsyncStorage.setItem('signupData', JSON.stringify({ ...data, displayName, areasOfExpertise, shortBio }));
-      router.replace("/Author/SignUp4");
-    }
+    if (!displayName) { setToast({ visible: true, message: 'Please enter your display name', type: 'error' }); return; }
+    if (!areasOfExpertise) { setToast({ visible: true, message: 'Please enter your areas of expertise', type: 'error' }); return; }
+    if (!shortBio) { setToast({ visible: true, message: 'Please enter your short bio', type: 'error' }); return; }
+
+    const saved = await AsyncStorage.getItem('signupData');
+    const data = saved ? JSON.parse(saved) : {};
+    await AsyncStorage.setItem('signupData', JSON.stringify({ ...data, displayName, areasOfExpertise, shortBio }));
+    router.replace("/Author/SignUp4");
   };
 
   return (
     <SafeAreaView style={styles.container}>
+      <Toast
+        visible={toast.visible}
+        message={toast.message}
+        type={toast.type}
+        onHide={() => setToast({ ...toast, visible: false })}
+      />
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.keyboardView}
