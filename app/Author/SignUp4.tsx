@@ -13,7 +13,6 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -45,21 +44,37 @@ export default function SignUp4() {
     try {
       const saved = await AsyncStorage.getItem('signupData');
       const data = saved ? JSON.parse(saved) : {};
-      
-      const authorData = {
-        fullName: data.fullName,
-        email: data.email,
-        institution: data.institution,
-        governmentId: data.governmentId,
-        institutionalEmail: data.institutionalEmail,
-        displayName: data.displayName,
-        areasOfExpertise: data.areasOfExpertise,
-        shortBio: data.shortBio,
-        password: password,
-        referralCode: data.referralCode || undefined,
-      };
 
-      await authorAPI.register(authorData);
+      const formData = new FormData();
+      if (data.title) formData.append('title', data.title);
+      formData.append('fullName', data.fullName);
+      formData.append('email', data.email);
+      formData.append('institution', data.institution);
+      formData.append('governmentId', data.governmentId);
+      if (data.institutionalEmail) formData.append('institutionalEmail', data.institutionalEmail);
+      formData.append('displayName', data.displayName);
+      formData.append('areasOfExpertise', data.areasOfExpertise);
+      formData.append('shortBio', data.shortBio);
+      formData.append('password', password);
+      if (data.referralCode) formData.append('referralCode', data.referralCode);
+
+      if (data.idFile) {
+        if (Platform.OS === 'web') {
+          // On web, blob: URIs must be fetched and converted to a File object
+          const fetchRes = await fetch(data.idFile.uri);
+          const blob = await fetchRes.blob();
+          const file = new File([blob], data.idFile.name, { type: data.idFile.mimeType || blob.type });
+          formData.append('ninSlip', file);
+        } else {
+          formData.append('ninSlip', {
+            uri: data.idFile.uri,
+            name: data.idFile.name,
+            type: data.idFile.mimeType,
+          } as any);
+        }
+      }
+
+      await authorAPI.register(formData);
       await AsyncStorage.removeItem('signupData');
       
       showToast('Registration Successful! 🎉', 'success');

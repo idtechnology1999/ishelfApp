@@ -4,8 +4,8 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
+  Image,
 } from "react-native";
-import Svg, { Path, Line } from "react-native-svg";
 import GestureRecognizer from "react-native-swipe-gestures";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -49,13 +49,13 @@ export default function OnboardingScreenOne() {
           </Text>
 
           <View style={styles.imageWrapper}>
-            <Svg width={120} height={288} viewBox="0 0 24 58">
-              <Path d="M9 4 Q12 2 15 4 L16 36 Q12 38 8 36 Z" fill="none" stroke="#E85D54" strokeWidth={1.4} />
-              <Path d="M9 4 Q12 1 15 4" fill="none" stroke="#E85D54" strokeWidth={1.4} />
-              <Path d="M8 36 L12 54 L16 36" fill="none" stroke="#E85D54" strokeWidth={1.4} strokeLinejoin="round" />
-              <Line x1="12" y1="42" x2="12" y2="54" stroke="#E85D54" strokeWidth={0.8} />
-              <Path d="M8.5 32 Q12 33.5 15.5 32" fill="none" stroke="#E85D54" strokeWidth={1} />
-            </Svg>
+            <View style={styles.penContainer}>
+              <Image
+                source={require("../../assets/images/pen.png")}
+                style={styles.penImage}
+                resizeMode="contain"
+              />
+            </View>
           </View>
         </View>
 
@@ -118,6 +118,23 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     marginTop: 20,
+  },
+  penContainer: {
+    width: 210,
+    height: 260,
+    borderRadius: 32,
+    backgroundColor: '#E85D54',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#E85D54',
+    shadowOpacity: 0.35,
+    shadowOffset: { width: 0, height: 8 },
+    shadowRadius: 20,
+    elevation: 10,
+  },
+  penImage: {
+    width: 110,
+    height: 190,
   },
 
   footer: {

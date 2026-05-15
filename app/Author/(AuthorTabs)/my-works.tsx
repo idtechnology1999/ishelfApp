@@ -11,6 +11,7 @@ import {
   TextInput,
   ActivityIndicator,
   Alert,
+  RefreshControl,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import GestureRecognizer from "react-native-swipe-gestures";
@@ -21,6 +22,7 @@ export default function MyWorksTab() {
   const [searchQuery, setSearchQuery] = useState("");
   const [books, setBooks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
   const swipeConfig = {
     velocityThreshold: 0.25,
@@ -43,11 +45,17 @@ export default function MyWorksTab() {
     }
   };
 
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchBooks();
+    setRefreshing(false);
+  };
+
   const getImageSource = (coverImage: string) => {
     if (coverImage) {
-      // Cloudinary returns full URL, local storage returns path
-      const uri = coverImage.startsWith('http') ? coverImage : `${process.env.EXPO_PUBLIC_API_URL}/${coverImage}`;
-      return { uri };
+      if (coverImage.startsWith('http')) return { uri: coverImage };
+      const relative = coverImage.startsWith('/') ? coverImage.slice(1) : coverImage;
+      return { uri: `${process.env.EXPO_PUBLIC_API_URL}/${relative}` };
     }
     return require('../../../assets/images/book-placeholder.png');
   };
@@ -60,7 +68,7 @@ export default function MyWorksTab() {
       onSwipeRight={() => router.push("/Author/(AuthorTabs)/")}
     >
       <SafeAreaView style={styles.container}>
-        <ScrollView showsVerticalScrollIndicator={false}>
+        <ScrollView showsVerticalScrollIndicator={false} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#E85D54']} tintColor="#E85D54" />}>
           {/* Header */}
           <View style={styles.header}>
             <TouchableOpacity
@@ -123,6 +131,30 @@ export default function MyWorksTab() {
                       />
                     </View>
                   </TouchableOpacity>
+
+                  {/* Status Badge */}
+                  {book.status === 'approved' ? (
+                    <View style={[styles.statusBadge, { backgroundColor: '#dcfce7' }]}>
+                      <Ionicons name="checkmark-circle" size={12} color="#16a34a" />
+                      <Text style={[styles.statusText, { color: '#16a34a' }]}>Approved — Live</Text>
+                    </View>
+                  ) : book.status === 'pending' ? (
+                    <View style={[styles.statusBadge, { backgroundColor: '#fef9c3' }]}>
+                      <Ionicons name="time-outline" size={12} color="#ca8a04" />
+                      <Text style={[styles.statusText, { color: '#ca8a04' }]}>Pending Review</Text>
+                    </View>
+                  ) : book.status === 'rejected' ? (
+                    <View style={[styles.statusBadge, { backgroundColor: '#fee2e2' }]}>
+                      <Ionicons name="close-circle" size={12} color="#dc2626" />
+                      <Text style={[styles.statusText, { color: '#dc2626' }]}>Rejected</Text>
+                    </View>
+                  ) : (
+                    <View style={[styles.statusBadge, { backgroundColor: '#f1f5f9' }]}>
+                      <Ionicons name="ellipsis-horizontal" size={12} color="#64748b" />
+                      <Text style={[styles.statusText, { color: '#64748b' }]}>Draft</Text>
+                    </View>
+                  )}
+
                   <Text style={styles.bookAuthor}>{book.coAuthors || 'Author'}</Text>
                   <Text style={styles.bookTitle} numberOfLines={2}>
                     {book.title}
@@ -283,6 +315,23 @@ const styles = StyleSheet.create({
     color: "#333",
     marginBottom: 8,
     minHeight: 36,
+  },
+
+  statusBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    gap: 4,
+    alignSelf: "flex-start",
+    marginBottom: 6,
+    marginTop: 4,
+  },
+
+  statusText: {
+    fontSize: 10,
+    fontWeight: "700",
   },
 
   salesBadge: {

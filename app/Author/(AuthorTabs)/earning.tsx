@@ -9,6 +9,10 @@ import {
   ScrollView,
   Image,
   ActivityIndicator,
+  RefreshControl,
+  Alert,
+  Modal,
+  TextInput,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { authorAPI } from "../../authorAPI";
@@ -19,6 +23,11 @@ export default function Earning() {
   const [transactions, setTransactions] = useState<any[]>([]);
   const [bankAccount, setBankAccount] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [paymentMode, setPaymentMode] = useState<'manual' | 'automatic'>('manual');
+  const [withdrawModal, setWithdrawModal] = useState(false);
+  const [withdrawAmount, setWithdrawAmount] = useState('');
+  const [withdrawing, setWithdrawing] = useState(false);
 
   useEffect(() => {
     loadEarningsData();
@@ -26,14 +35,16 @@ export default function Earning() {
 
   const loadEarningsData = async () => {
     try {
-      const [statsData, purchasesData, accountData] = await Promise.all([
+      const [statsData, purchasesData, accountData, paymentModeData] = await Promise.all([
         authorAPI.getDashboardStats(),
         authorAPI.getLatestPurchases(),
-        authorAPI.getSubaccountStatus()
+        authorAPI.getSubaccountStatus(),
+        authorAPI.getPaymentMode().catch(() => ({ paymentMode: 'manual' }))
       ]);
       setStats(statsData);
       setTransactions(purchasesData.purchases);
       setBankAccount(accountData.bankAccount);
+      setPaymentMode(paymentModeData.paymentMode);
     } catch (error) {
       console.error('Failed to load earnings data:', error);
     } finally {
@@ -41,13 +52,45 @@ export default function Earning() {
     }
   };
 
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await loadEarningsData();
+    setRefreshing(false);
+  };
+
   const getMonthName = () => {
     return new Date().toLocaleString('default', { month: 'long' });
   };
 
+  const handleWithdraw = async () => {
+    const amount = parseFloat(withdrawAmount);
+    if (isNaN(amount) || amount < 1000) {
+      Alert.alert('Error', 'Minimum withdrawal amount is ₦1,000');
+      return;
+    }
+    if (amount > stats.balance) {
+      Alert.alert('Error', 'Insufficient balance');
+      return;
+    }
+
+    setWithdrawing(true);
+    try {
+      await authorAPI.initiateWithdrawal(amount);
+      setWithdrawModal(false);
+      setWithdrawAmount('');
+      Alert.alert('Success', 'Withdrawal request submitted successfully. Admin will process your payment.', [
+        { text: 'OK', onPress: () => loadEarningsData() }
+      ]);
+    } catch (error: any) {
+      Alert.alert('Error', error.response?.data?.message || 'Failed to submit withdrawal request');
+    } finally {
+      setWithdrawing(false);
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#E85D54']} tintColor="#E85D54" />}>
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity
@@ -83,9 +126,11 @@ export default function Earning() {
               <Ionicons name="layers-outline" size={28} color="#E85D54" />
               <Text style={styles.cardLabel}>Balance</Text>
               <Text style={styles.cardAmount}>₦{stats.balance.toLocaleString()}</Text>
-              <TouchableOpacity onPress={() => router.push("/Author/Withdraw/WithdrawScreen")}>
-                <Text style={styles.withdrawLink}>Withdraw</Text>
-              </TouchableOpacity>
+              {paymentMode === 'manual' && bankAccount?.accountNumber && (
+                <TouchableOpacity onPress={() => setWithdrawModal(true)}>
+                  <Text style={styles.withdrawLink}>Withdraw</Text>
+                </TouchableOpacity>
+              )}
             </View>
           </View>
         )}
@@ -105,7 +150,7 @@ export default function Earning() {
             transactions.map((transaction) => (
               <View key={transaction.id} style={styles.transactionCard}>
                 {transaction.coverImage ? (
-                  <Image source={{ uri: transaction.coverImage.startsWith('http') ? transaction.coverImage : `${process.env.EXPO_PUBLIC_API_URL}/${transaction.coverImage}` }} style={styles.transactionImage} />
+                  <Image source={{ uri: transaction.coverImage.startsWith('http') ? transaction.coverImage : `${process.env.EXPO_PUBLIC_API_URL}/${transaction.coverImage.replace(/^\//, '')}` }} style={styles.transactionImage} />
                 ) : (
                   <Image source={require('../../../assets/images/book-placeholder.png')} style={styles.transactionImage} />
                 )}
@@ -144,9 +189,11 @@ export default function Earning() {
               </View>
               <View style={styles.bankActions}>
                 <Ionicons name="checkmark-circle" size={20} color="#4CAF50" style={{ marginBottom: 4 }} />
-                <TouchableOpacity onPress={() => router.push("/Author/Withdraw/WithdrawScreen")}>
-                  <Text style={styles.editText}>Withdraw</Text>
-                </TouchableOpacity>
+                {paymentMode === 'manual' && (
+                  <TouchableOpacity onPress={() => router.push("/Author/Withdraw/WithdrawScreen")}>
+                    <Text style={styles.editText}>Update</Text>
+                  </TouchableOpacity>
+                )}
               </View>
             </View>
           ) : (
@@ -166,16 +213,104 @@ export default function Earning() {
           )}
         </View>
 
-        {/* Withdraw Now Button */}
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity 
-            style={styles.withdrawButton}
-            onPress={() => router.push("/Author/Withdraw/WithdrawScreen")}
-          >
-            <Text style={styles.withdrawButtonText}>Withdraw Now</Text>
-          </TouchableOpacity>
-        </View>
+        {/* Withdraw Now Button - Only show in manual mode */}
+        {paymentMode === 'manual' && bankAccount?.accountNumber && (
+          <View style={styles.buttonContainer}>
+            <TouchableOpacity 
+              style={styles.withdrawButton}
+              onPress={() => setWithdrawModal(true)}
+            >
+              <Text style={styles.withdrawButtonText}>Withdraw Now</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {/* Payment Mode Info */}
+        {paymentMode === 'automatic' && (
+          <View style={styles.section}>
+            <View style={styles.infoCard}>
+              <Ionicons name="information-circle" size={20} color="#E85D54" />
+              <Text style={styles.infoText}>
+                Payments are automatically sent to your bank account within 1-2 business days after each sale.
+              </Text>
+            </View>
+          </View>
+        )}
       </ScrollView>
+
+      {/* Withdraw Modal */}
+      <Modal visible={withdrawModal} animationType="slide" transparent>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Request Withdrawal</Text>
+              <TouchableOpacity onPress={() => { setWithdrawModal(false); setWithdrawAmount(''); }}>
+                <Ionicons name="close" size={24} color="#666" />
+              </TouchableOpacity>
+            </View>
+
+            {(() => {
+              const entered = parseFloat(withdrawAmount) || 0;
+              const overBalance = withdrawAmount !== '' && entered > stats.balance;
+              const belowMin = withdrawAmount !== '' && entered > 0 && entered < 1000;
+              const isDisabled = !withdrawAmount || overBalance || belowMin || entered === 0 || withdrawing;
+
+              return (
+                <>
+                  <Text style={styles.modalLabel}>Amount (₦)</Text>
+                  <TextInput
+                    style={[styles.modalInput, overBalance && styles.modalInputError]}
+                    value={withdrawAmount}
+                    onChangeText={setWithdrawAmount}
+                    placeholder="Enter amount"
+                    keyboardType="numeric"
+                    placeholderTextColor="#999"
+                  />
+
+                  {overBalance ? (
+                    <View style={styles.errorRow}>
+                      <Ionicons name="alert-circle" size={14} color="#dc2626" />
+                      <Text style={styles.errorText}>
+                        Insufficient balance. You only have ₦{stats.balance.toLocaleString()} available.
+                      </Text>
+                    </View>
+                  ) : belowMin ? (
+                    <View style={styles.errorRow}>
+                      <Ionicons name="alert-circle" size={14} color="#f59e0b" />
+                      <Text style={[styles.errorText, { color: '#f59e0b' }]}>
+                        Minimum withdrawal amount is ₦1,000.
+                      </Text>
+                    </View>
+                  ) : (
+                    <Text style={styles.modalHelper}>Minimum: ₦1,000 | Available: ₦{stats.balance.toLocaleString()}</Text>
+                  )}
+
+                  {bankAccount && (
+                    <View style={styles.modalBankInfo}>
+                      <Ionicons name="bank" size={16} color="#666" />
+                      <Text style={styles.modalBankText}>
+                        {bankAccount.bankName} • {bankAccount.accountNumber}
+                      </Text>
+                    </View>
+                  )}
+
+                  <TouchableOpacity
+                    style={[styles.modalButton, isDisabled && styles.modalButtonDisabled]}
+                    onPress={handleWithdraw}
+                    disabled={isDisabled}
+                  >
+                    {withdrawing ? (
+                      <ActivityIndicator color="#FFFFFF" />
+                    ) : (
+                      <Text style={styles.modalButtonText}>Submit Request</Text>
+                    )}
+                  </TouchableOpacity>
+                </>
+              );
+            })()}
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -488,5 +623,126 @@ const styles = StyleSheet.create({
     color: '#999',
     fontSize: 14,
     paddingVertical: 20,
+  },
+
+  infoCard: {
+    flexDirection: "row",
+    backgroundColor: "#FFF5F4",
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#FFD4D1",
+    gap: 12,
+  },
+
+  infoText: {
+    flex: 1,
+    fontSize: 13,
+    color: "#666666",
+    lineHeight: 18,
+  },
+
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
+  },
+
+  modalContent: {
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 24,
+    paddingBottom: 40,
+  },
+
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#1A1A1A',
+  },
+
+  modalLabel: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#1A1A1A',
+    marginBottom: 8,
+  },
+
+  modalInput: {
+    height: 56,
+    borderWidth: 1,
+    borderColor: '#FFD4D1',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#000',
+    marginBottom: 8,
+  },
+
+  modalHelper: {
+    fontSize: 12,
+    color: '#999',
+    marginBottom: 16,
+  },
+
+  modalBankInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#F5F5F5',
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 20,
+  },
+
+  modalBankText: {
+    fontSize: 13,
+    color: '#666',
+  },
+
+  modalButton: {
+    height: 56,
+    backgroundColor: '#E85D54',
+    borderRadius: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  modalButtonDisabled: {
+    backgroundColor: '#CCCCCC',
+  },
+
+  modalButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+
+  modalInputError: {
+    borderColor: '#dc2626',
+    borderWidth: 2,
+  },
+
+  errorRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 16,
+    marginTop: 2,
+  },
+
+  errorText: {
+    fontSize: 12,
+    color: '#dc2626',
+    flex: 1,
   },
 });

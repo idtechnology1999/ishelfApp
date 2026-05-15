@@ -1,7 +1,7 @@
 import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useAuthorAuth } from '../_useAuthorAuth';
+import { useAuthorAuth } from '../../../hooks/useAuthorAuth';
 
 export default function TabLayout() {
   useAuthorAuth();

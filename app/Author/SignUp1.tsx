@@ -12,12 +12,18 @@ import {
   Platform,
   ScrollView,
   Image,
+  Modal,
+  FlatList,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StaticBackgroundPattern } from "../../components/BackgroundPattern";
 
+const TITLES = ['Mr.', 'Mrs.', 'Ms.', 'Miss', 'Dr.', 'Prof.', 'Engr.', 'Pharm.', 'Rev.', 'Chief', 'Alhaji', 'Alhaja', 'Barr.'];
+
 export default function SignUp1() {
   const router = useRouter();
+  const [title, setTitle] = useState("");
+  const [showTitlePicker, setShowTitlePicker] = useState(false);
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [institution, setInstitution] = useState("");
@@ -28,6 +34,7 @@ export default function SignUp1() {
       const saved = await AsyncStorage.getItem('signupData');
       if (saved) {
         const data = JSON.parse(saved);
+        setTitle(data.title || '');
         setFullName(data.fullName || '');
         setEmail(data.email || '');
         setInstitution(data.institution || '');
@@ -41,7 +48,7 @@ export default function SignUp1() {
     if (fullName && email && institution) {
       const saved = await AsyncStorage.getItem('signupData');
       const data = saved ? JSON.parse(saved) : {};
-      await AsyncStorage.setItem('signupData', JSON.stringify({ ...data, fullName, email, institution, referralCode: referralCode.trim().toUpperCase() }));
+      await AsyncStorage.setItem('signupData', JSON.stringify({ ...data, title, fullName, email, institution, referralCode: referralCode.trim().toUpperCase() }));
       router.replace("/Author/SignUp2");
     }
   };
@@ -49,6 +56,29 @@ export default function SignUp1() {
   return (
     <>
       <StaticBackgroundPattern />
+
+      {/* Title Picker Modal */}
+      <Modal visible={showTitlePicker} transparent animationType="slide">
+        <TouchableOpacity style={styles.modalOverlay} onPress={() => setShowTitlePicker(false)} activeOpacity={1}>
+          <View style={styles.modalSheet}>
+            <Text style={styles.modalTitle}>Select Title</Text>
+            <FlatList
+              data={TITLES}
+              keyExtractor={(item) => item}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={styles.modalItem}
+                  onPress={() => { setTitle(item); setShowTitlePicker(false); }}
+                >
+                  <Text style={[styles.modalItemText, title === item && { color: '#E85D54', fontWeight: '700' }]}>{item}</Text>
+                  {title === item && <Ionicons name="checkmark" size={20} color="#E85D54" />}
+                </TouchableOpacity>
+              )}
+            />
+          </View>
+        </TouchableOpacity>
+      </Modal>
+
       <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -87,6 +117,15 @@ export default function SignUp1() {
 
           {/* Form */}
           <View style={styles.form}>
+            {/* Title Picker */}
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Title <Text style={{ color: '#999', fontWeight: '400' }}>(Optional)</Text></Text>
+              <TouchableOpacity style={styles.pickerButton} onPress={() => setShowTitlePicker(true)}>
+                <Text style={[styles.pickerText, !title && { color: '#bbb' }]}>{title || 'Select title...'}</Text>
+                <Ionicons name="chevron-down" size={18} color="#888" />
+              </TouchableOpacity>
+            </View>
+
             {/* Full Name Input */}
             <View style={styles.inputContainer}>
               <Text style={styles.label}>Full Name</Text>
@@ -263,5 +302,64 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "600",
     color: "#FFFFFF",
+  },
+
+  pickerButton: {
+    height: 52,
+    borderWidth: 1,
+    borderColor: "#FFD4D1",
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#FFFFFF',
+  },
+
+  pickerText: {
+    fontSize: 16,
+    color: '#333',
+  },
+
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'flex-end',
+  },
+
+  modalSheet: {
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingTop: 16,
+    paddingBottom: 30,
+    maxHeight: '60%',
+  },
+
+  modalTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#333',
+    textAlign: 'center',
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+    marginHorizontal: 16,
+    marginBottom: 8,
+  },
+
+  modalItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f9f9f9',
+  },
+
+  modalItemText: {
+    fontSize: 16,
+    color: '#333',
   },
 });

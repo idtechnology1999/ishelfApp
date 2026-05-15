@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-export const useReaderAuth = () => {
+export const useAuthorAuth = () => {
   const router = useRouter();
 
   useEffect(() => {
@@ -11,12 +11,12 @@ export const useReaderAuth = () => {
 
   const checkAuth = async () => {
     try {
-      const token = await AsyncStorage.getItem('readerToken');
+      const token = await AsyncStorage.getItem('authorToken');
       if (!token) {
-        router.replace('/Reader/Login');
+        router.replace('/Author/Login');
       }
-    } catch (error) {
-      router.replace('/Reader/Login');
+    } catch {
+      router.replace('/Author/Login');
     }
   };
 };

@@ -10,6 +10,7 @@ import {
   ActivityIndicator,
   Alert,
   FlatList,
+  RefreshControl,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -23,6 +24,7 @@ export default function Home() {
   const router = useRouter();
   const [books, setBooks] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [search, setSearch] = useState("");
   const [cartCount, setCartCount] = useState(0);
   const [totalEarnings, setTotalEarnings] = useState(0);
@@ -45,6 +47,12 @@ export default function Home() {
       };
     }, [])
   );
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await Promise.all([loadBooks(), loadCartCount(), loadEarnings(), loadNotifications()]);
+    setRefreshing(false);
+  };
 
   const loadNotifications = async () => {
     try {
@@ -158,7 +166,7 @@ export default function Home() {
                   <Text style={styles.earningsText}>₦{totalEarnings.toLocaleString()}</Text>
                 </View>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.iconButton} onPress={() => router.push('/Reader/(ReaderTabs)/cart')}>
+              <TouchableOpacity style={styles.iconButton} onPress={() => router.push('/Reader/cart')}>
                 <View>
                   <Ionicons name="cart-outline" size={24} color="#E85D54" />
                   {cartCount > 0 && (
@@ -240,7 +248,7 @@ export default function Home() {
         )}
 
         {/* Scrollable Content */}
-        <ScrollView showsVerticalScrollIndicator={false} style={styles.scrollContent}>
+        <ScrollView showsVerticalScrollIndicator={false} style={styles.scrollContent} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#E85D54']} tintColor="#E85D54" />}>
           {loading ? (
             <View style={styles.loadingContainer}>
               <ActivityIndicator size="large" color="#E85D54" />
@@ -255,7 +263,7 @@ export default function Home() {
                 <View key={book._id} style={styles.bookCard}>
                   {book.coverImage ? (
                     <Image
-                      source={{ uri: book.coverImage.startsWith('http') ? book.coverImage : `${process.env.EXPO_PUBLIC_API_URL}/${book.coverImage}` }}
+                      source={{ uri: book.coverImage.startsWith('http') ? book.coverImage : `${process.env.EXPO_PUBLIC_API_URL}/${book.coverImage.replace(/^\//, '')}` }}
                       style={styles.bookImage}
                       resizeMode="cover"
                     />

@@ -1,7 +1,7 @@
 import { Tabs, useFocusEffect } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useReaderAuth } from '../_useReaderAuth';
+import { useReaderAuth } from '../../../hooks/useReaderAuth';
 import { useState, useCallback, useEffect } from "react";
 import { View, Text } from "react-native";
 import { readerCart } from "../../readerAPI";

@@ -47,12 +47,14 @@ export default function ReaderOnboarding() {
           </Text>
 
           <View style={styles.imageWrapper}>
-            <Svg width={220} height={120} viewBox="0 0 52 28">
-              <Path d="M26 6 Q14 2 2 6 L2 24 Q14 20 26 24 Z" fill="none" stroke="#E85D54" strokeWidth={1.4} strokeLinejoin="round" />
-              <Path d="M26 6 Q38 2 50 6 L50 24 Q38 20 26 24 Z" fill="none" stroke="#E85D54" strokeWidth={1.4} strokeLinejoin="round" />
-              <Path d="M26 6 Q25 15 26 24" fill="none" stroke="#E85D54" strokeWidth={1} />
-              <Path d="M6 26 Q26 32 46 26" fill="none" stroke="#E8A838" strokeWidth={2} strokeLinecap="round" />
-            </Svg>
+            <View style={styles.bookContainer}>
+              <Svg width={150} height={82} viewBox="0 0 52 28">
+                <Path d="M26 6 Q14 2 2 6 L2 24 Q14 20 26 24 Z" fill="none" stroke="rgba(255,255,255,0.9)" strokeWidth={1.4} strokeLinejoin="round" />
+                <Path d="M26 6 Q38 2 50 6 L50 24 Q38 20 26 24 Z" fill="none" stroke="rgba(255,255,255,0.9)" strokeWidth={1.4} strokeLinejoin="round" />
+                <Path d="M26 6 Q25 15 26 24" fill="none" stroke="rgba(255,255,255,0.9)" strokeWidth={1} />
+                <Path d="M6 26 Q26 32 46 26" fill="none" stroke="#E8C96A" strokeWidth={2.2} strokeLinecap="round" />
+              </Svg>
+            </View>
           </View>
         </View>
 
@@ -107,6 +109,19 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     marginTop: 40,
+  },
+  bookContainer: {
+    width: 220,
+    height: 180,
+    borderRadius: 32,
+    backgroundColor: '#E85D54',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#E85D54',
+    shadowOpacity: 0.35,
+    shadowOffset: { width: 0, height: 8 },
+    shadowRadius: 20,
+    elevation: 10,
   },
   footer: {
     paddingHorizontal: 24,

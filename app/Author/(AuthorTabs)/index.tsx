@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   Image,
   ScrollView,
@@ -9,8 +9,10 @@ import {
   TouchableOpacity,
   View,
   ActivityIndicator,
+  RefreshControl,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useFocusEffect } from "expo-router";
 import GestureRecognizer from "react-native-swipe-gestures";
 import { authorAPI } from "../../authorAPI";
 
@@ -20,10 +22,22 @@ export default function HomeTab() {
   const [stats, setStats] = useState({ totalBooks: 0, totalEarnings: 0, totalSales: 0 });
   const [purchases, setPurchases] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [unreadNotifCount, setUnreadNotifCount] = useState(0);
 
-  useEffect(() => {
-    loadDashboardData();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      loadDashboardData();
+      loadNotifCount();
+    }, [])
+  );
+
+  const loadNotifCount = async () => {
+    try {
+      const data = await authorAPI.getNotifications();
+      setUnreadNotifCount(data.unreadCount || 0);
+    } catch {}
+  };
 
   const loadDashboardData = async () => {
     try {
@@ -40,6 +54,12 @@ export default function HomeTab() {
     }
   };
 
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await Promise.all([loadDashboardData(), loadNotifCount()]);
+    setRefreshing(false);
+  };
+
   const swipeConfig = {
     velocityThreshold: 0.25,
     directionalOffsetThreshold: 70,
@@ -52,7 +72,7 @@ export default function HomeTab() {
       onSwipeLeft={() => router.push("/Author/(AuthorTabs)/my-works")}
     >
       <SafeAreaView style={styles.container}>
-        <ScrollView showsVerticalScrollIndicator={false}>
+        <ScrollView showsVerticalScrollIndicator={false} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#DC143C']} tintColor="#DC143C" />}>
           {/* Header */}
           <View style={styles.header}>
             <Image
@@ -62,10 +82,16 @@ export default function HomeTab() {
             />
             <TouchableOpacity
               style={styles.notificationButton}
-            //  onPress={() => 
-            //     router.push("/notifications")}
-                >
-              <Ionicons name="notifications-outline" size={28} color="#DC143C" />
+              onPress={() => router.push("/Author/Notifications")}
+            >
+              <View>
+                <Ionicons name="notifications-outline" size={28} color="#DC143C" />
+                {unreadNotifCount > 0 && (
+                  <View style={styles.notifBadge}>
+                    <Text style={styles.notifBadgeText}>{unreadNotifCount > 9 ? '9+' : unreadNotifCount}</Text>
+                  </View>
+                )}
+              </View>
             </TouchableOpacity>
           </View>
 
@@ -126,7 +152,7 @@ export default function HomeTab() {
                   <View style={styles.bookThumbnail}>
                     <Image
                         source={purchase.coverImage
-                          ? { uri: purchase.coverImage.startsWith('http') ? purchase.coverImage : `${process.env.EXPO_PUBLIC_API_URL}/${purchase.coverImage}` }
+                          ? { uri: purchase.coverImage.startsWith('http') ? purchase.coverImage : `${process.env.EXPO_PUBLIC_API_URL}/${purchase.coverImage.replace(/^\//, '')}` }
                           : require('../../../assets/images/book-placeholder.png')
                         }
                         style={styles.bookImage}
@@ -184,6 +210,27 @@ const styles = StyleSheet.create({
 
   notificationButton: {
     padding: 4,
+  },
+
+  notifBadge: {
+    position: 'absolute',
+    top: -4,
+    right: -6,
+    backgroundColor: '#DC143C',
+    borderRadius: 10,
+    minWidth: 18,
+    height: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 3,
+    borderWidth: 1.5,
+    borderColor: '#fff',
+  },
+
+  notifBadgeText: {
+    color: '#fff',
+    fontSize: 10,
+    fontWeight: '700',
   },
 
   sectionTitle: {

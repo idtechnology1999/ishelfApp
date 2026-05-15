@@ -6,8 +6,8 @@ import {
     Text,
     TouchableOpacity,
     View,
+    Image,
 } from "react-native";
-import Svg, { Path, Line } from "react-native-svg";
 import { SafeAreaView } from "react-native-safe-area-context";
 import GestureRecognizer from "react-native-swipe-gestures";
 import { DynamicBackgroundPattern } from "../../components/BackgroundPattern";
@@ -47,13 +47,13 @@ export default function OnboardingScreenThree() {
           </Text>
 
           <View style={styles.imageWrapper}>
-            <Svg width={120} height={288} viewBox="0 0 24 58">
-              <Path d="M9 4 Q12 2 15 4 L16 36 Q12 38 8 36 Z" fill="none" stroke="#E85D54" strokeWidth={1.4} />
-              <Path d="M9 4 Q12 1 15 4" fill="none" stroke="#E85D54" strokeWidth={1.4} />
-              <Path d="M8 36 L12 54 L16 36" fill="none" stroke="#E85D54" strokeWidth={1.4} strokeLinejoin="round" />
-              <Line x1="12" y1="42" x2="12" y2="54" stroke="#E85D54" strokeWidth={0.8} />
-              <Path d="M8.5 32 Q12 33.5 15.5 32" fill="none" stroke="#E85D54" strokeWidth={1} />
-            </Svg>
+            <View style={styles.penContainer}>
+              <Image
+                source={require("../../assets/images/pen.png")}
+                style={styles.penImage}
+                resizeMode="contain"
+              />
+            </View>
           </View>
         </View>
 
@@ -95,24 +95,41 @@ const styles = StyleSheet.create({
   },
 
   title: {
-    fontSize: 34,
+    fontSize: 26,
     fontWeight: "700",
-    color: "#E85D54", // I-SHELF coral red
-    marginBottom: 12,
+    color: "#E85D54",
+    marginBottom: 10,
   },
 
   description: {
-    fontSize: 15,
-    lineHeight: 22,
+    fontSize: 14,
+    lineHeight: 21,
     color: "#555",
-    maxWidth: 320,
+    maxWidth: 300,
   },
 
   imageWrapper: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    marginTop: 20,
+    marginTop: 16,
+  },
+  penContainer: {
+    width: 140,
+    height: 160,
+    borderRadius: 24,
+    backgroundColor: '#E85D54',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#E85D54',
+    shadowOpacity: 0.28,
+    shadowOffset: { width: 0, height: 6 },
+    shadowRadius: 14,
+    elevation: 7,
+  },
+  penImage: {
+    width: 62,
+    height: 100,
   },
 
   footer: {

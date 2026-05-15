@@ -47,12 +47,14 @@ export default function ReaderOnboarding3() {
           </Text>
 
           <View style={styles.imageWrapper}>
-            <Svg width={220} height={120} viewBox="0 0 52 28">
-              <Path d="M26 6 Q14 2 2 6 L2 24 Q14 20 26 24 Z" fill="none" stroke="#E85D54" strokeWidth={1.4} strokeLinejoin="round" />
-              <Path d="M26 6 Q38 2 50 6 L50 24 Q38 20 26 24 Z" fill="none" stroke="#E85D54" strokeWidth={1.4} strokeLinejoin="round" />
-              <Path d="M26 6 Q25 15 26 24" fill="none" stroke="#E85D54" strokeWidth={1} />
-              <Path d="M6 26 Q26 32 46 26" fill="none" stroke="#E8A838" strokeWidth={2} strokeLinecap="round" />
-            </Svg>
+            <View style={styles.bookContainer}>
+              <Svg width={90} height={50} viewBox="0 0 52 28">
+                <Path d="M26 6 Q14 2 2 6 L2 24 Q14 20 26 24 Z" fill="none" stroke="rgba(255,255,255,0.9)" strokeWidth={1.4} strokeLinejoin="round" />
+                <Path d="M26 6 Q38 2 50 6 L50 24 Q38 20 26 24 Z" fill="none" stroke="rgba(255,255,255,0.9)" strokeWidth={1.4} strokeLinejoin="round" />
+                <Path d="M26 6 Q25 15 26 24" fill="none" stroke="rgba(255,255,255,0.9)" strokeWidth={1} />
+                <Path d="M6 26 Q26 32 46 26" fill="none" stroke="#E8C96A" strokeWidth={2.2} strokeLinecap="round" />
+              </Svg>
+            </View>
           </View>
         </View>
 
@@ -90,54 +92,67 @@ const styles = StyleSheet.create({
     paddingTop: 20,
   },
   title: {
-    fontSize: 38,
-    lineHeight: 44,
+    fontSize: 28,
+    lineHeight: 36,
     fontWeight: "700",
     color: "#E85D55",
-    marginBottom: 14,
+    marginBottom: 10,
   },
   description: {
-    fontSize: 15,
-    lineHeight: 22,
+    fontSize: 14,
+    lineHeight: 21,
     color: "#333",
-    maxWidth: 320,
-    marginBottom: 20,
+    maxWidth: 300,
+    marginBottom: 16,
   },
   imageWrapper: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    paddingBottom: 60,
+    paddingBottom: 30,
+  },
+  bookContainer: {
+    width: 150,
+    height: 130,
+    borderRadius: 22,
+    backgroundColor: '#E85D54',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#E85D54',
+    shadowOpacity: 0.28,
+    shadowOffset: { width: 0, height: 6 },
+    shadowRadius: 14,
+    elevation: 7,
   },
   footer: {
     paddingHorizontal: 24,
-    paddingBottom: 40,
-    paddingTop: 20,
+    paddingBottom: 36,
+    paddingTop: 12,
     alignItems: "center",
   },
   pagination: {
     flexDirection: "row",
-    marginBottom: 36,
+    marginBottom: 28,
   },
   dot: {
-    width: 8,
-    height: 8,
+    width: 7,
+    height: 7,
     borderRadius: 4,
     backgroundColor: "#D0D7E2",
     marginHorizontal: 4,
   },
   activeDot: {
-    width: 32,
+    width: 24,
     backgroundColor: "#E85D55",
   },
   nextButton: {
-    width: 70,
-    height: 70,
-    borderRadius: 35,
+    width: 52,
+    height: 52,
+    borderRadius: 26,
     backgroundColor: "#FFF5F4",
     alignItems: "center",
     justifyContent: "center",
-    borderWidth: 2,
+    borderWidth: 1.5,
     borderColor: "#FFE5E3",
   },
 });

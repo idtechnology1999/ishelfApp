@@ -30,6 +30,7 @@ export default function WithdrawScreen() {
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
   const [showSetupForm, setShowSetupForm] = useState(false);
+  const [paymentMode, setPaymentMode] = useState<'manual' | 'automatic'>('manual');
 
   useEffect(() => {
     loadData();
@@ -90,16 +91,14 @@ export default function WithdrawScreen() {
       setAccountName("");
       setSelectedBank(null);
       setBankSearch("");
-      Alert.alert(
-        "Success", 
-        "Bank account setup successfully! Payments will be automatically sent to your account within 1-2 business days.",
-        [
-          {
-            text: "OK",
-            onPress: () => router.back()
-          }
-        ]
-      );
+      
+      const successMessage = paymentMode === 'manual'
+        ? "Bank account setup successfully! You can now request withdrawals from your earnings."
+        : "Bank account setup successfully! Payments will be automatically sent to your account within 1-2 business days.";
+      
+      Alert.alert("Success", successMessage, [
+        { text: "OK", onPress: () => router.back() }
+      ]);
     } catch (error: any) {
       Alert.alert("Error", error.response?.data?.message || "Failed to setup account");
     } finally {
@@ -109,15 +108,17 @@ export default function WithdrawScreen() {
 
   const loadData = async () => {
     try {
-      const [accountData, banksData] = await Promise.all([
+      const [accountData, banksData, paymentModeData] = await Promise.all([
         authorAPI.getSubaccountStatus(),
-        authorAPI.getBanks().catch(() => ({ banks: [] }))
+        authorAPI.getBanks().catch(() => ({ banks: [] })),
+        authorAPI.getPaymentMode().catch(() => ({ paymentMode: 'manual' }))
       ]);
       
       const hasAccount = accountData.bankAccount && accountData.bankAccount.accountNumber;
       setBankAccount(hasAccount ? accountData.bankAccount : null);
       setBanks(banksData.banks || []);
       setFilteredBanks(banksData.banks || []);
+      setPaymentMode(paymentModeData.paymentMode);
       
       if (!hasAccount) {
         setShowSetupForm(true);
@@ -147,7 +148,6 @@ export default function WithdrawScreen() {
         style={styles.keyboardView}
       >
         <ScrollView showsVerticalScrollIndicator={false}>
-          {/* Header */}
           <View style={styles.header}>
             <TouchableOpacity
               style={styles.backButton}
@@ -155,19 +155,22 @@ export default function WithdrawScreen() {
             >
               <Ionicons name="chevron-back" size={28} color="#E85D54" />
             </TouchableOpacity>
-            <Text style={styles.headerTitle}>Setup Payment Account</Text>
+            <Text style={styles.headerTitle}>
+              {paymentMode === 'manual' ? 'Bank Account' : 'Setup Payment Account'}
+            </Text>
             <View style={styles.headerSpacer} />
           </View>
 
-          {/* Bank Account Info or Setup Form */}
           {bankAccount && bankAccount.accountNumber ? (
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Payment Account</Text>
               <View style={styles.bankInfoCard}>
                 <View style={{ flex: 1 }}>
-                  <View style={styles.autoSettlementBadge}>
-                    <Ionicons name="flash" size={14} color="#4CAF50" />
-                    <Text style={styles.autoSettlementText}>Auto Settlement Enabled</Text>
+                  <View style={paymentMode === 'manual' ? styles.manualBadge : styles.autoSettlementBadge}>
+                    <Ionicons name={paymentMode === 'manual' ? "wallet" : "flash"} size={14} color={paymentMode === 'manual' ? "#E85D54" : "#4CAF50"} />
+                    <Text style={paymentMode === 'manual' ? styles.manualText : styles.autoSettlementText}>
+                      {paymentMode === 'manual' ? 'Manual Withdrawal' : 'Auto Settlement'}
+                    </Text>
                   </View>
                   <Text style={styles.bankName}>{bankAccount.bankName}</Text>
                   <Text style={styles.accountNumber}>{bankAccount.accountNumber}</Text>
@@ -179,7 +182,9 @@ export default function WithdrawScreen() {
               <View style={styles.infoCard}>
                 <Ionicons name="information-circle" size={20} color="#E85D54" />
                 <Text style={styles.infoText}>
-                  Payments are automatically transferred to your account within 1-2 business days after each sale. No withdrawal needed!
+                  {paymentMode === 'manual'
+                    ? 'Go to Earnings and tap "Withdraw Now" to request a withdrawal. Admin will process and send funds to this account.'
+                    : 'Payments are automatically transferred to your account within 1-2 business days after each sale. No withdrawal needed!'}
                 </Text>
               </View>
               
@@ -385,6 +390,24 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: "600",
     color: "#4CAF50",
+  },
+
+  manualBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#FFD4D1",
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+    gap: 4,
+    alignSelf: "flex-start",
+    marginBottom: 12,
+  },
+
+  manualText: {
+    fontSize: 11,
+    fontWeight: "600",
+    color: "#E85D54",
   },
 
   bankName: {
