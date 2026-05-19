@@ -85,64 +85,8 @@ export const authorAPI = {
   uploadCoverImage: async (imageUri: string) => {
     const token = await AsyncStorage.getItem('authorToken');
     const formData = new FormData();
-    
-    // For web, handle blob differently
-    if (imageUri.startsWith('blob:') || imageUri.startsWith('http')) {
-      const response = await fetch(imageUri);
-      const blob = await response.blob();
-      formData.append('coverImage', blob, 'cover.jpg');
-    } else {
-      // For mobile
-      const filename = imageUri.split('/').pop();
-      const match = /\.(\w+)$/.exec(filename || '');
-      const type = match ? `image/${match[1]}` : 'image/jpeg';
 
-      formData.append('coverImage', {
-        uri: imageUri,
-        name: filename || 'cover.jpg',
-        type,
-      } as any);
-    }
-
-    const response = await api.post('/api/authors/book/upload-cover', formData, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    return response.data;
-  },
-
-  uploadPdfFile: async (fileUri: string) => {
-    const token = await AsyncStorage.getItem('authorToken');
-    const formData = new FormData();
-    
-    // For web, handle blob differently
-    if (fileUri.startsWith('blob:') || fileUri.startsWith('http')) {
-      const response = await fetch(fileUri);
-      const blob = await response.blob();
-      formData.append('pdfFile', blob, 'book.pdf');
-    } else {
-      // For mobile
-      const filename = fileUri.split('/').pop();
-      formData.append('pdfFile', {
-        uri: fileUri,
-        name: filename || 'book.pdf',
-        type: 'application/pdf',
-      } as any);
-    }
-
-    const response = await api.post('/api/authors/book/upload-pdf', formData, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    return response.data;
-  },
-
-  updateBookCoverImage: async (bookId: string, imageUri: string) => {
-    const token = await AsyncStorage.getItem('authorToken');
-    const formData = new FormData();
-
+    // Use fetch instead of axios — axios has known issues with FormData on React Native Android
     if (imageUri.startsWith('blob:') || imageUri.startsWith('http')) {
       const response = await fetch(imageUri);
       const blob = await response.blob();
@@ -154,16 +98,21 @@ export const authorAPI = {
       formData.append('coverImage', { uri: imageUri, name: filename || 'cover.jpg', type } as any);
     }
 
-    const response = await api.post(`/api/authors/book/${bookId}/upload-cover`, formData, {
+    const response = await fetch(`${API_URL}/api/authors/book/upload-cover`, {
+      method: 'POST',
       headers: { Authorization: `Bearer ${token}` },
+      body: formData,
     });
-    return response.data;
+    const data = await response.json();
+    if (!response.ok) throw { response: { data, status: response.status } };
+    return data;
   },
 
-  updateBookPdfFile: async (bookId: string, fileUri: string) => {
+  uploadPdfFile: async (fileUri: string) => {
     const token = await AsyncStorage.getItem('authorToken');
     const formData = new FormData();
 
+    // Use fetch instead of axios — axios has known issues with FormData on React Native Android
     if (fileUri.startsWith('blob:') || fileUri.startsWith('http')) {
       const response = await fetch(fileUri);
       const blob = await response.blob();
@@ -173,10 +122,64 @@ export const authorAPI = {
       formData.append('pdfFile', { uri: fileUri, name: filename || 'book.pdf', type: 'application/pdf' } as any);
     }
 
-    const response = await api.post(`/api/authors/book/${bookId}/upload-pdf`, formData, {
+    const response = await fetch(`${API_URL}/api/authors/book/upload-pdf`, {
+      method: 'POST',
       headers: { Authorization: `Bearer ${token}` },
+      body: formData,
     });
-    return response.data;
+    const data = await response.json();
+    if (!response.ok) throw { response: { data, status: response.status } };
+    return data;
+  },
+
+  updateBookCoverImage: async (bookId: string, imageUri: string) => {
+    const token = await AsyncStorage.getItem('authorToken');
+    const formData = new FormData();
+
+    // Use fetch instead of axios — axios has known issues with FormData on React Native Android
+    if (imageUri.startsWith('blob:') || imageUri.startsWith('http')) {
+      const response = await fetch(imageUri);
+      const blob = await response.blob();
+      formData.append('coverImage', blob, 'cover.jpg');
+    } else {
+      const filename = imageUri.split('/').pop();
+      const match = /\.(\w+)$/.exec(filename || '');
+      const type = match ? `image/${match[1]}` : 'image/jpeg';
+      formData.append('coverImage', { uri: imageUri, name: filename || 'cover.jpg', type } as any);
+    }
+
+    const response = await fetch(`${API_URL}/api/authors/book/${bookId}/upload-cover`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+      body: formData,
+    });
+    const data = await response.json();
+    if (!response.ok) throw { response: { data, status: response.status } };
+    return data;
+  },
+
+  updateBookPdfFile: async (bookId: string, fileUri: string) => {
+    const token = await AsyncStorage.getItem('authorToken');
+    const formData = new FormData();
+
+    // Use fetch instead of axios — axios has known issues with FormData on React Native Android
+    if (fileUri.startsWith('blob:') || fileUri.startsWith('http')) {
+      const response = await fetch(fileUri);
+      const blob = await response.blob();
+      formData.append('pdfFile', blob, 'book.pdf');
+    } else {
+      const filename = fileUri.split('/').pop();
+      formData.append('pdfFile', { uri: fileUri, name: filename || 'book.pdf', type: 'application/pdf' } as any);
+    }
+
+    const response = await fetch(`${API_URL}/api/authors/book/${bookId}/upload-pdf`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+      body: formData,
+    });
+    const data = await response.json();
+    if (!response.ok) throw { response: { data, status: response.status } };
+    return data;
   },
 
   getBanks: async () => {

@@ -43,7 +43,7 @@ export default function Upload4() {
   const pickPDFFile = async () => {
     try {
       const result = await DocumentPicker.getDocumentAsync({
-        type: ["application/pdf", "text/csv", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"],
+        type: ["application/pdf"],
         copyToCacheDirectory: true,
       });
 
@@ -159,7 +159,7 @@ export default function Upload4() {
                 <Text style={styles.uploadDrag}>Drag and Drop</Text>
               </Text>
               <Text style={styles.uploadSubText}>
-                CSV and DOC Formats up to 50MB
+                PDF Format up to 50MB
               </Text>
             </View>
             {pdfFile && (

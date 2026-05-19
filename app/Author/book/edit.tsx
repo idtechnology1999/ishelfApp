@@ -102,7 +102,7 @@ export default function EditBook() {
   const pickPdfFile = async () => {
     try {
       const result = await DocumentPicker.getDocumentAsync({
-        type: ["application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"],
+        type: ["application/pdf"],
         copyToCacheDirectory: true,
       });
       if (!result.canceled) {
@@ -217,7 +217,7 @@ export default function EditBook() {
                       ? (newPdfFile.assets ? newPdfFile.assets[0].name : newPdfFile.name) || 'File selected'
                       : currentPdfName || 'No file uploaded'}
                   </Text>
-                  <Text style={styles.pdfBoxSub}>Tap to {currentPdfName ? 're-upload' : 'upload'} PDF</Text>
+                  <Text style={styles.pdfBoxSub}>Tap to {currentPdfName ? 're-upload' : 'upload'} PDF only</Text>
                 </View>
                 <Ionicons name="cloud-upload-outline" size={22} color="#E85D54" />
               </TouchableOpacity>

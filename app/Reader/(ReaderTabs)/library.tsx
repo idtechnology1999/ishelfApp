@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -9,28 +9,44 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
+import { useRouter, useFocusEffect } from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { readerBooks } from "../../readerAPI";
 
 export default function Library() {
   const router = useRouter();
   const [purchaseCount, setPurchaseCount] = useState(0);
+  const [downloadCount, setDownloadCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadPurchaseCount();
-  }, []);
-
-  const loadPurchaseCount = async () => {
+  const loadCounts = useCallback(async () => {
+    setLoading(true);
     try {
-      const data = await readerBooks.getMyPurchases();
-      setPurchaseCount(data.purchases?.length || 0);
+      const [purchaseData, readerDataStr, downloadedBooksStr] = await Promise.all([
+        readerBooks.getMyPurchases().catch(() => ({ purchases: [] })),
+        AsyncStorage.getItem('readerData'),
+        AsyncStorage.getItem('downloadedBooks'),
+      ]);
+
+      setPurchaseCount(purchaseData.purchases?.length || 0);
+
+      if (readerDataStr && downloadedBooksStr) {
+        const reader = JSON.parse(readerDataStr);
+        const readerId = reader._id || reader.id;
+        const allDownloaded = JSON.parse(downloadedBooksStr);
+        const userDownloads = allDownloaded.filter((b: any) => b.readerId === readerId);
+        setDownloadCount(userDownloads.length);
+      } else {
+        setDownloadCount(0);
+      }
     } catch (error) {
-      console.error('Failed to load purchases:', error);
+      console.error('Failed to load library counts:', error);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useFocusEffect(loadCounts);
 
   const handleViewPurchasedBooks = () => {
     router.push("/Reader/Library/PurchasedBooks");
@@ -68,7 +84,7 @@ export default function Library() {
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Downloaded Books</Text>
             <View style={styles.countBadge}>
-              <Text style={styles.countText}>{purchaseCount}</Text>
+              <Text style={styles.countText}>{downloadCount}</Text>
             </View>
           </View>
           <View style={styles.booksContainer}>

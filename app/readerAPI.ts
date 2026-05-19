@@ -155,15 +155,6 @@ export const readerBooks = {
     return response.data;
   },
 
-  downloadBook: async (bookId: string) => {
-    const token = await AsyncStorage.getItem('readerToken');
-    const response = await readerAPI.get(`/books/download/${bookId}`, {
-      headers: { Authorization: `Bearer ${token}` },
-      responseType: 'blob'
-    });
-    return response;
-  },
-
   getBookContent: async (bookId: string) => {
     const token = await AsyncStorage.getItem('readerToken');
     const response = await readerAPI.get(`/books/read/${bookId}`, {
