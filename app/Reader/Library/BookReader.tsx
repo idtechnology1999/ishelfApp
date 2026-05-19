@@ -26,7 +26,7 @@ const getPdfViewerHtml = (pdfUrl: string) => `<!DOCTYPE html>
 * { margin:0; padding:0; box-sizing:border-box; -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; }
 body { background:#525659; overflow-x:hidden; }
 #viewer { padding:8px; }
-canvas { display:block; width:100% !important; height:auto !important; margin:0 auto 8px; background:white; box-shadow:0 2px 8px rgba(0,0,0,.35); }
+canvas { display:block; margin:0 auto 8px; background:white; box-shadow:0 2px 8px rgba(0,0,0,.35); max-width:100%; }
 #loading { display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh; color:white; font-family:Arial,sans-serif; gap:16px; }
 #error { display:none; flex-direction:column; align-items:center; justify-content:center; height:100vh; color:#ff8080; font-family:Arial,sans-serif; text-align:center; padding:24px; gap:12px; }
 .spinner { width:44px; height:44px; border:4px solid rgba(255,255,255,.25); border-top-color:white; border-radius:50%; animation:spin .85s linear infinite; }
@@ -44,14 +44,19 @@ pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/p
     const pdf = await pdfjsLib.getDocument('${pdfUrl}').promise;
     document.getElementById('loading').style.display='none';
     const viewer = document.getElementById('viewer');
+    const dpr = window.devicePixelRatio || 1;
+    const cssWidth = window.innerWidth - 16;
     for(let i=1;i<=pdf.numPages;i++){
       const page = await pdf.getPage(i);
       const base = page.getViewport({scale:1});
-      const scale = (window.innerWidth-16)/base.width;
-      const vp = page.getViewport({scale});
+      const baseScale = cssWidth / base.width;
+      const renderScale = baseScale * dpr;
+      const vp = page.getViewport({scale:renderScale});
       const canvas = document.createElement('canvas');
       canvas.width = vp.width;
       canvas.height = vp.height;
+      canvas.style.width = cssWidth + 'px';
+      canvas.style.height = (base.height * baseScale) + 'px';
       viewer.appendChild(canvas);
       await page.render({canvasContext:canvas.getContext('2d'),viewport:vp}).promise;
     }
