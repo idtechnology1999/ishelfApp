@@ -114,15 +114,14 @@ export default function CourseMaterials() {
                 <View key={book._id} style={styles.bookCard}>
                   <Image
                     source={book.coverImage
-                      ? (book.coverImage.startsWith('http')
+                      ? { uri: book.coverImage.startsWith('http')
                           ? book.coverImage
-                          : `${process.env.EXPO_PUBLIC_API_URL}/${book.coverImage.replace(/^\//, '')}`)
-                      : require("../../../assets/images/book-placeholder.png")}
+                          : `${process.env.EXPO_PUBLIC_API_URL}/${book.coverImage.replace(/^\//, '')}` }
+                      : null}
                     style={styles.bookImage}
                     contentFit="cover"
                     cachePolicy="memory-disk"
                     transition={150}
-                    placeholder={require("../../../assets/images/book-placeholder.png")}
                   />
                   <View style={styles.bookInfo}>
                     <Text style={styles.authorText}>{book.authorId?.displayName || 'Unknown'}</Text>

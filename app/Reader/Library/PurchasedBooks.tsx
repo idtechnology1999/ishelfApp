@@ -58,17 +58,14 @@ export default function PurchasedBooks() {
           <View key={purchase._id} style={styles.bookCard}>
             <Image
               source={purchase.book?.coverImage
-                ? (purchase.book.coverImage.startsWith('http')
+                ? { uri: purchase.book.coverImage.startsWith('http')
                     ? purchase.book.coverImage
-                    : purchase.book.coverImage.startsWith('/')
-                      ? `${process.env.EXPO_PUBLIC_API_URL}${purchase.book.coverImage}`
-                      : `${process.env.EXPO_PUBLIC_API_URL}/${purchase.book.coverImage}`)
-                : require("../../../assets/images/book-placeholder.png")}
+                    : `${process.env.EXPO_PUBLIC_API_URL}/${purchase.book.coverImage.replace(/^\//, '')}` }
+                : null}
               style={styles.bookImage}
               contentFit="cover"
               cachePolicy="memory-disk"
               transition={200}
-              placeholder={require("../../../assets/images/book-placeholder.png")}
             />
             <View style={styles.bookContent}>
               <View style={styles.bookInfo}>

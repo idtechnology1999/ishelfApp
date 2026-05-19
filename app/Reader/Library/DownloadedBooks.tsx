@@ -273,17 +273,14 @@ export default function DownloadedBooks() {
               <View key={book.bookId} style={styles.bookCard}>
                 <Image
                   source={book.coverImage
-                    ? (book.coverImage.startsWith('http')
+                    ? { uri: book.coverImage.startsWith('http')
                         ? book.coverImage
-                        : book.coverImage.startsWith('/')
-                          ? `${process.env.EXPO_PUBLIC_API_URL}${book.coverImage}`
-                          : `${process.env.EXPO_PUBLIC_API_URL}/${book.coverImage}`)
-                    : require("../../../assets/images/book-placeholder.png")}
+                        : `${process.env.EXPO_PUBLIC_API_URL}/${book.coverImage.replace(/^\//, '')}` }
+                    : null}
                   style={styles.bookImage}
                   contentFit="cover"
                   cachePolicy="memory-disk"
                   transition={200}
-                  placeholder={require("../../../assets/images/book-placeholder.png")}
                 />
                 <View style={styles.bookDetails}>
                   <View style={styles.bookInfo}>
