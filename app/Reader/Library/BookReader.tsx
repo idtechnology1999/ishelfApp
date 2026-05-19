@@ -6,23 +6,21 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Alert,
-  Dimensions,
   Platform,
-  Linking,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { WebView } from 'react-native-webview';
 import { readerBooks } from '../../readerAPI';
-
-const { width, height } = Dimensions.get('window');
 
 export default function BookReader() {
   const router = useRouter();
   const params = useLocalSearchParams();
   const [book, setBook] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [webLoading, setWebLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -40,33 +38,17 @@ export default function BookReader() {
       const data = await readerBooks.getBookContent(bookId);
       const token = await AsyncStorage.getItem('readerToken');
 
-      // Use stream endpoint — server pipes file inline with correct Content-Type
       const streamUrl = `${process.env.EXPO_PUBLIC_API_URL}/api/readers/books/stream/${bookId}?token=${encodeURIComponent(token || '')}`;
-
-      // Detect file type from pdfUrl stored on book
-      const rawUrl = data.book?.pdfUrl || '';
-      const ext = rawUrl.split('?')[0].split('.').pop()?.toLowerCase() || 'pdf';
 
       setBook({
         ...data.book,
         pdfUrl: streamUrl,
-        fileExt: ext,
       });
     } catch (error: any) {
       console.error('Failed to load book:', error);
       setError(error.response?.data?.message || 'Failed to load book');
     } finally {
       setLoading(false);
-    }
-  };
-
-  const openPDFInBrowser = () => {
-    if (book?.pdfUrl) {
-      if (Platform.OS === 'web') {
-        window.open(book.pdfUrl, '_blank');
-      } else {
-        Linking.openURL(book.pdfUrl);
-      }
     }
   };
 
@@ -118,32 +100,51 @@ export default function BookReader() {
         </TouchableOpacity>
       </View>
 
-      {/* File Viewer */}
+      {/* PDF Viewer — in-app only, no external browser */}
       <View style={styles.pdfContainer}>
         {Platform.OS === 'web' ? (
-          book.fileExt === 'docx' || book.fileExt === 'doc' ? (
-            <iframe
-              src={`https://docs.google.com/gview?url=${encodeURIComponent(book.pdfUrl)}&embedded=true`}
-              style={{ width: '100%', height: '100%', border: 'none' }}
-              title={book.title}
-            />
-          ) : (
-            <iframe
-              src={book.pdfUrl}
-              style={{ width: '100%', height: '100%', border: 'none' }}
-              title={book.title}
-            />
-          )
+          <iframe
+            src={book.pdfUrl}
+            style={{ width: '100%', height: '100%', border: 'none' }}
+            title={book.title}
+          />
         ) : (
-          <View style={styles.mobileContainer}>
-            <Ionicons name="document-text-outline" size={80} color="#E85D54" />
-            <Text style={styles.mobileTitle}>{book.title}</Text>
-            <Text style={styles.mobileSubtitle}>PDF Reader</Text>
-            <TouchableOpacity style={styles.openButton} onPress={openPDFInBrowser}>
-              <Ionicons name="open-outline" size={20} color="#FFFFFF" />
-              <Text style={styles.openButtonText}>Open PDF</Text>
-            </TouchableOpacity>
-          </View>
+          <>
+            {webLoading && (
+              <View style={styles.webLoadingOverlay}>
+                <ActivityIndicator size="large" color="#E85D54" />
+                <Text style={styles.loadingText}>Opening book...</Text>
+              </View>
+            )}
+            <WebView
+              source={{ uri: book.pdfUrl }}
+              style={[styles.webview, webLoading && { opacity: 0 }]}
+              javaScriptEnabled
+              domStorageEnabled
+              originWhitelist={['*']}
+              allowsInlineMediaPlayback
+              onLoadStart={() => setWebLoading(true)}
+              onLoadEnd={() => setWebLoading(false)}
+              onError={() => {
+                setWebLoading(false);
+                setError('Failed to load the book. Please try again.');
+              }}
+              onShouldStartLoadWithRequest={(request) => {
+                // Block any navigation away from our stream endpoint
+                const allowedHosts = [
+                  'api.i-shelf.app',
+                  'localhost',
+                  '127.0.0.1',
+                ];
+                try {
+                  const host = new URL(request.url).hostname;
+                  return allowedHosts.some(h => host.includes(h));
+                } catch {
+                  return false;
+                }
+              }}
+            />
+          </>
         )}
       </View>
     </SafeAreaView>
@@ -191,39 +192,15 @@ const styles = StyleSheet.create({
   pdfContainer: {
     flex: 1,
   },
-  mobileContainer: {
+  webview: {
     flex: 1,
+  },
+  webLoadingOverlay: {
+    ...StyleSheet.absoluteFillObject,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 40,
-  },
-  mobileTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#333',
-    textAlign: 'center',
-    marginTop: 20,
-    marginBottom: 8,
-  },
-  mobileSubtitle: {
-    fontSize: 16,
-    color: '#666',
-    textAlign: 'center',
-    marginBottom: 30,
-  },
-  openButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#E85D54',
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 25,
-    gap: 8,
-  },
-  openButtonText: {
-    color: '#FFFFFF',
-    fontWeight: '600',
-    fontSize: 16,
+    backgroundColor: '#FFFFFF',
+    zIndex: 10,
   },
   loadingContainer: {
     flex: 1,

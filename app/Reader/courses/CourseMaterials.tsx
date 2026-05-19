@@ -6,9 +6,9 @@ import {
   TextInput,
   TouchableOpacity,
   ScrollView,
-  Image,
   ActivityIndicator,
 } from "react-native";
+import { Image } from "expo-image";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter, useLocalSearchParams } from "expo-router";
@@ -112,19 +112,18 @@ export default function CourseMaterials() {
             <View style={styles.booksGrid}>
               {books.map((book: any) => (
                 <View key={book._id} style={styles.bookCard}>
-                  {book.coverImage ? (
-                    <Image
-                      source={{ uri: book.coverImage.startsWith('http') ? book.coverImage : `${process.env.EXPO_PUBLIC_API_URL}/${book.coverImage.replace(/^\//, '')}` }}
-                      style={styles.bookImage}
-                      resizeMode="cover"
-                    />
-                  ) : (
-                    <Image
-                      source={require("../../../assets/images/book-placeholder.png")}
-                      style={styles.bookImage}
-                      resizeMode="cover"
-                    />
-                  )}
+                  <Image
+                    source={book.coverImage
+                      ? (book.coverImage.startsWith('http')
+                          ? book.coverImage
+                          : `${process.env.EXPO_PUBLIC_API_URL}/${book.coverImage.replace(/^\//, '')}`)
+                      : require("../../../assets/images/book-placeholder.png")}
+                    style={styles.bookImage}
+                    contentFit="cover"
+                    cachePolicy="memory-disk"
+                    transition={150}
+                    placeholder={require("../../../assets/images/book-placeholder.png")}
+                  />
                   <View style={styles.bookInfo}>
                     <Text style={styles.authorText}>{book.authorId?.displayName || 'Unknown'}</Text>
                     <Text style={styles.bookTitle} numberOfLines={2}>

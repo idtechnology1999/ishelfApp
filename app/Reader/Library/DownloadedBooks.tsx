@@ -5,12 +5,12 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
-  Image,
   ActivityIndicator,
   Alert,
   Platform,
   RefreshControl,
 } from "react-native";
+import { Image } from "expo-image";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter, useFocusEffect } from "expo-router";
@@ -272,16 +272,18 @@ export default function DownloadedBooks() {
             {books.map((book: any) => (
               <View key={book.bookId} style={styles.bookCard}>
                 <Image
-                  source={{ 
-                    uri: book.coverImage?.startsWith('http') 
-                      ? book.coverImage 
-                      : book.coverImage?.startsWith('/') 
-                        ? `${process.env.EXPO_PUBLIC_API_URL}${book.coverImage}` 
-                        : `${process.env.EXPO_PUBLIC_API_URL}/${book.coverImage}` 
-                  }}
+                  source={book.coverImage
+                    ? (book.coverImage.startsWith('http')
+                        ? book.coverImage
+                        : book.coverImage.startsWith('/')
+                          ? `${process.env.EXPO_PUBLIC_API_URL}${book.coverImage}`
+                          : `${process.env.EXPO_PUBLIC_API_URL}/${book.coverImage}`)
+                    : require("../../../assets/images/book-placeholder.png")}
                   style={styles.bookImage}
-                  resizeMode="cover"
-                  defaultSource={require("../../../assets/images/book-placeholder.png")}
+                  contentFit="cover"
+                  cachePolicy="memory-disk"
+                  transition={200}
+                  placeholder={require("../../../assets/images/book-placeholder.png")}
                 />
                 <View style={styles.bookDetails}>
                   <View style={styles.bookInfo}>

@@ -46,7 +46,11 @@ export default function Library() {
     }
   }, []);
 
-  useFocusEffect(loadCounts);
+  useFocusEffect(
+    useCallback(() => {
+      loadCounts();
+    }, [loadCounts])
+  );
 
   const handleViewPurchasedBooks = () => {
     router.push("/Reader/Library/PurchasedBooks");

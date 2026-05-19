@@ -5,9 +5,9 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
-  Image,
   ActivityIndicator,
 } from "react-native";
+import { Image } from "expo-image";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
@@ -57,16 +57,18 @@ export default function PurchasedBooks() {
         {books.filter((purchase: any) => purchase.book).map((purchase: any) => (
           <View key={purchase._id} style={styles.bookCard}>
             <Image
-              source={{
-                uri: purchase.book?.coverImage?.startsWith('http')
-                  ? purchase.book.coverImage
-                  : purchase.book?.coverImage?.startsWith('/')
-                    ? `${process.env.EXPO_PUBLIC_API_URL}${purchase.book.coverImage}`
-                    : `${process.env.EXPO_PUBLIC_API_URL}/${purchase.book.coverImage}`
-              }}
+              source={purchase.book?.coverImage
+                ? (purchase.book.coverImage.startsWith('http')
+                    ? purchase.book.coverImage
+                    : purchase.book.coverImage.startsWith('/')
+                      ? `${process.env.EXPO_PUBLIC_API_URL}${purchase.book.coverImage}`
+                      : `${process.env.EXPO_PUBLIC_API_URL}/${purchase.book.coverImage}`)
+                : require("../../../assets/images/book-placeholder.png")}
               style={styles.bookImage}
-              resizeMode="cover"
-              defaultSource={require("../../../assets/images/book-placeholder.png")}
+              contentFit="cover"
+              cachePolicy="memory-disk"
+              transition={200}
+              placeholder={require("../../../assets/images/book-placeholder.png")}
             />
             <View style={styles.bookContent}>
               <View style={styles.bookInfo}>
