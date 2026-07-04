@@ -31,12 +31,20 @@ export default function ReaderOnboarding2() {
     >
       <DynamicBackgroundPattern />
       <SafeAreaView style={styles.container}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => router.back()}
-        >
-          <Ionicons name="chevron-back" size={24} color="#E8533F" />
-        </TouchableOpacity>
+        <View style={styles.topRow}>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => router.back()}
+          >
+            <Ionicons name="chevron-back" size={24} color="#E8533F" />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.skipButton}
+            onPress={() => router.push("/Reader/Login")}
+          >
+            <Text style={styles.skipText}>Skip</Text>
+          </TouchableOpacity>
+        </View>
 
         <View style={styles.content}>
           <Text style={styles.title}>
@@ -84,9 +92,23 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: 'transparent',
   },
+  topRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
   backButton: {
     paddingHorizontal: 16,
     paddingVertical: 10,
+  },
+  skipButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+  },
+  skipText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#E8533F",
   },
   content: {
     flex: 1,

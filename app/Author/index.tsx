@@ -30,13 +30,21 @@ export default function OnboardingScreenOne() {
     >
       <DynamicBackgroundPattern />
       <SafeAreaView style={styles.container}>
-        {/* Back Button */}
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => router.back()}
-        >
-          <Ionicons name="chevron-back" size={24} color="#E85D54" />
-        </TouchableOpacity>
+        {/* Top Row */}
+        <View style={styles.topRow}>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => router.back()}
+          >
+            <Ionicons name="chevron-back" size={24} color="#E85D54" />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.skipButton}
+            onPress={() => router.push("/Author/Login")}
+          >
+            <Text style={styles.skipText}>Skip</Text>
+          </TouchableOpacity>
+        </View>
 
         {/* Content */}
         <View style={styles.content}>
@@ -89,9 +97,26 @@ const styles = StyleSheet.create({
     backgroundColor: "transparent",
   },
 
+  topRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+
   backButton: {
     paddingHorizontal: 16,
     paddingVertical: 10,
+  },
+
+  skipButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+  },
+
+  skipText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#E85D54",
   },
 
   content: {

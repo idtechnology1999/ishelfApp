@@ -33,6 +33,39 @@ type Identity =
 const generateGuestId = () =>
   `guest_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
 
+const FAQS = [
+  {
+    id: 1,
+    question: "How do I purchase and download a book on I-SHELF?",
+    answer: 'Open the book you want, tap "Buy Now", and complete payment. Once successful, the book appears in your Library, where you can read it anytime.',
+  },
+  {
+    id: 2,
+    question: "How do I upload and sell a book on I-SHELF?",
+    answer: 'Sign in as an Author, go to your dashboard and tap "Upload Book". Fill in the book details, upload your PDF and cover image, and submit for review. Once approved, readers can purchase it.',
+  },
+  {
+    id: 3,
+    question: "Can I read my books offline after downloading them?",
+    answer: "Yes, once you download a book to your device, you can read it offline anytime without an internet connection.",
+  },
+  {
+    id: 4,
+    question: "Why can't I screenshot or share the books I bought?",
+    answer: "To protect copyright and intellectual property rights, screenshots and sharing of purchased books are restricted.",
+  },
+  {
+    id: 5,
+    question: "How do I recover my account if I forget my login details?",
+    answer: "Click 'Forgot Password' on the login screen and follow the instructions to reset your password via email.",
+  },
+  {
+    id: 6,
+    question: "What payment methods are supported?",
+    answer: "We support various payment methods including credit/debit cards, bank transfers, and mobile payment options.",
+  },
+];
+
 export default function SupportWidget() {
   const insets = useSafeAreaInsets();
   const [visible, setVisible] = useState(false);
@@ -44,6 +77,7 @@ export default function SupportWidget() {
   const [verifyMsg, setVerifyMsg] = useState("");
 
   const [nameInput, setNameInput] = useState("");
+  const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [messageText, setMessageText] = useState("");
@@ -186,15 +220,40 @@ export default function SupportWidget() {
             </View>
 
             {stage === "intro" && (
-              <View style={styles.centeredContent}>
-                <View style={styles.iconCircle}>
-                  <Ionicons name="people" size={56} color="#E85D54" />
+              <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.introScrollContent}>
+                <View style={styles.introTop}>
+                  <View style={styles.iconCircle}>
+                    <Ionicons name="people" size={56} color="#E85D54" />
+                  </View>
+                  <Text style={styles.introText}>Chat with our support team</Text>
+                  <TouchableOpacity style={styles.primaryButton} onPress={startChatFlow}>
+                    <Text style={styles.primaryButtonText}>Chat Now</Text>
+                  </TouchableOpacity>
                 </View>
-                <Text style={styles.introText}>Chat with our support team</Text>
-                <TouchableOpacity style={styles.primaryButton} onPress={startChatFlow}>
-                  <Text style={styles.primaryButtonText}>Chat Now</Text>
-                </TouchableOpacity>
-              </View>
+
+                <Text style={styles.faqTitle}>Frequently Asked Questions</Text>
+                <Text style={styles.faqSubtitle}>You might find your answer here first</Text>
+                {FAQS.map((faq) => (
+                  <View key={faq.id} style={styles.faqItem}>
+                    <TouchableOpacity
+                      style={styles.faqQuestion}
+                      onPress={() => setExpandedFaq(expandedFaq === faq.id ? null : faq.id)}
+                    >
+                      <Text style={styles.faqQuestionText}>{faq.question}</Text>
+                      <Ionicons
+                        name={expandedFaq === faq.id ? "chevron-up" : "chevron-down"}
+                        size={18}
+                        color="#FFFFFF"
+                      />
+                    </TouchableOpacity>
+                    {expandedFaq === faq.id && (
+                      <View style={styles.faqAnswer}>
+                        <Text style={styles.faqAnswerText}>{faq.answer}</Text>
+                      </View>
+                    )}
+                  </View>
+                ))}
+              </ScrollView>
             )}
 
             {stage === "choice" && (
@@ -358,6 +417,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 32,
     gap: 16,
   },
+  introScrollContent: { paddingHorizontal: 24, paddingTop: 24, paddingBottom: 24 },
+  introTop: { alignItems: "center", gap: 16, marginBottom: 28 },
   iconCircle: {
     width: 110,
     height: 110,
@@ -368,6 +429,21 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   introText: { fontSize: 16, fontWeight: "600", color: "#222", textAlign: "center" },
+  faqTitle: { fontSize: 16, fontWeight: "700", color: "#111", marginBottom: 4 },
+  faqSubtitle: { fontSize: 13, color: "#888", marginBottom: 16 },
+  faqItem: { marginBottom: 10 },
+  faqQuestion: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    backgroundColor: "#E85D54",
+    padding: 16,
+    borderRadius: 12,
+    gap: 10,
+  },
+  faqQuestionText: { flex: 1, fontSize: 14, fontWeight: "500", color: "#FFFFFF" },
+  faqAnswer: { backgroundColor: "#FFE8E6", padding: 16, borderRadius: 12, marginTop: 4 },
+  faqAnswerText: { fontSize: 13, color: "#333", lineHeight: 19 },
   primaryButton: {
     backgroundColor: "#E85D54",
     paddingHorizontal: 32,

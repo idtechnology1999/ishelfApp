@@ -27,16 +27,24 @@ export default function ReaderOnboarding3() {
       style={{ flex: 1 }}
       config={swipeConfig}
       onSwipeRight={() => router.back()}
-      onSwipeLeft={() => router.push("/Reader/SignUp")}
+      onSwipeLeft={() => router.push("/Reader/Login")}
     >
       <DynamicBackgroundPattern />
       <SafeAreaView style={styles.container}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => router.back()}
-        >
-          <Ionicons name="chevron-back" size={24} color="#E85D55" />
-        </TouchableOpacity>
+        <View style={styles.topRow}>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => router.back()}
+          >
+            <Ionicons name="chevron-back" size={24} color="#E85D55" />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.skipButton}
+            onPress={() => router.push("/Reader/Login")}
+          >
+            <Text style={styles.skipText}>Skip</Text>
+          </TouchableOpacity>
+        </View>
 
         <View style={styles.content}>
           <Text style={styles.title}>
@@ -68,7 +76,7 @@ export default function ReaderOnboarding3() {
 
           <TouchableOpacity
             style={styles.nextButton}
-            onPress={() => router.push("/Reader/SignUp")}
+            onPress={() => router.push("/Reader/Login")}
           >
             <Ionicons name="chevron-forward" size={24} color="#E85D55" />
           </TouchableOpacity>
@@ -84,9 +92,23 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: 'transparent',
   },
+  topRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
   backButton: {
     paddingHorizontal: 16,
     paddingVertical: 10,
+  },
+  skipButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+  },
+  skipText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#E85D55",
   },
   content: {
     flex: 1,
