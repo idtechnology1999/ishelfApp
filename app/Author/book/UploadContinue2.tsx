@@ -15,7 +15,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { authorAPI } from "../../authorAPI";
-import { BOOK_CATEGORIES } from "../../constants/categories";
+import { BOOK_CATEGORIES } from "../../../constants/categories";
 
 export default function Upload3() {
   const router = useRouter();

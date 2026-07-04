@@ -11,7 +11,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import GestureRecognizer from "react-native-swipe-gestures";
-import { EXPLORE_CATEGORIES } from "../../constants/categories";
+import { EXPLORE_CATEGORIES } from "../../../constants/categories";
 
 export default function Explore() {
   const router = useRouter();
