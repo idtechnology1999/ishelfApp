@@ -3,6 +3,8 @@ import { useRouter, usePathname } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  Animated,
+  Easing,
   KeyboardAvoidingView,
   Modal,
   Platform,
@@ -89,6 +91,26 @@ export default function SupportWidget() {
   const [sending, setSending] = useState(false);
   const scrollRef = useRef<ScrollView>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+  const ringAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const blink = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, { toValue: 0.4, duration: 700, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+        Animated.timing(pulseAnim, { toValue: 1, duration: 700, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+      ])
+    );
+    const ring = Animated.loop(
+      Animated.timing(ringAnim, { toValue: 1, duration: 1400, easing: Easing.out(Easing.ease), useNativeDriver: true })
+    );
+    blink.start();
+    ring.start();
+    return () => {
+      blink.stop();
+      ring.stop();
+    };
+  }, []);
 
   const openWidget = async () => {
     setVisible(true);
@@ -202,13 +224,23 @@ export default function SupportWidget() {
 
   return (
     <>
-      <TouchableOpacity
-        style={[styles.fab, { bottom: insets.bottom + 20 }]}
-        onPress={openWidget}
-        activeOpacity={0.85}
-      >
-        <Ionicons name="chatbubble-ellipses" size={26} color="#FFFFFF" />
-      </TouchableOpacity>
+      <View style={[styles.fabWrapper, { bottom: insets.bottom + 20 }]} pointerEvents="box-none">
+        <Animated.View
+          pointerEvents="none"
+          style={[
+            styles.fabRing,
+            {
+              opacity: ringAnim.interpolate({ inputRange: [0, 1], outputRange: [0.5, 0] }),
+              transform: [{ scale: ringAnim.interpolate({ inputRange: [0, 1], outputRange: [1, 1.7] }) }],
+            },
+          ]}
+        />
+        <TouchableOpacity onPress={openWidget} activeOpacity={0.85}>
+          <Animated.View style={[styles.fab, { opacity: pulseAnim }]}>
+            <Ionicons name="chatbubble-ellipses" size={26} color="#FFFFFF" />
+          </Animated.View>
+        </TouchableOpacity>
+      </View>
 
       <Modal visible={visible} animationType="slide" onRequestClose={closeWidget} transparent>
         <View style={styles.overlay}>
@@ -436,9 +468,23 @@ export default function SupportWidget() {
 }
 
 const styles = StyleSheet.create({
-  fab: {
+  fabWrapper: {
     position: "absolute",
     right: 20,
+    width: 56,
+    height: 56,
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 999,
+  },
+  fabRing: {
+    position: "absolute",
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: "#E85D54",
+  },
+  fab: {
     width: 56,
     height: 56,
     borderRadius: 28,
@@ -450,7 +496,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 8,
     elevation: 6,
-    zIndex: 999,
   },
   overlay: {
     flex: 1,
