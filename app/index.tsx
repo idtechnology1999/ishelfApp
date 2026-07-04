@@ -11,6 +11,7 @@ import {
 import GestureRecognizer from "react-native-swipe-gestures";
 import { DynamicBackgroundPattern } from "../components/BackgroundPattern";
 import Svg, { Path } from "react-native-svg";
+import SupportWidget from "../components/SupportWidget";
 
 type UserRole = "author" | "student";
 
@@ -172,6 +173,8 @@ export default function ContinueAsScreen() {
           </TouchableOpacity>
         </Animated.View>
       </Animated.View>
+
+      <SupportWidget />
     </GestureRecognizer>
   );
 }

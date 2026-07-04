@@ -17,6 +17,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import GestureRecognizer from "react-native-swipe-gestures";
 import { StaticBackgroundPattern } from "../../components/BackgroundPattern";
+import SupportWidget from "../../components/SupportWidget";
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -197,6 +198,7 @@ export default function LoginScreen() {
           </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
+      <SupportWidget />
     </GestureRecognizer>
   );
 }

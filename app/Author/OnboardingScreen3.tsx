@@ -11,6 +11,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import GestureRecognizer from "react-native-swipe-gestures";
 import { DynamicBackgroundPattern } from "../../components/BackgroundPattern";
+import SupportWidget from "../../components/SupportWidget";
 
 export default function OnboardingScreenThree() {
   const router = useRouter();
@@ -73,6 +74,7 @@ export default function OnboardingScreenThree() {
           </TouchableOpacity>
         </View>
       </SafeAreaView>
+      <SupportWidget />
     </GestureRecognizer>
   );
 }

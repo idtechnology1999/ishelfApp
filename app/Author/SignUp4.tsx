@@ -15,6 +15,7 @@ import {
   ScrollView,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import SupportWidget from "../../components/SupportWidget";
 
 export default function SignUp4() {
   const router = useRouter();
@@ -216,6 +217,7 @@ export default function SignUp4() {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+      <SupportWidget />
     </SafeAreaView>
   );
 }

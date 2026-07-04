@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   ScrollView,
   ActivityIndicator,
+  RefreshControl,
 } from "react-native";
 import { Image } from "expo-image";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -20,6 +21,7 @@ export default function CourseMaterials() {
   const params = useLocalSearchParams();
   const [books, setBooks] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState(params.category as string || "");
 
@@ -42,15 +44,26 @@ export default function CourseMaterials() {
   };
 
   const handleSearch = async () => {
-    if (!search.trim()) return;
     setLoading(true);
     try {
-      const data = await readerBooks.getAllBooks(search, category);
+      const data = await readerBooks.getAllBooks(search.trim(), category);
       setBooks(data.books);
     } catch (error) {
       console.error('Search failed:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    try {
+      const data = await readerBooks.getAllBooks(search.trim(), category);
+      setBooks(data.books);
+    } catch (error) {
+      console.error('Refresh failed:', error);
+    } finally {
+      setRefreshing(false);
     }
   };
 
@@ -85,10 +98,17 @@ export default function CourseMaterials() {
           <View style={{ width: 24 }} />
         </View>
 
-        <ScrollView showsVerticalScrollIndicator={false}>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} colors={["#E85D55"]} tintColor="#E85D55" />
+          }
+        >
           {/* Search Bar */}
           <View style={styles.searchContainer}>
-            <Ionicons name="search" size={20} color="#999" />
+            <TouchableOpacity onPress={handleSearch}>
+              <Ionicons name="search" size={20} color="#999" />
+            </TouchableOpacity>
             <TextInput
               style={styles.searchInput}
               placeholder="Search by course/author/Title ISBN"
@@ -96,6 +116,7 @@ export default function CourseMaterials() {
               value={search}
               onChangeText={setSearch}
               onSubmitEditing={handleSearch}
+              returnKeyType="search"
             />
           </View>
 

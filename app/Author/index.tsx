@@ -11,6 +11,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { DynamicBackgroundPattern } from "../../components/BackgroundPattern";
+import SupportWidget from "../../components/SupportWidget";
 
 export default function OnboardingScreenOne() {
   const router = useRouter();
@@ -75,6 +76,7 @@ export default function OnboardingScreenOne() {
           </TouchableOpacity>
         </View>
       </SafeAreaView>
+      <SupportWidget />
     </GestureRecognizer>
   );
 }

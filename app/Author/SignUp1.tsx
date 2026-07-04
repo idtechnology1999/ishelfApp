@@ -16,6 +16,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StaticBackgroundPattern } from "../../components/BackgroundPattern";
+import SupportWidget from "../../components/SupportWidget";
 
 const TITLES = ['Mr.', 'Mrs.', 'Ms.', 'Miss', 'Dr.', 'Prof.', 'Engr.', 'Pharm.', 'Rev.', 'Chief', 'Alhaji', 'Alhaja', 'Barr.'];
 
@@ -228,6 +229,7 @@ export default function SignUp1() {
           </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
+      <SupportWidget />
     </>
   );
 }

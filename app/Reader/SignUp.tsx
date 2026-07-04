@@ -17,6 +17,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { readerAuth } from "../readerAPI";
 import Toast from "../Toast";
+import SupportWidget from "../../components/SupportWidget";
 
 const TITLES = ['Mr.', 'Mrs.', 'Ms.', 'Miss', 'Dr.', 'Prof.', 'Engr.', 'Pharm.', 'Rev.', 'Chief', 'Alhaji', 'Alhaja', 'Barr.'];
 
@@ -256,6 +257,7 @@ export default function SignUp() {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+      <SupportWidget />
     </SafeAreaView>
   );
 }

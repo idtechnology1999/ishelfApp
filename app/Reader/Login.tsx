@@ -15,6 +15,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { readerAuth } from "../readerAPI";
 import Toast from "../Toast";
+import SupportWidget from "../../components/SupportWidget";
 
 export default function Login() {
   const router = useRouter();
@@ -182,6 +183,7 @@ export default function Login() {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+      <SupportWidget />
     </SafeAreaView>
   );
 }

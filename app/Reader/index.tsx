@@ -9,6 +9,7 @@ import {
 import Svg, { Path } from "react-native-svg";
 import GestureRecognizer from "react-native-swipe-gestures";
 import { DynamicBackgroundPattern } from "../../components/BackgroundPattern";
+import SupportWidget from "../../components/SupportWidget";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
@@ -73,6 +74,7 @@ export default function ReaderOnboarding() {
           </TouchableOpacity>
         </View>
       </SafeAreaView>
+      <SupportWidget />
     </GestureRecognizer>
   );
 }
