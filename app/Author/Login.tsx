@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { authorAPI } from '../authorAPI';
 import Toast from '../Toast';
 import {
@@ -10,7 +10,6 @@ import {
   TouchableOpacity,
   View,
   KeyboardAvoidingView,
-  Platform,
   ScrollView,
   Image,
   Alert,
@@ -21,6 +20,7 @@ import { StaticBackgroundPattern } from "../../components/BackgroundPattern";
 
 export default function LoginScreen() {
   const router = useRouter();
+  const scrollRef = useRef<any>(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
@@ -85,10 +85,11 @@ export default function LoginScreen() {
           onHide={() => setToast({ ...toast, visible: false })}
         />
         <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          behavior="padding"
           style={styles.keyboardView}
         >
           <ScrollView
+            ref={scrollRef}
             contentContainerStyle={styles.scrollContent}
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
@@ -149,6 +150,7 @@ export default function LoginScreen() {
                     autoCapitalize="none"
                     autoCorrect={false}
                     accessibilityLabel="Password input"
+                    onFocus={() => setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 300)}
                   />
                   <TouchableOpacity
                     style={styles.eyeIcon}
@@ -166,14 +168,6 @@ export default function LoginScreen() {
                 </View>
               </View>
 
-              {/* Forgot Password */}
-              <TouchableOpacity
-                style={styles.forgotPassword}
-                onPress={() => router.push("/Author/ForgotPassword1")}
-              >
-                <Text style={styles.forgotPasswordText}>Forgot Password</Text>
-              </TouchableOpacity>
-
               {/* Login Button */}
               <TouchableOpacity
                 style={[styles.loginButton, loading && { opacity: 0.6 }]}
@@ -182,6 +176,14 @@ export default function LoginScreen() {
                 accessibilityLabel="Log in button"
               >
                 <Text style={styles.loginButtonText}>{loading ? 'Logging in...' : 'Log in'}</Text>
+              </TouchableOpacity>
+
+              {/* Forgot Password */}
+              <TouchableOpacity
+                style={styles.forgotPassword}
+                onPress={() => router.push("/Author/ForgotPassword1")}
+              >
+                <Text style={styles.forgotPasswordText}>Forgot Password</Text>
               </TouchableOpacity>
 
               {/* Sign Up Link */}
@@ -212,6 +214,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     paddingHorizontal: 24,
+    paddingBottom: 60,
   },
 
   backButton: {
@@ -294,8 +297,9 @@ const styles = StyleSheet.create({
   },
 
   forgotPassword: {
-    alignSelf: "flex-end",
-    marginBottom: 32,
+    alignSelf: "center",
+    marginTop: 16,
+    marginBottom: 16,
   },
 
   forgotPasswordText: {

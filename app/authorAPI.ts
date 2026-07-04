@@ -82,6 +82,14 @@ export const authorAPI = {
     return response.data;
   },
 
+  deleteBook: async (bookId: string) => {
+    const token = await AsyncStorage.getItem('authorToken');
+    const response = await api.delete(`/api/authors/book/${bookId}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data;
+  },
+
   uploadCoverImage: async (imageUri: string) => {
     const token = await AsyncStorage.getItem('authorToken');
     const formData = new FormData();
@@ -252,6 +260,16 @@ export const authorAPI = {
   getLatestPurchases: async () => {
     const token = await AsyncStorage.getItem('authorToken');
     const response = await api.get('/api/authors/dashboard/purchases', {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data;
+  },
+
+  getTransactionHistory: async (bookId?: string, page = 1) => {
+    const token = await AsyncStorage.getItem('authorToken');
+    const params = new URLSearchParams({ page: String(page), limit: '30' });
+    if (bookId) params.set('bookId', bookId);
+    const response = await api.get(`/api/authors/dashboard/transactions?${params.toString()}`, {
       headers: { Authorization: `Bearer ${token}` }
     });
     return response.data;

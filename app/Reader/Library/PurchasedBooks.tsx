@@ -12,8 +12,10 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { readerBooks } from "../../readerAPI";
+import { usePreventScreenCapture } from "expo-screen-capture";
 
 export default function PurchasedBooks() {
+  usePreventScreenCapture();
   const router = useRouter();
   const [books, setBooks] = useState([]);
   const [loading, setLoading] = useState(true);

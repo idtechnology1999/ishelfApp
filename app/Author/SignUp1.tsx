@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   StyleSheet,
@@ -9,7 +9,6 @@ import {
   TouchableOpacity,
   View,
   KeyboardAvoidingView,
-  Platform,
   ScrollView,
   Image,
   Modal,
@@ -22,6 +21,10 @@ const TITLES = ['Mr.', 'Mrs.', 'Ms.', 'Miss', 'Dr.', 'Prof.', 'Engr.', 'Pharm.',
 
 export default function SignUp1() {
   const router = useRouter();
+  const scrollRef = useRef<any>(null);
+  const formY = useRef(0);
+  const fieldY = useRef<{ [k: string]: number }>({});
+
   const [title, setTitle] = useState("");
   const [showTitlePicker, setShowTitlePicker] = useState(false);
   const [fullName, setFullName] = useState("");
@@ -44,11 +47,21 @@ export default function SignUp1() {
     loadData();
   }, []);
 
+  const scrollToField = (key: string) => {
+    setTimeout(() => {
+      const y = formY.current + (fieldY.current[key] ?? 0);
+      scrollRef.current?.scrollTo({ y: Math.max(0, y - 120), animated: true });
+    }, 250);
+  };
+
   const handleContinue = async () => {
     if (fullName && email && institution) {
       const saved = await AsyncStorage.getItem('signupData');
       const data = saved ? JSON.parse(saved) : {};
-      await AsyncStorage.setItem('signupData', JSON.stringify({ ...data, title, fullName, email, institution, referralCode: referralCode.trim().toUpperCase() }));
+      await AsyncStorage.setItem('signupData', JSON.stringify({
+        ...data, title, fullName, email, institution,
+        referralCode: referralCode.trim().toUpperCase()
+      }));
       router.replace("/Author/SignUp2");
     }
   };
@@ -80,122 +93,141 @@ export default function SignUp1() {
       </Modal>
 
       <SafeAreaView style={styles.container}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={styles.keyboardView}
-      >
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
-        >
-          {/* Back Button */}
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={async () => { await AsyncStorage.removeItem('signupData'); router.replace("/Author/Login"); }}
-            accessibilityLabel="Go back to login"
+        <KeyboardAvoidingView behavior="padding" style={styles.keyboardView}>
+          <ScrollView
+            ref={scrollRef}
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
           >
-            <Ionicons name="chevron-back" size={28} color="#E85D54" />
-          </TouchableOpacity>
+            {/* Back Button */}
+            <TouchableOpacity
+              style={styles.backButton}
+              onPress={async () => { await AsyncStorage.removeItem('signupData'); router.replace("/Author/Login"); }}
+              accessibilityLabel="Go back to login"
+            >
+              <Ionicons name="chevron-back" size={28} color="#E85D54" />
+            </TouchableOpacity>
 
-          {/* Header */}
-          <View style={styles.header}>
-            {/* Logo */}
-            <View style={styles.logoContainer}>
-              <Image
-                source={require('../../assets/images/logo.png')}
-                style={styles.logoImage}
-                resizeMode="contain"
-              />
+            {/* Header */}
+            <View style={styles.header}>
+              <View style={styles.logoContainer}>
+                <Image
+                  source={require('../../assets/images/logo.png')}
+                  style={styles.logoImage}
+                  resizeMode="contain"
+                />
+              </View>
+              <Text style={styles.title}>Welcome to i-shelf</Text>
+              <Text style={styles.subtitle}>
+                Sign up to this platform to reach a larger audience
+              </Text>
             </View>
 
-            <Text style={styles.title}>Welcome to i-shelf</Text>
-            <Text style={styles.subtitle}>
-              Sign up to this platform to reach a larger audience
-            </Text>
-          </View>
+            {/* Form */}
+            <View
+              style={styles.form}
+              onLayout={(e) => { formY.current = e.nativeEvent.layout.y; }}
+            >
+              {/* Title Picker */}
+              <View style={styles.inputContainer}>
+                <Text style={styles.label}>Title <Text style={{ color: '#999', fontWeight: '400' }}>(Optional)</Text></Text>
+                <TouchableOpacity style={styles.pickerButton} onPress={() => setShowTitlePicker(true)}>
+                  <Text style={[styles.pickerText, !title && { color: '#bbb' }]}>{title || 'Select title...'}</Text>
+                  <Ionicons name="chevron-down" size={18} color="#888" />
+                </TouchableOpacity>
+              </View>
 
-          {/* Form */}
-          <View style={styles.form}>
-            {/* Title Picker */}
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>Title <Text style={{ color: '#999', fontWeight: '400' }}>(Optional)</Text></Text>
-              <TouchableOpacity style={styles.pickerButton} onPress={() => setShowTitlePicker(true)}>
-                <Text style={[styles.pickerText, !title && { color: '#bbb' }]}>{title || 'Select title...'}</Text>
-                <Ionicons name="chevron-down" size={18} color="#888" />
+              {/* Full Name */}
+              <View
+                style={styles.inputContainer}
+                onLayout={(e) => { fieldY.current['fullName'] = e.nativeEvent.layout.y; }}
+              >
+                <Text style={styles.label}>Full Name</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder=""
+                  value={fullName}
+                  onChangeText={setFullName}
+                  autoCapitalize="words"
+                  autoCorrect={false}
+                  color="#333"
+                  onFocus={() => scrollToField('fullName')}
+                  accessibilityLabel="Full name input"
+                />
+              </View>
+
+              {/* Email */}
+              <View
+                style={styles.inputContainer}
+                onLayout={(e) => { fieldY.current['email'] = e.nativeEvent.layout.y; }}
+              >
+                <Text style={styles.label}>E-Mail Address</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder=""
+                  value={email}
+                  onChangeText={setEmail}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  color="#333"
+                  onFocus={() => scrollToField('email')}
+                  accessibilityLabel="Email address input"
+                />
+              </View>
+
+              {/* Institution */}
+              <View
+                style={styles.inputContainer}
+                onLayout={(e) => { fieldY.current['institution'] = e.nativeEvent.layout.y; }}
+              >
+                <Text style={styles.label}>Institution.</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder=""
+                  value={institution}
+                  onChangeText={setInstitution}
+                  autoCapitalize="words"
+                  autoCorrect={false}
+                  color="#333"
+                  onFocus={() => scrollToField('institution')}
+                  accessibilityLabel="Institution input"
+                />
+              </View>
+
+              {/* Referral Code */}
+              <View
+                style={styles.inputContainer}
+                onLayout={(e) => { fieldY.current['referral'] = e.nativeEvent.layout.y; }}
+              >
+                <Text style={styles.label}>Referral Code <Text style={{ color: '#999', fontWeight: '400' }}>(Optional)</Text></Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="e.g. ISH-A3F9B2C1"
+                  placeholderTextColor="#bbb"
+                  value={referralCode}
+                  onChangeText={setReferralCode}
+                  autoCapitalize="characters"
+                  autoCorrect={false}
+                  color="#333"
+                  onFocus={() => scrollToField('referral')}
+                  accessibilityLabel="Referral code input"
+                />
+              </View>
+
+              {/* Continue Button */}
+              <TouchableOpacity
+                style={styles.continueButton}
+                onPress={handleContinue}
+                accessibilityLabel="Continue to next step"
+              >
+                <Text style={styles.continueButtonText}>Continue</Text>
               </TouchableOpacity>
             </View>
-
-            {/* Full Name Input */}
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>Full Name</Text>
-              <TextInput
-                style={styles.input}
-                placeholder=""
-                value={fullName}
-                onChangeText={setFullName}
-                autoCapitalize="words"
-                autoCorrect={false}
-                accessibilityLabel="Full name input"
-              />
-            </View>
-
-            {/* Email Input */}
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>E-Mail Address</Text>
-              <TextInput
-                style={styles.input}
-                placeholder=""
-                value={email}
-                onChangeText={setEmail}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoCorrect={false}
-                accessibilityLabel="Email address input"
-              />
-            </View>
-
-            {/* Institution Input */}
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>Institution.</Text>
-              <TextInput
-                style={styles.input}
-                placeholder=""
-                value={institution}
-                onChangeText={setInstitution}
-                autoCapitalize="words"
-                autoCorrect={false}
-                accessibilityLabel="Institution input"
-              />
-            </View>
-
-            {/* Referral Code Input */}
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>Referral Code <Text style={{ color: '#999', fontWeight: '400' }}>(Optional)</Text></Text>
-              <TextInput
-                style={styles.input}
-                placeholder="e.g. ISH-A3F9B2C1"
-                placeholderTextColor="#bbb"
-                value={referralCode}
-                onChangeText={setReferralCode}
-                autoCapitalize="characters"
-                autoCorrect={false}
-                accessibilityLabel="Referral code input"
-              />
-            </View>
-
-            {/* Continue Button */}
-            <TouchableOpacity
-              style={styles.continueButton}
-              onPress={handleContinue}
-              accessibilityLabel="Continue to next step"
-            >
-              <Text style={styles.continueButtonText}>Continue</Text>
-            </TouchableOpacity>
-          </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
     </>
   );
 }
@@ -205,105 +237,88 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#FFFFFF",
   },
-
   keyboardView: {
     flex: 1,
   },
-
   scrollContent: {
     flexGrow: 1,
     paddingHorizontal: 24,
+    paddingBottom: 60,
   },
-
   backButton: {
     paddingVertical: 10,
     alignSelf: "flex-start",
     marginBottom: 20,
   },
-
   header: {
     alignItems: "center",
-    marginBottom: 40,
+    marginBottom: 32,
   },
-
   logoContainer: {
     width: 100,
     height: 100,
     borderRadius: 50,
-    backgroundColor: "#FFE8E6", // Light coral matching brand
+    backgroundColor: "#FFE8E6",
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 20,
   },
-
   logoImage: {
     width: 80,
     height: 80,
   },
-
   title: {
     fontSize: 32,
     fontWeight: "700",
-    color: "#E85D54", // I-SHELF coral red
+    color: "#E85D54",
     marginBottom: 8,
   },
-
   subtitle: {
     fontSize: 15,
     color: "#666",
     textAlign: "center",
     paddingHorizontal: 20,
   },
-
   form: {
     flex: 1,
   },
-
   inputContainer: {
     marginBottom: 20,
   },
-
   label: {
     fontSize: 15,
     fontWeight: "500",
     color: "#333",
     marginBottom: 8,
   },
-
   input: {
     height: 52,
     borderWidth: 1,
-    borderColor: "#FFD4D1", // Light coral border
+    borderColor: "#FFD4D1",
     borderRadius: 12,
     paddingHorizontal: 16,
     fontSize: 16,
     color: "#333",
     backgroundColor: "#FFFFFF",
   },
-
   continueButton: {
     height: 56,
-    backgroundColor: "#E85D54", // I-SHELF coral red
+    backgroundColor: "#E85D54",
     borderRadius: 28,
     alignItems: "center",
     justifyContent: "center",
     marginTop: 12,
     shadowColor: "#E85D54",
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 8,
     elevation: 4,
   },
-
   continueButtonText: {
     fontSize: 18,
     fontWeight: "600",
     color: "#FFFFFF",
   },
-
   pickerButton: {
     height: 52,
     borderWidth: 1,
@@ -315,18 +330,15 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     backgroundColor: '#FFFFFF',
   },
-
   pickerText: {
     fontSize: 16,
     color: '#333',
   },
-
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.4)',
     justifyContent: 'flex-end',
   },
-
   modalSheet: {
     backgroundColor: '#fff',
     borderTopLeftRadius: 20,
@@ -335,7 +347,6 @@ const styles = StyleSheet.create({
     paddingBottom: 30,
     maxHeight: '60%',
   },
-
   modalTitle: {
     fontSize: 16,
     fontWeight: '700',
@@ -347,7 +358,6 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     marginBottom: 8,
   },
-
   modalItem: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -357,7 +367,6 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#f9f9f9',
   },
-
   modalItemText: {
     fontSize: 16,
     color: '#333',

@@ -6,12 +6,13 @@ import {
   TextInput,
   TouchableOpacity,
   ScrollView,
-  Image,
   ActivityIndicator,
   Alert,
   FlatList,
   RefreshControl,
 } from "react-native";
+import { Image } from "expo-image";
+import BookCover from "../../../components/BookCover";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
@@ -261,26 +262,14 @@ export default function Home() {
             <View style={styles.booksContainer}>
               {books.map((book: any) => (
                 <View key={book._id} style={styles.bookCard}>
-                  {book.coverImage ? (
-                    <Image
-                      source={{ uri: book.coverImage.startsWith('http') ? book.coverImage : `${process.env.EXPO_PUBLIC_API_URL}/${book.coverImage.replace(/^\//, '')}` }}
-                      style={styles.bookImage}
-                      resizeMode="cover"
-                    />
-                  ) : (
-                    <Image
-                      source={require("../../../assets/images/book-placeholder.png")}
-                      style={styles.bookImage}
-                      resizeMode="cover"
-                    />
-                  )}
+                  <BookCover uri={book.coverImage} style={styles.bookImage} />
                   <View style={styles.bookInfo}>
                     <Text style={styles.authorText}>{book.authorId?.displayName || 'Unknown Author'}</Text>
                     <Text style={styles.bookTitle} numberOfLines={2}>{book.title}</Text>
                     <View style={styles.priceContainer}>
                       <View>
                         <Text style={styles.priceLabel}>Price</Text>
-                        <Text style={styles.price}>₦{book.price?.toLocaleString()}</Text>
+                        <Text style={styles.price}>₦{(book.publicPrice || book.price)?.toLocaleString()}</Text>
                       </View>
                       <TouchableOpacity style={styles.favoriteButton}>
                         <Ionicons name="heart-outline" size={20} color="#E85D54" />

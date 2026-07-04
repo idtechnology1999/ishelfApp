@@ -130,7 +130,7 @@ export default function CourseMaterials() {
                     </Text>
                     <View style={styles.priceContainer}>
                       <Text style={styles.priceLabel}>Price</Text>
-                      <Text style={styles.price}>₦{book.price?.toLocaleString()}</Text>
+                      <Text style={styles.price}>₦{(book.publicPrice || book.price)?.toLocaleString()}</Text>
                     </View>
                     <View style={styles.bookActions}>
                       <TouchableOpacity

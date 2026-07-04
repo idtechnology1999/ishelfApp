@@ -7,20 +7,21 @@ import {
   TouchableOpacity,
   View,
   ScrollView,
-  Image,
   ActivityIndicator,
   RefreshControl,
   Alert,
   Modal,
   TextInput,
+  KeyboardAvoidingView,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { authorAPI } from "../../authorAPI";
 
+const ITEMS_PER_PAGE = 7;
+
 export default function Earning() {
   const router = useRouter();
   const [stats, setStats] = useState({ totalEarnings: 0, monthlyEarnings: 0, balance: 0 });
-  const [transactions, setTransactions] = useState<any[]>([]);
   const [bankAccount, setBankAccount] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -29,22 +30,92 @@ export default function Earning() {
   const [withdrawAmount, setWithdrawAmount] = useState('');
   const [withdrawing, setWithdrawing] = useState(false);
 
+  const [withdrawalHistory, setWithdrawalHistory] = useState<any[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+
   useEffect(() => {
     loadEarningsData();
   }, []);
 
+  const parseAmountFromMessage = (message: string): number => {
+    if (!message) return 0;
+    const match = message.match(/₦([\d,]+)/);
+    return match ? parseFloat(match[1].replace(/,/g, '')) : 0;
+  };
+
+  const buildHistoryFromNotifications = (notifications: any[]): any[] => {
+    const withdrawalNotifs = notifications
+      .filter((n: any) => n.action?.startsWith('withdrawal'))
+      .sort((a: any, b: any) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+
+    const built: any[] = [];
+    let pending: any = null;
+
+    for (const notif of withdrawalNotifs) {
+      if (notif.action === 'withdrawal_requested') {
+        if (pending) {
+          built.push({
+            _id: pending._id,
+            amount: pending.metadata?.amount || parseAmountFromMessage(pending.message),
+            createdAt: pending.createdAt,
+            status: 'pending',
+            bankAccount: pending.metadata?.bankAccount || null,
+          });
+        }
+        pending = notif;
+      } else if (notif.action === 'withdrawal_completed' || notif.action === 'withdrawal_rejected') {
+        const base = pending || notif;
+        built.push({
+          _id: base._id,
+          amount: base.metadata?.amount || notif.metadata?.amount || parseAmountFromMessage(notif.message),
+          createdAt: base.createdAt,
+          status: notif.action === 'withdrawal_completed' ? 'completed' : 'rejected',
+          bankAccount: base.metadata?.bankAccount || notif.metadata?.bankAccount || null,
+        });
+        pending = null;
+      }
+    }
+
+    if (pending) {
+      built.push({
+        _id: pending._id,
+        amount: pending.metadata?.amount || parseAmountFromMessage(pending.message),
+        createdAt: pending.createdAt,
+        status: 'pending',
+        bankAccount: pending.metadata?.bankAccount || null,
+      });
+    }
+
+    return built.reverse();
+  };
+
   const loadEarningsData = async () => {
     try {
-      const [statsData, purchasesData, accountData, paymentModeData] = await Promise.all([
+      const [statsData, accountData, paymentModeData, withdrawalData, notifData] = await Promise.all([
         authorAPI.getDashboardStats(),
-        authorAPI.getLatestPurchases(),
         authorAPI.getSubaccountStatus(),
-        authorAPI.getPaymentMode().catch(() => ({ paymentMode: 'manual' }))
+        authorAPI.getPaymentMode().catch(() => ({ paymentMode: 'manual' })),
+        authorAPI.getWithdrawalHistory().catch(() => ({})),
+        authorAPI.getNotifications().catch(() => ({ notifications: [] })),
       ]);
       setStats(statsData);
-      setTransactions(purchasesData.purchases);
       setBankAccount(accountData.bankAccount);
       setPaymentMode(paymentModeData.paymentMode);
+
+      let history =
+        withdrawalData.history ||
+        withdrawalData.withdrawals ||
+        withdrawalData.data ||
+        withdrawalData.requests ||
+        withdrawalData.transactions ||
+        (Array.isArray(withdrawalData) ? withdrawalData : []);
+
+      // If dedicated endpoint returned nothing, build from notifications
+      if (history.length === 0) {
+        history = buildHistoryFromNotifications(notifData.notifications || []);
+      }
+
+      setWithdrawalHistory(history);
     } catch (error) {
       console.error('Failed to load earnings data:', error);
     } finally {
@@ -54,6 +125,7 @@ export default function Earning() {
 
   const onRefresh = async () => {
     setRefreshing(true);
+    setCurrentPage(1);
     await loadEarningsData();
     setRefreshing(false);
   };
@@ -88,15 +160,34 @@ export default function Earning() {
     }
   };
 
+  const getStatusLabel = (status: string) => {
+    if (status === 'completed') return 'Received';
+    if (status === 'rejected') return 'Rejected';
+    return 'Pending';
+  };
+
+  const getStatusColor = (status: string) => {
+    if (status === 'completed') return '#4CAF50';
+    if (status === 'rejected') return '#EF5350';
+    return '#FFA726';
+  };
+
+  const totalPages = Math.ceil(withdrawalHistory.length / ITEMS_PER_PAGE);
+  const pagedWithdrawals = withdrawalHistory.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
+
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#E85D54']} tintColor="#E85D54" />}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#E85D54']} tintColor="#E85D54" />}
+      >
         {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => router.back()}
-          >
+          <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
             <Ionicons name="chevron-back" size={28} color="#E85D54" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Earnings</Text>
@@ -135,45 +226,65 @@ export default function Earning() {
           </View>
         )}
 
-        {/* Recent Transactions */}
+        {/* Recent Transaction History */}
         <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Recent Transactions List</Text>
-            <TouchableOpacity>
-              <Text style={styles.seeAllText}>See all</Text>
-            </TouchableOpacity>
-          </View>
+          <Text style={styles.sectionTitle}>Recent Transaction History</Text>
 
-          {transactions.length === 0 ? (
-            <Text style={styles.emptyText}>No transactions yet</Text>
+          {withdrawalHistory.length === 0 ? (
+            <Text style={styles.emptyText}>No withdrawal requests yet</Text>
           ) : (
-            transactions.map((transaction) => (
-              <View key={transaction.id} style={styles.transactionCard}>
-                {transaction.coverImage ? (
-                  <Image source={{ uri: transaction.coverImage.startsWith('http') ? transaction.coverImage : `${process.env.EXPO_PUBLIC_API_URL}/${transaction.coverImage.replace(/^\//, '')}` }} style={styles.transactionImage} />
-                ) : (
-                  <Image source={require('../../../assets/images/book-placeholder.png')} style={styles.transactionImage} />
-                )}
-                <View style={styles.transactionDetails}>
-                  <Text style={styles.transactionTitle}>{transaction.title}</Text>
-                  <View style={styles.badgesContainer}>
-                    <View style={styles.buyersBadge}>
-                      <Ionicons name="people" size={12} color="#4CAF50" />
-                      <Text style={styles.badgeText}>{transaction.uniqueBuyers || 0} {transaction.uniqueBuyers === 1 ? 'buyer' : 'buyers'}</Text>
-                    </View>
-                    <View style={styles.salesBadge}>
-                      <Ionicons name="cart" size={12} color="#2196F3" />
-                      <Text style={styles.badgeText}>{transaction.salesCount || 0} {transaction.salesCount === 1 ? 'sale' : 'sales'}</Text>
+            <>
+              {pagedWithdrawals.map((item, index) => (
+                <View key={item._id || index} style={styles.withdrawalCard}>
+                  <View style={styles.withdrawalIconWrap}>
+                    <Ionicons name="cash-outline" size={28} color="#E85D54" />
+                  </View>
+                  <View style={styles.withdrawalDetails}>
+                    <Text style={styles.withdrawalAmount}>₦{item.amount?.toLocaleString()}</Text>
+                    <Text style={styles.withdrawalDate}>
+                      {new Date(item.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                    </Text>
+                    {item.bankAccount && (
+                      <Text style={styles.withdrawalBank}>
+                        {item.bankAccount.bankName} • {item.bankAccount.accountNumber}
+                      </Text>
+                    )}
+                  </View>
+                  <View style={styles.withdrawalRight}>
+                    <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) + '22' }]}>
+                      <Text style={[styles.statusText, { color: getStatusColor(item.status) }]}>
+                        {getStatusLabel(item.status)}
+                      </Text>
                     </View>
                   </View>
-                  <Text style={styles.transactionDate}>Last sale: {new Date(transaction.lastSaleDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</Text>
                 </View>
-                <View style={styles.transactionRight}>
-                  <Text style={styles.transactionAmount}>₦{transaction.totalEarnings.toLocaleString()}</Text>
-                  <Text style={[styles.transactionStatus, { color: '#4CAF50' }]}>Completed</Text>
+              ))}
+
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <View style={styles.pagination}>
+                  <TouchableOpacity
+                    style={[styles.pageButton, currentPage === 1 && styles.pageButtonDisabled]}
+                    onPress={() => setCurrentPage(p => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                  >
+                    <Ionicons name="chevron-back" size={18} color={currentPage === 1 ? '#ccc' : '#E85D54'} />
+                  </TouchableOpacity>
+
+                  <Text style={styles.pageText}>
+                    Page {currentPage} of {totalPages}
+                  </Text>
+
+                  <TouchableOpacity
+                    style={[styles.pageButton, currentPage === totalPages && styles.pageButtonDisabled]}
+                    onPress={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                    disabled={currentPage === totalPages}
+                  >
+                    <Ionicons name="chevron-forward" size={18} color={currentPage === totalPages ? '#ccc' : '#E85D54'} />
+                  </TouchableOpacity>
                 </View>
-              </View>
-            ))
+              )}
+            </>
           )}
         </View>
 
@@ -197,7 +308,7 @@ export default function Earning() {
               </View>
             </View>
           ) : (
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.setupBankCard}
               onPress={() => router.push("/Author/Withdraw/WithdrawScreen")}
             >
@@ -213,19 +324,16 @@ export default function Earning() {
           )}
         </View>
 
-        {/* Withdraw Now Button - Only show in manual mode */}
+        {/* Withdraw Now Button */}
         {paymentMode === 'manual' && bankAccount?.accountNumber && (
           <View style={styles.buttonContainer}>
-            <TouchableOpacity 
-              style={styles.withdrawButton}
-              onPress={() => setWithdrawModal(true)}
-            >
+            <TouchableOpacity style={styles.withdrawButton} onPress={() => setWithdrawModal(true)}>
               <Text style={styles.withdrawButtonText}>Withdraw Now</Text>
             </TouchableOpacity>
           </View>
         )}
 
-        {/* Payment Mode Info */}
+        {/* Automatic Payment Info */}
         {paymentMode === 'automatic' && (
           <View style={styles.section}>
             <View style={styles.infoCard}>
@@ -240,7 +348,12 @@ export default function Earning() {
 
       {/* Withdraw Modal */}
       <Modal visible={withdrawModal} animationType="slide" transparent>
-        <View style={styles.modalOverlay}>
+        <KeyboardAvoidingView behavior="padding" style={styles.modalOverlay}>
+          <TouchableOpacity
+            style={{ flex: 1 }}
+            activeOpacity={1}
+            onPress={() => { setWithdrawModal(false); setWithdrawAmount(''); }}
+          />
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Request Withdrawal</Text>
@@ -265,6 +378,7 @@ export default function Earning() {
                     placeholder="Enter amount"
                     keyboardType="numeric"
                     placeholderTextColor="#999"
+                    color="#000"
                   />
 
                   {overBalance ? (
@@ -287,7 +401,7 @@ export default function Earning() {
 
                   {bankAccount && (
                     <View style={styles.modalBankInfo}>
-                      <Ionicons name="bank" size={16} color="#666" />
+                      <Ionicons name="card" size={16} color="#666" />
                       <Text style={styles.modalBankText}>
                         {bankAccount.bankName} • {bankAccount.accountNumber}
                       </Text>
@@ -309,21 +423,15 @@ export default function Earning() {
               );
             })()}
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#FFFFFF",
-  },
-
-  scrollContent: {
-    paddingBottom: 100,
-  },
+  container: { flex: 1, backgroundColor: "#FFFFFF" },
+  scrollContent: { paddingBottom: 100 },
 
   header: {
     flexDirection: "row",
@@ -332,22 +440,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingVertical: 16,
   },
-
-  backButton: {
-    padding: 4,
-  },
-
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: "600",
-    color: "#E85D54",
-    flex: 1,
-    textAlign: "center",
-  },
-
-  headerSpacer: {
-    width: 36,
-  },
+  backButton: { padding: 4 },
+  headerTitle: { fontSize: 20, fontWeight: "600", color: "#E85D54", flex: 1, textAlign: "center" },
+  headerSpacer: { width: 36 },
 
   cardsContainer: {
     flexDirection: "row",
@@ -356,57 +451,15 @@ const styles = StyleSheet.create({
     marginTop: 8,
     marginBottom: 24,
   },
+  card: { flex: 1, padding: 14, borderRadius: 16, minHeight: 135 },
+  cardBlue: { backgroundColor: "#FFE8E6" },
+  cardGreen: { backgroundColor: "#FFF4E6" },
+  cardPink: { backgroundColor: "#FFD4D1" },
+  cardLabel: { fontSize: 13, color: "#000000", marginTop: 6, marginBottom: 6 },
+  cardAmount: { fontSize: 20, fontWeight: "700", color: "#000000" },
+  withdrawLink: { fontSize: 13, color: "#E85D54", textDecorationLine: "underline", marginTop: 4 },
 
-  card: {
-    flex: 1,
-    padding: 14,
-    borderRadius: 16,
-    minHeight: 135,
-  },
-
-  cardBlue: {
-    backgroundColor: "#FFE8E6",
-  },
-
-  cardGreen: {
-    backgroundColor: "#FFF4E6",
-  },
-
-  cardPink: {
-    backgroundColor: "#FFD4D1",
-  },
-
-  cardLabel: {
-    fontSize: 13,
-    color: "#000000",
-    marginTop: 6,
-    marginBottom: 6,
-  },
-
-  cardAmount: {
-    fontSize: 20,
-    fontWeight: "700",
-    color: "#000000",
-  },
-
-  withdrawLink: {
-    fontSize: 13,
-    color: "#E85D54",
-    textDecorationLine: "underline",
-    marginTop: 4,
-  },
-
-  section: {
-    paddingHorizontal: 24,
-    marginBottom: 24,
-  },
-
-  sectionHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 16,
-  },
+  section: { paddingHorizontal: 24, marginBottom: 24 },
 
   sectionTitle: {
     fontSize: 17,
@@ -415,12 +468,9 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
 
-  seeAllText: {
-    fontSize: 14,
-    color: "#E85D54",
-  },
+  emptyText: { textAlign: 'center', color: '#999', fontSize: 14, paddingVertical: 20 },
 
-  transactionCard: {
+  withdrawalCard: {
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#FFFFFF",
@@ -430,77 +480,44 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#FFD4D1",
   },
-
-  transactionImage: {
+  withdrawalIconWrap: {
     width: 50,
-    height: 70,
-    borderRadius: 6,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: "#FFE8E6",
+    alignItems: "center",
+    justifyContent: "center",
     marginRight: 12,
   },
-
-  transactionDetails: {
-    flex: 1,
+  withdrawalDetails: { flex: 1 },
+  withdrawalAmount: { fontSize: 17, fontWeight: "700", color: "#000", marginBottom: 3 },
+  withdrawalDate: { fontSize: 12, color: "#888", marginBottom: 2 },
+  withdrawalBank: { fontSize: 12, color: "#666" },
+  withdrawalRight: { alignItems: "flex-end" },
+  statusBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 12,
   },
+  statusText: { fontSize: 13, fontWeight: "600" },
 
-  transactionTitle: {
-    fontSize: 15,
-    fontWeight: "600",
-    color: "#000000",
-    marginBottom: 6,
-  },
-
-  badgesContainer: {
-    flexDirection: "row",
-    gap: 8,
-    marginBottom: 4,
-  },
-
-  buyersBadge: {
+  pagination: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#E8F5E9",
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 10,
-    gap: 4,
+    justifyContent: "center",
+    marginTop: 12,
+    gap: 16,
   },
-
-  salesBadge: {
-    flexDirection: "row",
+  pageButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "#FFE8E6",
     alignItems: "center",
-    backgroundColor: "#E3F2FD",
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 10,
-    gap: 4,
+    justifyContent: "center",
   },
-
-  badgeText: {
-    fontSize: 10,
-    fontWeight: "600",
-    color: "#666666",
-  },
-
-  transactionDate: {
-    fontSize: 12,
-    color: "#666666",
-  },
-
-  transactionRight: {
-    alignItems: "flex-end",
-  },
-
-  transactionAmount: {
-    fontSize: 15,
-    fontWeight: "600",
-    color: "#000000",
-    marginBottom: 4,
-  },
-
-  transactionStatus: {
-    fontSize: 13,
-    fontWeight: "500",
-  },
+  pageButtonDisabled: { backgroundColor: "#F5F5F5" },
+  pageText: { fontSize: 14, color: "#666", fontWeight: "500" },
 
   bankCard: {
     flexDirection: "row",
@@ -512,10 +529,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#FFD4D1",
   },
-
-  bankActions: {
-    alignItems: "center",
-  },
+  bankInfo: { flex: 1 },
+  bankName: { fontSize: 16, fontWeight: "600", color: "#000000", marginBottom: 4 },
+  accountNumber: { fontSize: 14, color: "#666666", marginBottom: 4 },
+  accountName: { fontSize: 14, color: "#666666" },
+  bankActions: { alignItems: "center" },
+  editText: { fontSize: 14, color: "#E85D54", fontWeight: "500" },
 
   setupBankCard: {
     flexDirection: "row",
@@ -528,69 +547,12 @@ const styles = StyleSheet.create({
     borderColor: "#FFD4D1",
     borderStyle: "dashed",
   },
+  setupBankContent: { flexDirection: "row", alignItems: "center", flex: 1, gap: 12 },
+  setupBankText: { flex: 1 },
+  setupBankTitle: { fontSize: 16, fontWeight: "600", color: "#E85D54", marginBottom: 2 },
+  setupBankDesc: { fontSize: 13, color: "#999999" },
 
-  setupBankContent: {
-    flexDirection: "row",
-    alignItems: "center",
-    flex: 1,
-    gap: 12,
-  },
-
-  setupBankText: {
-    flex: 1,
-  },
-
-  setupBankTitle: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#E85D54",
-    marginBottom: 2,
-  },
-
-  setupBankDesc: {
-    fontSize: 13,
-    color: "#999999",
-  },
-
-  bankInfo: {
-    flex: 1,
-  },
-
-  bankName: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#000000",
-    marginBottom: 4,
-  },
-
-  accountNumber: {
-    fontSize: 14,
-    color: "#666666",
-    marginBottom: 4,
-  },
-
-  accountName: {
-    fontSize: 14,
-    color: "#666666",
-  },
-
-  editText: {
-    fontSize: 14,
-    color: "#E85D54",
-    fontWeight: "500",
-  },
-
-  setupLink: {
-    fontSize: 14,
-    color: "#E85D54",
-    fontWeight: "500",
-  },
-
-  buttonContainer: {
-    paddingHorizontal: 24,
-    marginBottom: 20,
-  },
-
+  buttonContainer: { paddingHorizontal: 24, marginBottom: 20 },
   withdrawButton: {
     height: 56,
     backgroundColor: "#E85D54",
@@ -598,32 +560,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     shadowColor: "#E85D54",
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 8,
     elevation: 4,
   },
+  withdrawButtonText: { fontSize: 18, fontWeight: "600", color: "#FFFFFF" },
 
-  withdrawButtonText: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#FFFFFF",
-  },
-
-  loadingContainer: {
-    paddingVertical: 60,
-    alignItems: 'center',
-  },
-
-  emptyText: {
-    textAlign: 'center',
-    color: '#999',
-    fontSize: 14,
-    paddingVertical: 20,
-  },
+  loadingContainer: { paddingVertical: 60, alignItems: 'center' },
 
   infoCard: {
     flexDirection: "row",
@@ -634,20 +578,9 @@ const styles = StyleSheet.create({
     borderColor: "#FFD4D1",
     gap: 12,
   },
+  infoText: { flex: 1, fontSize: 13, color: "#666666", lineHeight: 18 },
 
-  infoText: {
-    flex: 1,
-    fontSize: 13,
-    color: "#666666",
-    lineHeight: 18,
-  },
-
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'flex-end',
-  },
-
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
   modalContent: {
     backgroundColor: '#FFFFFF',
     borderTopLeftRadius: 24,
@@ -655,27 +588,9 @@ const styles = StyleSheet.create({
     padding: 24,
     paddingBottom: 40,
   },
-
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#1A1A1A',
-  },
-
-  modalLabel: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#1A1A1A',
-    marginBottom: 8,
-  },
-
+  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
+  modalTitle: { fontSize: 20, fontWeight: '700', color: '#1A1A1A' },
+  modalLabel: { fontSize: 14, fontWeight: '500', color: '#1A1A1A', marginBottom: 8 },
   modalInput: {
     height: 56,
     borderWidth: 1,
@@ -687,13 +602,8 @@ const styles = StyleSheet.create({
     color: '#000',
     marginBottom: 8,
   },
-
-  modalHelper: {
-    fontSize: 12,
-    color: '#999',
-    marginBottom: 16,
-  },
-
+  modalInputError: { borderColor: '#dc2626', borderWidth: 2 },
+  modalHelper: { fontSize: 12, color: '#999', marginBottom: 16 },
   modalBankInfo: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -703,46 +613,10 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginBottom: 20,
   },
-
-  modalBankText: {
-    fontSize: 13,
-    color: '#666',
-  },
-
-  modalButton: {
-    height: 56,
-    backgroundColor: '#E85D54',
-    borderRadius: 28,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-
-  modalButtonDisabled: {
-    backgroundColor: '#CCCCCC',
-  },
-
-  modalButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#FFFFFF',
-  },
-
-  modalInputError: {
-    borderColor: '#dc2626',
-    borderWidth: 2,
-  },
-
-  errorRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginBottom: 16,
-    marginTop: 2,
-  },
-
-  errorText: {
-    fontSize: 12,
-    color: '#dc2626',
-    flex: 1,
-  },
+  modalBankText: { fontSize: 13, color: '#666' },
+  modalButton: { height: 56, backgroundColor: '#E85D54', borderRadius: 28, alignItems: 'center', justifyContent: 'center' },
+  modalButtonDisabled: { backgroundColor: '#CCCCCC' },
+  modalButtonText: { fontSize: 16, fontWeight: '600', color: '#FFFFFF' },
+  errorRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 16, marginTop: 2 },
+  errorText: { fontSize: 12, color: '#dc2626', flex: 1 },
 });

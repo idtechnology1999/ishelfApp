@@ -2,7 +2,6 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useState, useEffect } from "react";
 import {
-  Image,
   ScrollView,
   StyleSheet,
   Text,
@@ -11,6 +10,7 @@ import {
   ActivityIndicator,
   Alert,
 } from "react-native";
+import BookCover from "../../../components/BookCover";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { readerCart } from "../../readerAPI";
 
@@ -57,7 +57,7 @@ export default function Cart() {
   };
 
   const getTotalPrice = () => {
-    return cartItems.reduce((total: number, item: any) => total + (item.bookId.price || 0), 0);
+    return cartItems.reduce((total: number, item: any) => total + (item.bookId.publicPrice || item.bookId.price || 0), 0);
   };
 
   const renderContent = () => {
@@ -86,16 +86,12 @@ export default function Cart() {
           {cartItems.map((item: any) => (
             <View key={item._id} style={styles.cartItem}>
               <TouchableOpacity onPress={() => handleViewBook(item.bookId._id)}>
-                {item.bookId.coverImage ? (
-                  <Image source={{ uri: item.bookId.coverImage?.startsWith('http') ? item.bookId.coverImage : `${process.env.EXPO_PUBLIC_API_URL}/${item.bookId.coverImage?.replace(/^\//, '')}` }} style={styles.bookImage} resizeMode="cover" />
-                ) : (
-                  <Image source={require("../../../assets/images/book-placeholder.png")} style={styles.bookImage} resizeMode="cover" />
-                )}
+                <BookCover uri={item.bookId.coverImage} style={styles.bookImage} />
               </TouchableOpacity>
               <View style={styles.itemDetails}>
                 <Text style={styles.authorText}>{item.bookId.authorId?.displayName || 'Unknown Author'}</Text>
                 <Text style={styles.bookTitle} numberOfLines={2}>{item.bookId.title}</Text>
-                <Text style={styles.price}>₦{item.bookId.price?.toLocaleString()}</Text>
+                <Text style={styles.price}>₦{(item.bookId.publicPrice || item.bookId.price)?.toLocaleString()}</Text>
               </View>
               <TouchableOpacity style={styles.removeButton} onPress={() => handleRemoveFromCart(item.bookId._id)}>
                 <Ionicons name="trash-outline" size={20} color="#ff4444" />

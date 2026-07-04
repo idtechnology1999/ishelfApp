@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter, useLocalSearchParams } from "expo-router";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   StyleSheet,
   Text,
@@ -9,7 +9,6 @@ import {
   View,
   ScrollView,
   KeyboardAvoidingView,
-  Platform,
   Alert,
   ActivityIndicator,
   Image,
@@ -21,11 +20,22 @@ import { authorAPI } from "../../authorAPI";
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL || 'https://api.i-shelf.app';
 
+const getCommissionRate = (p: number) => {
+  if (p <= 2000) return 0.20;
+  if (p <= 3500) return 0.15;
+  return 0.10;
+};
+const calcPublicPrice = (p: number) => Math.round(p * (1 + getCommissionRate(p)));
+
 export default function EditBook() {
   const router = useRouter();
   const { id } = useLocalSearchParams();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+
+  const scrollRef = useRef<any>(null);
+  const formY = useRef(0);
+  const fieldY = useRef<{ [k: string]: number }>({});
 
   const [currentCoverImage, setCurrentCoverImage] = useState<string | null>(null);
   const [newCoverImage, setNewCoverImage] = useState<any>(null);
@@ -45,10 +55,15 @@ export default function EditBook() {
   const [pageCount, setPageCount] = useState("");
 
   useEffect(() => {
-    if (id) {
-      fetchBook();
-    }
+    if (id) fetchBook();
   }, [id]);
+
+  const scrollToField = (key: string) => {
+    setTimeout(() => {
+      const y = formY.current + (fieldY.current[key] ?? 0);
+      scrollRef.current?.scrollTo({ y: Math.max(0, y - 120), animated: true });
+    }, 250);
+  };
 
   const fetchBook = async () => {
     try {
@@ -91,9 +106,7 @@ export default function EditBook() {
         aspect: [3, 4],
         quality: 1,
       });
-      if (!result.canceled) {
-        setNewCoverImage(result.assets[0]);
-      }
+      if (!result.canceled) setNewCoverImage(result.assets[0]);
     } catch {
       Alert.alert("Error", "Failed to pick image");
     }
@@ -105,9 +118,7 @@ export default function EditBook() {
         type: ["application/pdf"],
         copyToCacheDirectory: true,
       });
-      if (!result.canceled) {
-        setNewPdfFile(result);
-      }
+      if (!result.canceled) setNewPdfFile(result);
     } catch {
       Alert.alert("Error", "Failed to pick document");
     }
@@ -162,17 +173,16 @@ export default function EditBook() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={styles.keyboardView}
-      >
-        <ScrollView showsVerticalScrollIndicator={false}>
+      <KeyboardAvoidingView behavior="padding" style={styles.keyboardView}>
+        <ScrollView
+          ref={scrollRef}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={styles.scrollContent}
+        >
           {/* Header */}
           <View style={styles.header}>
-            <TouchableOpacity
-              style={styles.backButton}
-              onPress={() => router.back()}
-            >
+            <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
               <Ionicons name="chevron-back" size={28} color="#E85D54" />
             </TouchableOpacity>
             <Text style={styles.headerTitle}>Edit Book</Text>
@@ -180,8 +190,10 @@ export default function EditBook() {
           </View>
 
           {/* Form */}
-          <View style={styles.form}>
-
+          <View
+            style={styles.form}
+            onLayout={(e) => { formY.current = e.nativeEvent.layout.y; }}
+          >
             {/* Cover Image */}
             <View style={styles.inputContainer}>
               <Text style={styles.label}>Cover Image</Text>
@@ -225,91 +237,150 @@ export default function EditBook() {
 
             <View style={styles.divider} />
 
-            <View style={styles.inputContainer}>
+            {/* Book Title */}
+            <View
+              style={styles.inputContainer}
+              onLayout={(e) => { fieldY.current['title'] = e.nativeEvent.layout.y; }}
+            >
               <Text style={styles.label}>Book Title *</Text>
               <TextInput
                 style={styles.input}
                 value={bookTitle}
                 onChangeText={setBookTitle}
+                color="#333"
+                onFocus={() => scrollToField('title')}
               />
             </View>
 
-            <View style={styles.inputContainer}>
+            {/* Subtitle */}
+            <View
+              style={styles.inputContainer}
+              onLayout={(e) => { fieldY.current['subtitle'] = e.nativeEvent.layout.y; }}
+            >
               <Text style={styles.label}>Subtitle</Text>
               <TextInput
                 style={styles.input}
                 value={subtitle}
                 onChangeText={setSubtitle}
+                color="#333"
+                onFocus={() => scrollToField('subtitle')}
               />
             </View>
 
-            <View style={styles.inputContainer}>
+            {/* Co-authors */}
+            <View
+              style={styles.inputContainer}
+              onLayout={(e) => { fieldY.current['coAuthors'] = e.nativeEvent.layout.y; }}
+            >
               <Text style={styles.label}>Co-authors</Text>
               <TextInput
                 style={styles.input}
                 value={coAuthors}
                 onChangeText={setCoAuthors}
+                color="#333"
+                onFocus={() => scrollToField('coAuthors')}
               />
             </View>
 
-            <View style={styles.inputContainer}>
+            {/* Edition */}
+            <View
+              style={styles.inputContainer}
+              onLayout={(e) => { fieldY.current['edition'] = e.nativeEvent.layout.y; }}
+            >
               <Text style={styles.label}>Edition</Text>
               <TextInput
                 style={styles.input}
                 value={edition}
                 onChangeText={setEdition}
+                color="#333"
+                onFocus={() => scrollToField('edition')}
               />
             </View>
 
-            <View style={styles.inputContainer}>
+            {/* Publisher */}
+            <View
+              style={styles.inputContainer}
+              onLayout={(e) => { fieldY.current['publisher'] = e.nativeEvent.layout.y; }}
+            >
               <Text style={styles.label}>Publisher</Text>
               <TextInput
                 style={styles.input}
                 value={publisher}
                 onChangeText={setPublisher}
+                color="#333"
+                onFocus={() => scrollToField('publisher')}
               />
             </View>
 
-            <View style={styles.inputContainer}>
+            {/* Publication Year */}
+            <View
+              style={styles.inputContainer}
+              onLayout={(e) => { fieldY.current['pubYear'] = e.nativeEvent.layout.y; }}
+            >
               <Text style={styles.label}>Publication Year *</Text>
               <TextInput
                 style={styles.input}
                 value={publicationYear}
                 onChangeText={setPublicationYear}
                 keyboardType="numeric"
+                color="#333"
+                onFocus={() => scrollToField('pubYear')}
               />
             </View>
 
-            <View style={styles.inputContainer}>
+            {/* Language */}
+            <View
+              style={styles.inputContainer}
+              onLayout={(e) => { fieldY.current['language'] = e.nativeEvent.layout.y; }}
+            >
               <Text style={styles.label}>Language *</Text>
               <TextInput
                 style={styles.input}
                 value={language}
                 onChangeText={setLanguage}
+                color="#333"
+                onFocus={() => scrollToField('language')}
               />
             </View>
 
-            <View style={styles.inputContainer}>
+            {/* ISBN */}
+            <View
+              style={styles.inputContainer}
+              onLayout={(e) => { fieldY.current['isbn'] = e.nativeEvent.layout.y; }}
+            >
               <Text style={styles.label}>ISBN/ISSN</Text>
               <TextInput
                 style={styles.input}
                 value={isbn}
                 onChangeText={setIsbn}
                 placeholder="Enter ISBN or ISSN"
+                placeholderTextColor="#bbb"
+                color="#333"
+                onFocus={() => scrollToField('isbn')}
               />
             </View>
 
-            <View style={styles.inputContainer}>
+            {/* Number of Pages */}
+            <View
+              style={styles.inputContainer}
+              onLayout={(e) => { fieldY.current['pageCount'] = e.nativeEvent.layout.y; }}
+            >
               <Text style={styles.label}>Number of Pages</Text>
               <TextInput
                 style={styles.input}
                 value={pageCount}
                 onChangeText={setPageCount}
                 keyboardType="numeric"
+                color="#333"
+                onFocus={() => scrollToField('pageCount')}
               />
             </View>
 
-            <View style={styles.inputContainer}>
+            {/* Description */}
+            <View
+              style={styles.inputContainer}
+              onLayout={(e) => { fieldY.current['description'] = e.nativeEvent.layout.y; }}
+            >
               <Text style={styles.label}>Description</Text>
               <TextInput
                 style={[styles.input, styles.textArea]}
@@ -318,49 +389,68 @@ export default function EditBook() {
                 multiline
                 numberOfLines={4}
                 textAlignVertical="top"
+                color="#333"
+                onFocus={() => scrollToField('description')}
               />
             </View>
 
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>Price (₦)</Text>
+            {/* Price */}
+            <View
+              style={styles.inputContainer}
+              onLayout={(e) => { fieldY.current['price'] = e.nativeEvent.layout.y; }}
+            >
+              <Text style={styles.label}>Your Price (₦)</Text>
               <TextInput
                 style={styles.input}
                 value={price}
                 onChangeText={setPrice}
                 keyboardType="numeric"
+                color="#333"
+                onFocus={() => scrollToField('price')}
               />
+              {(() => {
+                const n = parseFloat(price);
+                if (!isNaN(n) && n > 0) {
+                  const pub = calcPublicPrice(n);
+                  const pct = Math.round(getCommissionRate(n) * 100);
+                  return (
+                    <View style={styles.pricePreview}>
+                      <Text style={styles.previewText}>
+                        Public price readers pay:{" "}
+                        <Text style={styles.previewHighlight}>₦{pub.toLocaleString()}</Text>
+                        {"  "}
+                        <Text style={styles.previewNote}>({pct}% added)</Text>
+                      </Text>
+                    </View>
+                  );
+                }
+                return null;
+              })()}
             </View>
+
+            {/* Save Button — inside scroll so keyboard never covers it */}
+            <TouchableOpacity
+              style={[styles.saveButton, saving && styles.buttonDisabled]}
+              onPress={handleSave}
+              disabled={saving}
+            >
+              {saving ? (
+                <ActivityIndicator color="#FFFFFF" />
+              ) : (
+                <Text style={styles.saveButtonText}>Save Changes</Text>
+              )}
+            </TouchableOpacity>
           </View>
         </ScrollView>
-
-        {/* Save Button */}
-        <View style={styles.footer}>
-          <TouchableOpacity
-            style={[styles.saveButton, saving && styles.buttonDisabled]}
-            onPress={handleSave}
-            disabled={saving}
-          >
-            {saving ? (
-              <ActivityIndicator color="#FFFFFF" />
-            ) : (
-              <Text style={styles.saveButtonText}>Save Changes</Text>
-            )}
-          </TouchableOpacity>
-        </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#FFFFFF",
-  },
-
-  keyboardView: {
-    flex: 1,
-  },
+  container: { flex: 1, backgroundColor: "#FFFFFF" },
+  keyboardView: { flex: 1 },
+  scrollContent: { flexGrow: 1, paddingBottom: 40 },
 
   header: {
     flexDirection: "row",
@@ -369,38 +459,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingVertical: 16,
   },
-
-  backButton: {
-    padding: 4,
-  },
-
+  backButton: { padding: 4 },
   headerTitle: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#E85D54",
-    flex: 1,
-    textAlign: "center",
+    fontSize: 18, fontWeight: "600", color: "#E85D54",
+    flex: 1, textAlign: "center",
   },
+  headerSpacer: { width: 36 },
 
-  headerSpacer: {
-    width: 36,
-  },
+  form: { paddingHorizontal: 24 },
 
-  form: {
-    paddingHorizontal: 24,
-    paddingBottom: 100,
-  },
+  inputContainer: { marginBottom: 20 },
 
-  inputContainer: {
-    marginBottom: 20,
-  },
-
-  label: {
-    fontSize: 14,
-    fontWeight: "500",
-    color: "#333",
-    marginBottom: 8,
-  },
+  label: { fontSize: 14, fontWeight: "500", color: "#333", marginBottom: 8 },
 
   input: {
     height: 52,
@@ -413,22 +483,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
   },
 
-  textArea: {
-    height: 100,
-    paddingTop: 12,
-  },
-
-  footer: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    paddingHorizontal: 24,
-    paddingVertical: 20,
-    backgroundColor: "#FFFFFF",
-    borderTopWidth: 1,
-    borderTopColor: "#FFD4D1",
-  },
+  textArea: { height: 100, paddingTop: 12 },
 
   saveButton: {
     height: 56,
@@ -436,31 +491,22 @@ const styles = StyleSheet.create({
     borderRadius: 28,
     alignItems: "center",
     justifyContent: "center",
+    marginTop: 8,
+    marginBottom: 16,
     shadowColor: "#E85D54",
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 8,
     elevation: 4,
   },
+  saveButtonText: { fontSize: 18, fontWeight: "600", color: "#FFFFFF" },
+  buttonDisabled: { opacity: 0.6 },
+  pricePreview: { marginTop: 8, backgroundColor: "#FFF5F4", borderRadius: 8, padding: 10, borderWidth: 1, borderColor: "#FFD4D1" },
+  previewText: { fontSize: 13, color: "#555" },
+  previewHighlight: { fontWeight: "700", color: "#E85D54" },
+  previewNote: { color: "#888" },
 
-  saveButtonText: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#FFFFFF",
-  },
-
-  buttonDisabled: {
-    opacity: 0.6,
-  },
-
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
+  loadingContainer: { flex: 1, justifyContent: "center", alignItems: "center" },
 
   fileBox: {
     height: 160,
@@ -472,13 +518,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: '#FFF9F8',
   },
-
-  coverPreview: {
-    width: '100%',
-    height: '100%',
-    position: 'absolute',
-  },
-
+  coverPreview: { width: '100%', height: '100%', position: 'absolute' },
   fileBoxOverlay: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -488,12 +528,7 @@ const styles = StyleSheet.create({
     paddingVertical: 7,
     borderRadius: 20,
   },
-
-  fileBoxOverlayText: {
-    color: '#fff',
-    fontSize: 13,
-    fontWeight: '600',
-  },
+  fileBoxOverlayText: { color: '#fff', fontSize: 13, fontWeight: '600' },
 
   pdfBox: {
     flexDirection: 'row',
@@ -504,18 +539,8 @@ const styles = StyleSheet.create({
     padding: 16,
     backgroundColor: '#FFF9F8',
   },
-
-  pdfBoxTitle: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#333',
-  },
-
-  pdfBoxSub: {
-    fontSize: 12,
-    color: '#999',
-    marginTop: 2,
-  },
+  pdfBoxTitle: { fontSize: 14, fontWeight: '500', color: '#333' },
+  pdfBoxSub: { fontSize: 12, color: '#999', marginTop: 2 },
 
   divider: {
     height: 1,

@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   StyleSheet,
   Text,
@@ -9,7 +9,6 @@ import {
   View,
   ScrollView,
   KeyboardAvoidingView,
-  Platform,
   Alert,
   ActivityIndicator,
 } from "react-native";
@@ -18,13 +17,12 @@ import { authorAPI } from "../../authorAPI";
 
 export default function Upload7() {
   const router = useRouter();
+  const scrollRef = useRef<any>(null);
   const [tags, setTags] = useState("");
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    loadDraftBook();
-  }, []);
+  useEffect(() => { loadDraftBook(); }, []);
 
   const loadDraftBook = async () => {
     try {
@@ -42,13 +40,10 @@ export default function Upload7() {
       Alert.alert("Terms & Conditions", "Please accept the terms and conditions");
       return;
     }
-
     setLoading(true);
     try {
       const keywords = tags.split(",").map(k => k.trim()).filter(k => k);
-      // Save final keywords
       await authorAPI.uploadBook({ keywords });
-      // Complete the book upload (marks payment as exhausted)
       await authorAPI.completeBookUpload();
       router.replace("/Author/book/UploadSuccessful");
     } catch (error: any) {
@@ -60,29 +55,26 @@ export default function Upload7() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={styles.keyboardView}
-      >
-        <ScrollView showsVerticalScrollIndicator={false}>
+      <KeyboardAvoidingView behavior="padding" style={styles.keyboardView}>
+        <ScrollView
+          ref={scrollRef}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={styles.scrollContent}
+        >
           {/* Header */}
           <View style={styles.header}>
-            <TouchableOpacity
-              style={styles.backButton}
-              onPress={() => router.back()}
-            >
+            <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
               <Ionicons name="chevron-back" size={28} color="#E85D54" />
             </TouchableOpacity>
             <Text style={styles.headerTitle}>Upload</Text>
             <View style={styles.headerSpacer} />
           </View>
 
-          {/* Progress Section */}
+          {/* Progress */}
           <View style={styles.progressSection}>
             <View style={styles.progressHeader}>
-              <Text style={styles.progressTitle}>
-                Additional Smart Features
-              </Text>
+              <Text style={styles.progressTitle}>Additional Smart Features</Text>
               <Text style={styles.progressCounter}>6/6</Text>
             </View>
             <View style={styles.progressBarContainer}>
@@ -92,7 +84,6 @@ export default function Upload7() {
 
           {/* Form */}
           <View style={styles.form}>
-            {/* Tag/Keyword */}
             <View style={styles.inputContainer}>
               <Text style={styles.label}>Keywords (comma separated)</Text>
               <TextInput
@@ -100,274 +91,69 @@ export default function Upload7() {
                 value={tags}
                 onChangeText={setTags}
                 placeholder="e.g. Mathematics, Calculus, Engineering"
+                placeholderTextColor="#bbb"
+                color="#333"
+                onFocus={() => setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 250)}
               />
             </View>
 
-            {/* Accept Terms & Conditions */}
-            <TouchableOpacity
-              style={styles.checkboxContainer}
-              onPress={() => setAcceptTerms(!acceptTerms)}
-              activeOpacity={0.7}
-            >
-              <View style={[styles.checkbox, acceptTerms && styles.checkboxChecked]}>
-                {acceptTerms && (
-                  <Ionicons name="checkmark" size={18} color="#FFFFFF" />
-                )}
-              </View>
+            {/* Accept Terms */}
+            <View style={styles.checkboxContainer}>
+              <TouchableOpacity onPress={() => setAcceptTerms(!acceptTerms)} activeOpacity={0.7}>
+                <View style={[styles.checkbox, acceptTerms && styles.checkboxChecked]}>
+                  {acceptTerms && <Ionicons name="checkmark" size={18} color="#FFFFFF" />}
+                </View>
+              </TouchableOpacity>
               <Text style={styles.checkboxText}>
-                <Text style={styles.termsLink}>Accept Terms & Conditions</Text>
+                I agree to the{" "}
+                <Text style={styles.termsLink} onPress={() => router.push("/Author/book/PolicyScreen")}>
+                  Author Policy & Terms
+                </Text>
               </Text>
+            </View>
+
+            <TouchableOpacity
+              style={[styles.uploadButton, loading && styles.buttonDisabled]}
+              onPress={handleUpload}
+              disabled={loading}
+            >
+              {loading ? <ActivityIndicator color="#FFFFFF" /> : <Text style={styles.uploadButtonText}>Upload</Text>}
             </TouchableOpacity>
           </View>
         </ScrollView>
-
-        {/* Upload Button - Fixed at bottom */}
-        <View style={styles.footer}>
-          <TouchableOpacity 
-            style={[styles.uploadButton, loading && styles.buttonDisabled]} 
-            onPress={handleUpload}
-            disabled={loading}
-          >
-            {loading ? (
-              <ActivityIndicator color="#FFFFFF" />
-            ) : (
-              <Text style={styles.uploadButtonText}>Upload</Text>
-            )}
-          </TouchableOpacity>
-        </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#FFFFFF",
-  },
-
-  keyboardView: {
-    flex: 1,
-  },
-
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 24,
-    paddingVertical: 16,
-  },
-
-  backButton: {
-    padding: 4,
-  },
-
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#E85D54", // I-SHELF coral red
-    flex: 1,
-    textAlign: "center",
-  },
-
-  headerSpacer: {
-    width: 36,
-  },
-
-  progressSection: {
-    paddingHorizontal: 24,
-    marginBottom: 32,
-  },
-
-  progressHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 12,
-  },
-
-  progressTitle: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#E85D54", // I-SHELF coral red
-  },
-
-  progressCounter: {
-    fontSize: 14,
-    fontWeight: "500",
-    color: "#666",
-  },
-
-  progressBarContainer: {
-    flexDirection: "row",
-    height: 6,
-    borderRadius: 3,
-    overflow: "hidden",
-  },
-
-  progressBarFilled: {
-    flex: 1,
-    backgroundColor: "#E85D54", // I-SHELF coral red - 100% complete
-  },
-
-  form: {
-    paddingHorizontal: 24,
-    paddingBottom: 100,
-  },
-
-  uploadSection: {
-    marginBottom: 32,
-  },
-
-  uploadLabel: {
-    fontSize: 14,
-    fontWeight: "500",
-    color: "#333",
-    marginBottom: 12,
-  },
-
-  uploadBox: {
-    borderWidth: 2,
-    borderColor: "#E85D54", // I-SHELF coral red
-    borderStyle: "dashed",
-    borderRadius: 12,
-    padding: 32,
-    alignItems: "center",
-    backgroundColor: "#FFF9F8", // Very light coral tint
-  },
-
-  uploadTextContainer: {
-    alignItems: "center",
-    marginTop: 16,
-  },
-
-  uploadMainText: {
-    fontSize: 15,
-    marginBottom: 8,
-  },
-
-  uploadLink: {
-    color: "#E85D54", // I-SHELF coral red
-    fontWeight: "600",
-  },
-
-  uploadOr: {
-    color: "#666",
-  },
-
-  uploadDrag: {
-    color: "#333",
-  },
-
-  uploadSubText: {
-    fontSize: 13,
-    color: "#999",
-  },
-
-  fileSelectedContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: 12,
-    gap: 6,
-  },
-
-  fileSelectedText: {
-    fontSize: 14,
-    color: "#4CAF50",
-    fontWeight: "500",
-  },
-
-  inputContainer: {
-    marginBottom: 24,
-  },
-
-  label: {
-    fontSize: 14,
-    fontWeight: "500",
-    color: "#333",
-    marginBottom: 8,
-  },
-
-  input: {
-    height: 52,
-    borderWidth: 1,
-    borderColor: "#FFD4D1", // Light coral border
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    fontSize: 16,
-    color: "#333",
-    backgroundColor: "#FFFFFF",
-  },
-
-  checkboxContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: 8,
-    gap: 12,
-  },
-
-  checkbox: {
-    width: 24,
-    height: 24,
-    borderRadius: 4,
-    borderWidth: 2,
-    borderColor: "#FFD4D1", // Light coral border
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#FFFFFF",
-  },
-
-  checkboxChecked: {
-    backgroundColor: "#E85D54", // I-SHELF coral red
-    borderColor: "#E85D54",
-  },
-
-  checkboxText: {
-    flex: 1,
-    fontSize: 14,
-    color: "#333",
-  },
-
-  termsLink: {
-    color: "#E85D54", // I-SHELF coral red
-    textDecorationLine: "underline",
-  },
-
-  footer: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    paddingHorizontal: 24,
-    paddingVertical: 20,
-    backgroundColor: "#FFFFFF",
-    borderTopWidth: 1,
-    borderTopColor: "#FFD4D1", // Light coral border
-  },
-
+  container: { flex: 1, backgroundColor: "#FFFFFF" },
+  keyboardView: { flex: 1 },
+  scrollContent: { flexGrow: 1, paddingBottom: 40 },
+  header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 24, paddingVertical: 16 },
+  backButton: { padding: 4 },
+  headerTitle: { fontSize: 18, fontWeight: "600", color: "#E85D54", flex: 1, textAlign: "center" },
+  headerSpacer: { width: 36 },
+  progressSection: { paddingHorizontal: 24, marginBottom: 32 },
+  progressHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 12 },
+  progressTitle: { fontSize: 16, fontWeight: "600", color: "#E85D54" },
+  progressCounter: { fontSize: 14, fontWeight: "500", color: "#666" },
+  progressBarContainer: { flexDirection: "row", height: 6, borderRadius: 3, overflow: "hidden" },
+  progressBarFilled: { flex: 1, backgroundColor: "#E85D54" },
+  form: { paddingHorizontal: 24 },
+  inputContainer: { marginBottom: 24 },
+  label: { fontSize: 14, fontWeight: "500", color: "#333", marginBottom: 8 },
+  input: { height: 52, borderWidth: 1, borderColor: "#FFD4D1", borderRadius: 12, paddingHorizontal: 16, fontSize: 16, color: "#333", backgroundColor: "#FFFFFF" },
+  checkboxContainer: { flexDirection: "row", alignItems: "center", marginBottom: 24, gap: 12 },
+  checkbox: { width: 24, height: 24, borderRadius: 4, borderWidth: 2, borderColor: "#FFD4D1", alignItems: "center", justifyContent: "center", backgroundColor: "#FFFFFF" },
+  checkboxChecked: { backgroundColor: "#E85D54", borderColor: "#E85D54" },
+  checkboxText: { flex: 1, fontSize: 14, color: "#333" },
+  termsLink: { color: "#E85D54", textDecorationLine: "underline" },
   uploadButton: {
-    height: 56,
-    backgroundColor: "#E85D54", // I-SHELF coral red
-    borderRadius: 28,
-    alignItems: "center",
-    justifyContent: "center",
-    shadowColor: "#E85D54",
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 4,
+    height: 56, backgroundColor: "#E85D54", borderRadius: 28,
+    alignItems: "center", justifyContent: "center", marginBottom: 16,
+    shadowColor: "#E85D54", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 8, elevation: 4,
   },
-
-  uploadButtonText: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#FFFFFF",
-  },
-
-  buttonDisabled: {
-    opacity: 0.6,
-  },
+  uploadButtonText: { fontSize: 18, fontWeight: "600", color: "#FFFFFF" },
+  buttonDisabled: { opacity: 0.6 },
 });

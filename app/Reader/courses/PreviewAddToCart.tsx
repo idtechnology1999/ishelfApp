@@ -166,7 +166,7 @@ export default function PreviewAddToCart() {
           {/* Price */}
           <View style={styles.priceSection}>
             <Text style={styles.priceLabel}>Price</Text>
-            <Text style={styles.price}>₦{book.price?.toLocaleString()}</Text>
+            <Text style={styles.price}>₦{(book.publicPrice || book.price)?.toLocaleString()}</Text>
           </View>
 
           {/* Payment Account */}

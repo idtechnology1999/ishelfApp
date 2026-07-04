@@ -14,6 +14,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { WebView } from 'react-native-webview';
 import { readerBooks } from '../../readerAPI';
+import { usePreventScreenCapture } from 'expo-screen-capture';
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL || 'https://api.i-shelf.app';
 
@@ -71,6 +72,7 @@ pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/p
 </html>`;
 
 export default function BookReader() {
+  usePreventScreenCapture();
   const router = useRouter();
   const params = useLocalSearchParams();
   const [book, setBook] = useState<any>(null);

@@ -17,8 +17,8 @@ export default function Support() {
   const faqs = [
     {
       id: 1,
-      question: "How do I purchase and download a book on iShelf?",
-      answer: 'To buy a book on iShelf, simply open the book you want, tap the "Buy Now" button, and complete the payment using your preferred method. Once your payment is successful, the book will automatically appear in your Library, where you can download it for offline reading anytime.',
+      question: "How do I upload and sell a book on I-SHELF?",
+      answer: 'To upload a book on I-SHELF, go to your dashboard and tap "Upload Book". Fill in the book details, upload your PDF and cover image, and submit for review. Once approved by the I-SHELF team, your book will be listed and readers can purchase it.',
     },
     {
       id: 2,

@@ -7,12 +7,12 @@ import {
   TouchableOpacity,
   View,
   ScrollView,
-  Image,
   TextInput,
   ActivityIndicator,
   Alert,
   RefreshControl,
 } from "react-native";
+import BookCover from "../../../components/BookCover";
 import { SafeAreaView } from "react-native-safe-area-context";
 import GestureRecognizer from "react-native-swipe-gestures";
 import { authorAPI } from "../../authorAPI";
@@ -51,13 +51,26 @@ export default function MyWorksTab() {
     setRefreshing(false);
   };
 
-  const getImageSource = (coverImage: string) => {
-    if (coverImage) {
-      if (coverImage.startsWith('http')) return { uri: coverImage };
-      const relative = coverImage.startsWith('/') ? coverImage.slice(1) : coverImage;
-      return { uri: `${process.env.EXPO_PUBLIC_API_URL}/${relative}` };
-    }
-    return require('../../../assets/images/book-placeholder.png');
+  const handleDeleteDraft = (book: any) => {
+    Alert.alert(
+      'Delete Draft',
+      `Are you sure you want to delete "${book.title}"? This cannot be undone.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await authorAPI.deleteBook(book._id);
+              setBooks(prev => prev.filter(b => b._id !== book._id));
+            } catch (error: any) {
+              Alert.alert('Error', error.response?.data?.message || 'Failed to delete book');
+            }
+          },
+        },
+      ]
+    );
   };
 
   return (
@@ -109,7 +122,16 @@ export default function MyWorksTab() {
           </TouchableOpacity>
 
           {/* Uploaded Books Section */}
-          <Text style={styles.sectionTitle}>Uploaded Books</Text>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Uploaded Books</Text>
+            <TouchableOpacity
+              style={styles.historyChip}
+              onPress={() => router.push("/Author/book/TransactionHistory")}
+            >
+              <Ionicons name="receipt-outline" size={14} color="#E85D54" />
+              <Text style={styles.historyChipText}>Transaction History</Text>
+            </TouchableOpacity>
+          </View>
           {loading ? (
             <View style={styles.loadingContainer}>
               <ActivityIndicator size="large" color="#E85D54" />
@@ -123,13 +145,7 @@ export default function MyWorksTab() {
               {books.map((book) => (
                 <View key={book._id} style={styles.bookCard}>
                   <TouchableOpacity onPress={() => router.push(`/Author/book/detail?id=${book._id}`)}>
-                    <View style={styles.bookThumbnail}>
-                      <Image
-                        source={getImageSource(book.coverImage)}
-                        style={styles.bookImage}
-                        resizeMode="cover"
-                      />
-                    </View>
+                    <BookCover uri={book.coverImage} style={styles.bookThumbnail} />
                   </TouchableOpacity>
 
                   {/* Status Badge */}
@@ -159,21 +175,39 @@ export default function MyWorksTab() {
                   <Text style={styles.bookTitle} numberOfLines={2}>
                     {book.title}
                   </Text>
-                  <View style={styles.salesBadge}>
-                    <Ionicons name="people" size={14} color="#4CAF50" />
-                    <Text style={styles.salesText}>{book.salesCount || 0} {book.salesCount === 1 ? 'buyer' : 'buyers'}</Text>
+                  <View style={styles.salesRow}>
+                    <View style={styles.salesBadge}>
+                      <Ionicons name="people" size={14} color="#4CAF50" />
+                      <Text style={styles.salesText}>{book.salesCount || 0} {book.salesCount === 1 ? 'buyer' : 'buyers'}</Text>
+                    </View>
+                    <TouchableOpacity
+                      style={styles.salesButton}
+                      onPress={() => router.push(`/Author/book/TransactionHistory?bookId=${book._id}&bookTitle=${encodeURIComponent(book.title)}`)}
+                    >
+                      <Ionicons name="receipt-outline" size={14} color="#E85D54" />
+                    </TouchableOpacity>
                   </View>
                   <View style={styles.bookFooter}>
                     <View>
                       <Text style={styles.priceLabel}>Price</Text>
                       <Text style={styles.priceValue}>₦{book.price || 0}</Text>
                     </View>
-                    <TouchableOpacity
-                      style={styles.editButton}
-                      onPress={() => router.push(`/Author/book/edit?id=${book._id}`)}
-                    >
-                      <Text style={styles.editButtonText}>Edit</Text>
-                    </TouchableOpacity>
+                    <View style={styles.bookActions}>
+                      {(!book.status || book.status === 'draft') && (
+                        <TouchableOpacity
+                          style={styles.deleteButton}
+                          onPress={() => handleDeleteDraft(book)}
+                        >
+                          <Ionicons name="trash-outline" size={15} color="#dc2626" />
+                        </TouchableOpacity>
+                      )}
+                      <TouchableOpacity
+                        style={styles.editButton}
+                        onPress={() => router.push(`/Author/book/edit?id=${book._id}`)}
+                      >
+                        <Text style={styles.editButtonText}>Edit</Text>
+                      </TouchableOpacity>
+                    </View>
                   </View>
                 </View>
               ))}
@@ -238,12 +272,33 @@ const styles = StyleSheet.create({
     color: "#333",
   },
 
+  sectionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 24,
+    marginBottom: 16,
+  },
   sectionTitle: {
     fontSize: 18,
     fontWeight: "600",
     color: "#333",
-    paddingHorizontal: 24,
-    marginBottom: 16,
+  },
+  historyChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    backgroundColor: "#FFF5F4",
+    borderWidth: 1,
+    borderColor: "#FFD4D1",
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  historyChipText: {
+    fontSize: 12,
+    color: "#E85D54",
+    fontWeight: "600",
   },
 
   uploadButton: {
@@ -298,11 +353,6 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
 
-  bookImage: {
-    width: "100%",
-    height: "100%",
-  },
-
   bookAuthor: {
     fontSize: 12,
     color: "#666",
@@ -334,6 +384,12 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
 
+  salesRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 8,
+  },
   salesBadge: {
     flexDirection: "row",
     alignItems: "center",
@@ -342,8 +398,6 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 12,
     gap: 4,
-    alignSelf: "flex-start",
-    marginBottom: 8,
   },
 
   salesText: {
@@ -370,8 +424,35 @@ const styles = StyleSheet.create({
     color: "#000",
   },
 
+  bookActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+
+  deleteButton: {
+    width: 34,
+    height: 34,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#fca5a5",
+    backgroundColor: "#fff1f1",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  salesButton: {
+    width: 34,
+    height: 34,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#FFD4D1",
+    backgroundColor: "#FFF5F4",
+    alignItems: "center",
+    justifyContent: "center",
+  },
   editButton: {
-    backgroundColor: "#E85D54", // I-SHELF coral red
+    backgroundColor: "#E85D54",
     paddingHorizontal: 20,
     paddingVertical: 8,
     borderRadius: 8,

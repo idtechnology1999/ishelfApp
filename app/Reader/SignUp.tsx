@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import {
   View,
   Text,
@@ -7,7 +7,6 @@ import {
   TouchableOpacity,
   KeyboardAvoidingView,
   ScrollView,
-  Platform,
   Image,
   ActivityIndicator,
   Modal,
@@ -23,6 +22,10 @@ const TITLES = ['Mr.', 'Mrs.', 'Ms.', 'Miss', 'Dr.', 'Prof.', 'Engr.', 'Pharm.',
 
 export default function SignUp() {
   const router = useRouter();
+  const scrollRef = useRef<any>(null);
+  const formY = useRef(0);
+  const fieldY = useRef<{ [k: string]: number }>({});
+
   const [title, setTitle] = useState("");
   const [showTitlePicker, setShowTitlePicker] = useState(false);
   const [fullName, setFullName] = useState("");
@@ -39,6 +42,13 @@ export default function SignUp() {
 
   const hideToast = () => {
     setToast({ visible: false, message: "", type: "success" });
+  };
+
+  const scrollToField = (key: string) => {
+    setTimeout(() => {
+      const y = formY.current + (fieldY.current[key] ?? 0);
+      scrollRef.current?.scrollTo({ y: Math.max(0, y - 120), animated: true });
+    }, 250);
   };
 
   const handleSignUp = async () => {
@@ -83,12 +93,9 @@ export default function SignUp() {
         </TouchableOpacity>
       </Modal>
 
-      <KeyboardAvoidingView
-        style={styles.content}
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
-      >
+      <KeyboardAvoidingView style={styles.content} behavior="padding">
         <ScrollView
+          ref={scrollRef}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={styles.scrollContent}
@@ -112,59 +119,102 @@ export default function SignUp() {
           <Text style={styles.subtitle}>Sign up to get access to your academic resources</Text>
 
           {/* Form */}
-          <View style={styles.form}>
+          <View
+            style={styles.form}
+            onLayout={(e) => { formY.current = e.nativeEvent.layout.y; }}
+          >
             {/* Title Picker */}
-            <Text style={styles.label}>Title <Text style={{ color: '#999', fontWeight: '400' }}>(Optional)</Text></Text>
-            <TouchableOpacity style={styles.pickerButton} onPress={() => setShowTitlePicker(true)}>
-              <Text style={[styles.pickerText, !title && { color: '#bbb' }]}>{title || 'Select title...'}</Text>
-              <Ionicons name="chevron-down" size={18} color="#888" />
-            </TouchableOpacity>
-
-            <Text style={styles.label}>Full Name</Text>
-            <TextInput
-              style={styles.input}
-              value={fullName}
-              onChangeText={setFullName}
-              placeholder=""
-            />
-
-            <Text style={styles.label}>E-Mail Address</Text>
-            <TextInput
-              style={styles.input}
-              value={email}
-              onChangeText={setEmail}
-              placeholder=""
-              keyboardType="email-address"
-              autoCapitalize="none"
-            />
-
-            <Text style={styles.label}>Institution <Text style={{ color: '#999', fontWeight: '400' }}>(Optional)</Text></Text>
-            <TextInput
-              style={styles.input}
-              value={institution}
-              onChangeText={setInstitution}
-              placeholder=""
-            />
-
-            <Text style={styles.label}>Password</Text>
-            <View style={styles.passwordWrapper}>
-              <TextInput
-                style={[styles.input, styles.passwordInput]}
-                value={password}
-                onChangeText={setPassword}
-                placeholder=""
-                secureTextEntry={!showPassword}
-              />
-              <TouchableOpacity
-                style={styles.eyeIcon}
-                onPress={() => setShowPassword(!showPassword)}
-              >
-                <Ionicons
-                  name={showPassword ? "eye-off-outline" : "eye-outline"}
-                  size={22}
-                  color="#888"
-                />
+            <View style={styles.fieldContainer}>
+              <Text style={styles.label}>Title <Text style={{ color: '#999', fontWeight: '400' }}>(Optional)</Text></Text>
+              <TouchableOpacity style={styles.pickerButton} onPress={() => setShowTitlePicker(true)}>
+                <Text style={[styles.pickerText, !title && { color: '#bbb' }]}>{title || 'Select title...'}</Text>
+                <Ionicons name="chevron-down" size={18} color="#888" />
               </TouchableOpacity>
+            </View>
+
+            {/* Full Name */}
+            <View
+              style={styles.fieldContainer}
+              onLayout={(e) => { fieldY.current['fullName'] = e.nativeEvent.layout.y; }}
+            >
+              <Text style={styles.label}>Full Name</Text>
+              <TextInput
+                style={styles.input}
+                value={fullName}
+                onChangeText={setFullName}
+                placeholder=""
+                autoCapitalize="words"
+                autoCorrect={false}
+                color="#333"
+                onFocus={() => scrollToField('fullName')}
+              />
+            </View>
+
+            {/* Email */}
+            <View
+              style={styles.fieldContainer}
+              onLayout={(e) => { fieldY.current['email'] = e.nativeEvent.layout.y; }}
+            >
+              <Text style={styles.label}>E-Mail Address</Text>
+              <TextInput
+                style={styles.input}
+                value={email}
+                onChangeText={setEmail}
+                placeholder=""
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoCorrect={false}
+                color="#333"
+                onFocus={() => scrollToField('email')}
+              />
+            </View>
+
+            {/* Institution */}
+            <View
+              style={styles.fieldContainer}
+              onLayout={(e) => { fieldY.current['institution'] = e.nativeEvent.layout.y; }}
+            >
+              <Text style={styles.label}>Institution <Text style={{ color: '#999', fontWeight: '400' }}>(Optional)</Text></Text>
+              <TextInput
+                style={styles.input}
+                value={institution}
+                onChangeText={setInstitution}
+                placeholder=""
+                autoCapitalize="words"
+                autoCorrect={false}
+                color="#333"
+                onFocus={() => scrollToField('institution')}
+              />
+            </View>
+
+            {/* Password */}
+            <View
+              style={styles.fieldContainer}
+              onLayout={(e) => { fieldY.current['password'] = e.nativeEvent.layout.y; }}
+            >
+              <Text style={styles.label}>Password</Text>
+              <View style={styles.passwordWrapper}>
+                <TextInput
+                  style={[styles.input, styles.passwordInput]}
+                  value={password}
+                  onChangeText={setPassword}
+                  placeholder=""
+                  secureTextEntry={!showPassword}
+                  autoCapitalize="none"
+                  color="#333"
+                  onFocus={() => scrollToField('password')}
+                />
+                <TouchableOpacity
+                  style={styles.eyeIcon}
+                  onPress={() => setShowPassword(!showPassword)}
+                >
+                  <Ionicons
+                    name={showPassword ? "eye-off-outline" : "eye-outline"}
+                    size={22}
+                    color="#888"
+                  />
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
 
@@ -213,7 +263,7 @@ export default function SignUp() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#FFFFFF" },
   content: { flex: 1 },
-  scrollContent: { flexGrow: 1, paddingBottom: 40 },
+  scrollContent: { flexGrow: 1, paddingBottom: 60 },
   backButton: { paddingHorizontal: 16, paddingVertical: 8 },
   logoContainer: {
     alignItems: "center", marginTop: 10, marginBottom: 10,
@@ -224,10 +274,12 @@ const styles = StyleSheet.create({
   title: { fontSize: 24, fontWeight: "700", color: "#E85D54", textAlign: "center", marginBottom: 6 },
   subtitle: { fontSize: 13, color: "#333", textAlign: "center", paddingHorizontal: 40, marginBottom: 20 },
   form: { paddingHorizontal: 24 },
-  label: { fontSize: 14, fontWeight: "500", color: "#000", marginBottom: 6, marginTop: 8 },
+  fieldContainer: { marginBottom: 14 },
+  label: { fontSize: 14, fontWeight: "500", color: "#000", marginBottom: 6 },
   input: {
     height: 44, borderWidth: 1.5, borderColor: "#FFD4D1",
     borderRadius: 10, paddingHorizontal: 14, fontSize: 14,
+    color: "#333", backgroundColor: "#FFFFFF",
   },
   pickerButton: {
     height: 44, borderWidth: 1.5, borderColor: "#FFD4D1",

@@ -41,11 +41,11 @@ export default function MakePayment() {
         const data = await readerCart.getCartItems();
         const items = data.cartItems || [];
         setCartItems(items);
-        setTotalAmount(items.reduce((sum: number, item: any) => sum + (item.bookId?.price || 0), 0));
+        setTotalAmount(items.reduce((sum: number, item: any) => sum + (item.bookId?.publicPrice || item.bookId?.price || 0), 0));
       } else if (params.bookId) {
         const bookData = await readerBooks.getBookDetails(params.bookId as string);
         setBook(bookData.book);
-        setTotalAmount(bookData.book.price || 0);
+        setTotalAmount(bookData.book.publicPrice || bookData.book.price || 0);
       }
     } catch (error) {
       console.error('Failed to load data:', error);
@@ -109,7 +109,7 @@ export default function MakePayment() {
       return cartItems.map((item: any) => (
         <View key={item._id} style={styles.itemRow}>
           <Text style={styles.itemTitle} numberOfLines={1}>{item.bookId?.title}</Text>
-          <Text style={styles.itemPrice}>₦{item.bookId?.price?.toLocaleString()}</Text>
+          <Text style={styles.itemPrice}>₦{(item.bookId?.publicPrice || item.bookId?.price)?.toLocaleString()}</Text>
         </View>
       ));
     }
@@ -117,7 +117,7 @@ export default function MakePayment() {
       return (
         <View style={styles.itemRow}>
           <Text style={styles.itemTitle} numberOfLines={1}>{book.title}</Text>
-          <Text style={styles.itemPrice}>₦{book.price?.toLocaleString()}</Text>
+          <Text style={styles.itemPrice}>₦{(book.publicPrice || book.price)?.toLocaleString()}</Text>
         </View>
       );
     }

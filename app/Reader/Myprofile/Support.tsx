@@ -17,8 +17,8 @@ export default function Support() {
   const faqs = [
     {
       id: 1,
-      question: "How do I purchase and download a book on iShelf?",
-      answer: 'To buy a book on iShelf, simply open the book you want, tap the "Buy Now" button, and complete the payment using your preferred method. Once your payment is successful, the book will automatically appear in your Library, where you can download it for offline reading anytime.',
+      question: "How do I purchase and download a book on I-SHELF?",
+      answer: 'To buy a book on I-SHELF, simply open the book you want, tap the "Buy Now" button, and complete the payment using your preferred method. Once your payment is successful, the book will automatically appear in your Library, where you can read it anytime.',
     },
     {
       id: 2,
