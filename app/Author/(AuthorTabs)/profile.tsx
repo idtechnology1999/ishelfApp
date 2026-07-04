@@ -119,12 +119,20 @@ export default function Profile() {
             <Ionicons name="chevron-forward" size={20} color="#E85D54" />
           </TouchableOpacity>
 
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.menuItem}
             onPress={() => router.push("/Author/Myprofile/Support")}
           >
             <Text style={styles.menuText}>Support</Text>
             <Ionicons name="chevron-forward" size={20} color="#E85D54" />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.menuItem}
+            onPress={() => router.push("/delete-account")}
+          >
+            <Text style={styles.menuTextDanger}>Delete Account</Text>
+            <Ionicons name="chevron-forward" size={20} color="#DC2626" />
           </TouchableOpacity>
         </View>
 
@@ -226,6 +234,12 @@ const styles = StyleSheet.create({
   menuText: {
     fontSize: 16,
     color: "#000000",
+    fontWeight: "500",
+  },
+
+  menuTextDanger: {
+    fontSize: 16,
+    color: "#DC2626",
     fontWeight: "500",
   },
 

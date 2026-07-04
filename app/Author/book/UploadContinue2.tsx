@@ -15,6 +15,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { authorAPI } from "../../authorAPI";
+import { BOOK_CATEGORIES } from "../../constants/categories";
 
 export default function Upload3() {
   const router = useRouter();
@@ -55,33 +56,7 @@ export default function Upload3() {
     }, 250);
   };
 
-  const categories = [
-    "Textbooks & Course Materials",
-    "Journals & Research Papers",
-    "Past Questions & Exam Guides",
-    "General Studies (GNS/GST)",
-    "Science & Technology",
-    "Information & Communication Technology (ICT)",
-    "Arts & Humanities",
-    "Career & Professional Development",
-    "Business & Management",
-    "Law & Legal Studies",
-    "Medicine & Health Sciences",
-    "Agriculture & Veterinary Sciences",
-    "Education & Teaching",
-    "Social Sciences",
-    "Engineering & Applied Sciences",
-    "Mathematics & Statistics",
-    "Environmental Sciences",
-    "Architecture & Urban Planning",
-    "Languages & Communication",
-    "Religion & Theology",
-    "Political Science & Government",
-    "Economics & Finance",
-    "Computer Science & Programming",
-    "Nursing & Allied Health",
-    "Pharmacy & Pharmacology",
-  ];
+  const categories = BOOK_CATEGORIES;
 
   const levels = [
     "Jambites", "100lvl", "200lvl", "300lvl", "400lvl", "500lvl",

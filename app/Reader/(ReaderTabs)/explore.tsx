@@ -11,6 +11,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import GestureRecognizer from "react-native-swipe-gestures";
+import { EXPLORE_CATEGORIES } from "../../constants/categories";
 
 export default function Explore() {
   const router = useRouter();
@@ -21,15 +22,7 @@ export default function Explore() {
     directionalOffsetThreshold: 70,
   };
 
-  const categories = [
-    { id: 1, title: "Textbooks and Course Materials", color: "#C4D9F4" },
-    { id: 2, title: "Journals & Research Papers", color: "#B8F4D4" },
-    { id: 3, title: "Past Questions & Exam Guides", color: "#E5E5E5" },
-    { id: 4, title: "General Studies (GNS/GST)", color: "#FFD4D4" },
-    { id: 5, title: "Science & Technology", color: "#B8F4D4" },
-    { id: 6, title: "Arts & Humanities", color: "#E5E5E5" },
-    { id: 7, title: "Career & Professional Development", color: "#C4D9F4" },
-  ];
+  const categories = EXPLORE_CATEGORIES;
 
   const handleSearch = () => {
     if (search.trim()) {
