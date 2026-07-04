@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import { useRouter, usePathname } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -25,7 +26,7 @@ type ChatMessage = {
   timestamp: string;
 };
 
-type Stage = "intro" | "choice" | "email" | "name" | "chat";
+type Stage = "intro" | "choice" | "about" | "email" | "name" | "chat";
 type Identity =
   | { mode: "account"; email: string; name: string }
   | { mode: "guest"; guestId: string; guestName: string };
@@ -68,6 +69,10 @@ const FAQS = [
 
 export default function SupportWidget() {
   const insets = useSafeAreaInsets();
+  const router = useRouter();
+  const pathname = usePathname();
+  const isAuthorArea = pathname?.startsWith("/Author");
+  const isReaderArea = pathname?.startsWith("/Reader");
   const [visible, setVisible] = useState(false);
   const [stage, setStage] = useState<Stage>("intro");
   const [identity, setIdentity] = useState<Identity | null>(null);
@@ -107,8 +112,13 @@ export default function SupportWidget() {
       setIdentity({ mode: "guest", guestId: savedId, guestName: savedName });
       setStage("chat");
     } else {
-      setStage("name");
+      setStage("about");
     }
+  };
+
+  const goToSignUp = (target: "author" | "reader") => {
+    closeWidget();
+    router.push(target === "author" ? "/Author/SignUp1" : "/Reader/SignUp");
   };
 
   const handleVerifyEmail = async () => {
@@ -208,7 +218,7 @@ export default function SupportWidget() {
           >
             <View style={styles.header}>
               {stage !== "intro" && stage !== "chat" && (
-                <TouchableOpacity onPress={() => setStage(stage === "email" || stage === "name" ? "choice" : "intro")}>
+                <TouchableOpacity onPress={() => setStage(stage === "email" || stage === "name" || stage === "about" ? "choice" : "intro")}>
                   <Ionicons name="chevron-back" size={24} color="#E85D54" />
                 </TouchableOpacity>
               )}
@@ -266,6 +276,60 @@ export default function SupportWidget() {
                   <Text style={styles.secondaryButtonText}>No, I'm new here</Text>
                 </TouchableOpacity>
               </View>
+            )}
+
+            {stage === "about" && (
+              <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.aboutScrollContent}>
+                <View style={styles.iconCircle}>
+                  <Ionicons name="book" size={48} color="#E85D54" />
+                </View>
+                <Text style={styles.aboutHeading}>Welcome to I-Shelf</Text>
+                <Text style={styles.aboutBody}>
+                  I-Shelf connects lecturers and authors with students and readers. Authors upload
+                  books, course materials, and research papers and get paid securely — no piracy,
+                  real earnings. Readers get authentic, affordable academic content straight from
+                  trusted lecturers, read safely in-app with no unauthorized sharing.
+                </Text>
+
+                <View style={styles.aboutCard}>
+                  <Text style={styles.aboutCardTitle}>For Authors & Lecturers</Text>
+                  <Text style={styles.aboutCardText}>
+                    Upload your books and course materials, set your price, and get paid directly —
+                    track sales and withdraw earnings anytime.
+                  </Text>
+                </View>
+
+                <View style={styles.aboutCard}>
+                  <Text style={styles.aboutCardTitle}>For Readers & Students</Text>
+                  <Text style={styles.aboutCardText}>
+                    Access authentic materials from trusted authors. Refer an author to I-Shelf and
+                    earn ₦3,000 once they sign up and pay their upload fee.
+                  </Text>
+                </View>
+
+                {isReaderArea ? (
+                  <TouchableOpacity style={styles.primaryButton} onPress={() => goToSignUp("reader")}>
+                    <Text style={styles.primaryButtonText}>Create Free Account</Text>
+                  </TouchableOpacity>
+                ) : isAuthorArea ? (
+                  <TouchableOpacity style={styles.primaryButton} onPress={() => goToSignUp("author")}>
+                    <Text style={styles.primaryButtonText}>Create Free Account</Text>
+                  </TouchableOpacity>
+                ) : (
+                  <>
+                    <TouchableOpacity style={styles.primaryButton} onPress={() => goToSignUp("author")}>
+                      <Text style={styles.primaryButtonText}>Sign Up as Author</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.secondaryButton} onPress={() => goToSignUp("reader")}>
+                      <Text style={styles.secondaryButtonText}>Sign Up as Reader</Text>
+                    </TouchableOpacity>
+                  </>
+                )}
+
+                <TouchableOpacity onPress={() => setStage("name")}>
+                  <Text style={styles.aboutChatLink}>Still want to talk to someone? Chat with us</Text>
+                </TouchableOpacity>
+              </ScrollView>
             )}
 
             {stage === "email" && (
@@ -429,6 +493,20 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   introText: { fontSize: 16, fontWeight: "600", color: "#222", textAlign: "center" },
+  aboutScrollContent: { paddingHorizontal: 24, paddingTop: 24, paddingBottom: 24, alignItems: "center", gap: 14 },
+  aboutHeading: { fontSize: 18, fontWeight: "700", color: "#111", textAlign: "center" },
+  aboutBody: { fontSize: 13, color: "#555", textAlign: "center", lineHeight: 19 },
+  aboutCard: {
+    width: "100%",
+    backgroundColor: "#FFF5F4",
+    borderRadius: 12,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: "#FFD4D1",
+  },
+  aboutCardTitle: { fontSize: 14, fontWeight: "700", color: "#E85D54", marginBottom: 4 },
+  aboutCardText: { fontSize: 13, color: "#444", lineHeight: 18 },
+  aboutChatLink: { fontSize: 13, color: "#888", textDecorationLine: "underline", textAlign: "center" },
   faqTitle: { fontSize: 16, fontWeight: "700", color: "#111", marginBottom: 4 },
   faqSubtitle: { fontSize: 13, color: "#888", marginBottom: 16 },
   faqItem: { marginBottom: 10 },
