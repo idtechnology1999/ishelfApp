@@ -10,35 +10,18 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter, useFocusEffect } from "expo-router";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { readerBooks } from "../../readerAPI";
 
 export default function Library() {
   const router = useRouter();
   const [purchaseCount, setPurchaseCount] = useState(0);
-  const [downloadCount, setDownloadCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
   const loadCounts = useCallback(async () => {
     setLoading(true);
     try {
-      const [purchaseData, readerDataStr, downloadedBooksStr] = await Promise.all([
-        readerBooks.getMyPurchases().catch(() => ({ purchases: [] })),
-        AsyncStorage.getItem('readerData'),
-        AsyncStorage.getItem('downloadedBooks'),
-      ]);
-
+      const purchaseData = await readerBooks.getMyPurchases().catch(() => ({ purchases: [] }));
       setPurchaseCount(purchaseData.purchases?.length || 0);
-
-      if (readerDataStr && downloadedBooksStr) {
-        const reader = JSON.parse(readerDataStr);
-        const readerId = reader._id || reader.id;
-        const allDownloaded = JSON.parse(downloadedBooksStr);
-        const userDownloads = allDownloaded.filter((b: any) => b.readerId === readerId);
-        setDownloadCount(userDownloads.length);
-      } else {
-        setDownloadCount(0);
-      }
     } catch (error) {
       console.error('Failed to load library counts:', error);
     } finally {
@@ -54,10 +37,6 @@ export default function Library() {
 
   const handleViewPurchasedBooks = () => {
     router.push("/Reader/Library/PurchasedBooks");
-  };
-
-  const handleViewDownloadedBooks = () => {
-    router.push("/Reader/Library/DownloadedBooks");
   };
 
   const renderContent = () => {
@@ -80,20 +59,6 @@ export default function Library() {
           <View style={styles.booksContainer}>
             <Image source={require("../../../assets/images/categoriespic.png")} style={styles.booksImage} resizeMode="contain" />
             <TouchableOpacity style={styles.viewAllButton} onPress={handleViewPurchasedBooks}>
-              <Text style={styles.viewAllText}>View All</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Downloaded Books</Text>
-            <View style={styles.countBadge}>
-              <Text style={styles.countText}>{downloadCount}</Text>
-            </View>
-          </View>
-          <View style={styles.booksContainer}>
-            <Image source={require("../../../assets/images/categoriespic.png")} style={styles.booksImage} resizeMode="contain" />
-            <TouchableOpacity style={styles.viewAllButton} onPress={handleViewDownloadedBooks}>
               <Text style={styles.viewAllText}>View All</Text>
             </TouchableOpacity>
           </View>

@@ -22,8 +22,8 @@ export default function Support() {
     },
     {
       id: 2,
-      question: "Can I read my books offline after downloading them?",
-      answer: "Yes, once you download a book to your device, you can read it offline anytime without an internet connection.",
+      question: "Can I download books or read them offline?",
+      answer: "No. To protect authors' copyright, books can only be read inside the I-SHELF app while connected to the internet — downloading or saving books to your device is not supported.",
     },
     {
       id: 3,

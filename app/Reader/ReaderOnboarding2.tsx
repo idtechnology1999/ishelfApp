@@ -52,7 +52,7 @@ export default function ReaderOnboarding2() {
           </Text>
 
           <Text style={styles.description}>
-            Download or read online, stay connected to your studies wherever you are.
+            Read securely in the app anytime, stay connected to your studies wherever you are.
           </Text>
 
           <View style={styles.imageWrapper}>
