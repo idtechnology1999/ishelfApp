@@ -332,6 +332,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 10,
     marginTop: 4,
+    marginBottom: 24,
   },
 
   rememberCheckbox: {
