@@ -16,14 +16,17 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { authorAPI } from "../../authorAPI";
 
+type Bank = { id: string; name: string; code: string };
+type BankAccount = { bankName: string; accountNumber: string; accountName?: string };
+
 export default function WithdrawScreen() {
   const router = useRouter();
-  const [bankAccount, setBankAccount] = useState(null);
-  const [banks, setBanks] = useState([]);
-  const [filteredBanks, setFilteredBanks] = useState([]);
+  const [bankAccount, setBankAccount] = useState<BankAccount | null>(null);
+  const [banks, setBanks] = useState<Bank[]>([]);
+  const [filteredBanks, setFilteredBanks] = useState<Bank[]>([]);
   const [bankSearch, setBankSearch] = useState("");
   const [showBankDropdown, setShowBankDropdown] = useState(false);
-  const [selectedBank, setSelectedBank] = useState(null);
+  const [selectedBank, setSelectedBank] = useState<Bank | null>(null);
   const [accountNumber, setAccountNumber] = useState("");
   const [accountName, setAccountName] = useState("");
   const [verifying, setVerifying] = useState(false);
@@ -74,6 +77,10 @@ export default function WithdrawScreen() {
   const handleSetupAccount = async () => {
     if (!accountName) {
       Alert.alert("Error", "Please verify your account number first");
+      return;
+    }
+    if (!selectedBank) {
+      Alert.alert("Error", "Please select a bank first");
       return;
     }
 

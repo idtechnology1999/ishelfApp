@@ -14,10 +14,19 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { authorAPI } from "../../authorAPI";
 
+type BankAccount = { bankName: string; accountNumber: string; accountName?: string };
+type Earning = {
+  title: string;
+  uniqueBuyers: number;
+  salesCount: number;
+  lastSaleDate: string;
+  totalEarnings: number;
+};
+
 export default function EarningsScreen() {
   const router = useRouter();
-  const [bankAccount, setBankAccount] = useState(null);
-  const [earnings, setEarnings] = useState([]);
+  const [bankAccount, setBankAccount] = useState<BankAccount | null>(null);
+  const [earnings, setEarnings] = useState<Earning[]>([]);
   const [totalEarnings, setTotalEarnings] = useState(0);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -153,7 +162,7 @@ export default function EarningsScreen() {
                   </Text>
                 </View>
               ) : (
-                earnings.map((earning: any, index: number) => (
+                earnings.map((earning, index) => (
                   <View key={index} style={styles.earningCard}>
                     <View style={styles.earningIcon}>
                       <Ionicons name="book" size={20} color="#E85D54" />
