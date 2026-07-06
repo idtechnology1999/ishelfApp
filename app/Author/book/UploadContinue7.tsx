@@ -104,12 +104,12 @@ export default function Upload7() {
                   {acceptTerms && <Ionicons name="checkmark" size={18} color="#FFFFFF" />}
                 </View>
               </TouchableOpacity>
-              <Text style={styles.checkboxText}>
-                I agree to the{" "}
-                <Text style={styles.termsLink} onPress={() => router.push("/Author/book/PolicyScreen")}>
-                  Author Policy & Terms
-                </Text>
-              </Text>
+              <View style={styles.termsTextRow}>
+                <Text style={styles.checkboxText}>I agree to the </Text>
+                <TouchableOpacity onPress={() => router.push("/Author/book/PolicyScreen")} hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}>
+                  <Text style={styles.termsLink}>Author Policy & Terms</Text>
+                </TouchableOpacity>
+              </View>
             </View>
 
             <TouchableOpacity
@@ -147,8 +147,9 @@ const styles = StyleSheet.create({
   checkboxContainer: { flexDirection: "row", alignItems: "center", marginBottom: 24, gap: 12 },
   checkbox: { width: 24, height: 24, borderRadius: 4, borderWidth: 2, borderColor: "#FFD4D1", alignItems: "center", justifyContent: "center", backgroundColor: "#FFFFFF" },
   checkboxChecked: { backgroundColor: "#E85D54", borderColor: "#E85D54" },
-  checkboxText: { flex: 1, fontSize: 14, color: "#333" },
-  termsLink: { color: "#E85D54", textDecorationLine: "underline" },
+  termsTextRow: { flex: 1, flexDirection: "row", flexWrap: "wrap", alignItems: "center" },
+  checkboxText: { fontSize: 14, color: "#333" },
+  termsLink: { color: "#E85D54", textDecorationLine: "underline", fontSize: 14 },
   uploadButton: {
     height: 56, backgroundColor: "#E85D54", borderRadius: 28,
     alignItems: "center", justifyContent: "center", marginBottom: 16,
