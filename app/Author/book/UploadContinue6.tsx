@@ -88,22 +88,32 @@ export default function Upload6() {
           {/* Form */}
           <View style={styles.form}>
             {/* Combined Confirmation Checkbox */}
-            <TouchableOpacity
-              style={styles.checkboxContainer}
-              onPress={() => setConfirmed(!confirmed)}
-              activeOpacity={0.7}
-            >
-              <View style={[styles.checkbox, confirmed && styles.checkboxChecked]}>
-                {confirmed && (
-                  <Ionicons name="checkmark" size={18} color="#FFFFFF" />
-                )}
+            <View style={styles.checkboxContainer}>
+              <TouchableOpacity
+                onPress={() => setConfirmed(!confirmed)}
+                activeOpacity={0.7}
+              >
+                <View style={[styles.checkbox, confirmed && styles.checkboxChecked]}>
+                  {confirmed && (
+                    <Ionicons name="checkmark" size={18} color="#FFFFFF" />
+                  )}
+                </View>
+              </TouchableOpacity>
+              <View style={styles.termsTextWrap}>
+                <TouchableOpacity onPress={() => setConfirmed(!confirmed)} activeOpacity={0.7}>
+                  <Text style={styles.checkboxText}>
+                    I confirm that I am the owner of this content or have full rights
+                    to publish it, and I accept the
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => router.push("/Author/book/PolicyScreen")}
+                  hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
+                >
+                  <Text style={styles.termsLink}>Terms & Conditions</Text>
+                </TouchableOpacity>
               </View>
-              <Text style={styles.checkboxText}>
-                I confirm that I am the owner of this content or have full rights
-                to publish it, and I accept the{" "}
-                <Text style={styles.termsLink}>Terms & Conditions</Text>.
-              </Text>
-            </TouchableOpacity>
+            </View>
           </View>
         </ScrollView>
 
@@ -228,13 +238,17 @@ const styles = StyleSheet.create({
     backgroundColor: "#E85D54",
     borderColor: "#E85D54",
   },
-  checkboxText: {
+  termsTextWrap: {
     flex: 1,
+  },
+  checkboxText: {
     fontSize: 14,
     lineHeight: 22,
     color: "#333",
   },
   termsLink: {
+    fontSize: 14,
+    lineHeight: 22,
     color: "#E85D54",
     textDecorationLine: "underline",
   },
