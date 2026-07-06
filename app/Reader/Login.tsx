@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   View,
   Text,
@@ -13,6 +13,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { readerAuth } from "../readerAPI";
 import Toast from "../Toast";
 import SupportWidget from "../../components/SupportWidget";
@@ -23,8 +24,18 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState({ visible: false, message: "", type: "success" as "success" | "error" | "warning" });
+
+  useEffect(() => {
+    AsyncStorage.getItem('rememberedReaderEmail').then((saved) => {
+      if (saved) {
+        setEmail(saved);
+        setRememberMe(true);
+      }
+    });
+  }, []);
 
   const showToast = (message: string, type: "success" | "error" | "warning") => {
     setToast({ visible: true, message, type });
@@ -43,6 +54,13 @@ export default function Login() {
     setLoading(true);
     try {
       await readerAuth.login(email, password);
+
+      if (rememberMe) {
+        await AsyncStorage.setItem('rememberedReaderEmail', email);
+      } else {
+        await AsyncStorage.removeItem('rememberedReaderEmail');
+      }
+
       showToast("Login successful!", "success");
       setTimeout(() => router.push("/Reader/(ReaderTabs)"), 1000);
     } catch (error: any) {
@@ -138,6 +156,18 @@ export default function Login() {
               </TouchableOpacity>
             </View>
           </View>
+
+          {/* Remember Me */}
+          <TouchableOpacity
+            style={styles.rememberRow}
+            onPress={() => setRememberMe(!rememberMe)}
+            activeOpacity={0.7}
+          >
+            <View style={[styles.rememberCheckbox, rememberMe && styles.rememberCheckboxChecked]}>
+              {rememberMe && <Ionicons name="checkmark" size={14} color="#FFFFFF" />}
+            </View>
+            <Text style={styles.rememberText}>Remember my email</Text>
+          </TouchableOpacity>
 
           {/* Login Button */}
           <TouchableOpacity
@@ -260,6 +290,31 @@ const styles = StyleSheet.create({
     position: "absolute",
     right: 16,
     top: 13,
+  },
+  rememberRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    paddingHorizontal: 24,
+    marginTop: 16,
+  },
+  rememberCheckbox: {
+    width: 20,
+    height: 20,
+    borderRadius: 4,
+    borderWidth: 2,
+    borderColor: "#FFD4D1",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#FFFFFF",
+  },
+  rememberCheckboxChecked: {
+    backgroundColor: "#E85D54",
+    borderColor: "#E85D54",
+  },
+  rememberText: {
+    fontSize: 14,
+    color: "#666",
   },
   loginButton: {
     marginHorizontal: 24,

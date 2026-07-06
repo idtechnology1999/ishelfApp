@@ -1,6 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { authorAPI } from '../authorAPI';
 import Toast from '../Toast';
 import {
@@ -25,8 +26,18 @@ export default function LoginScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState({ visible: false, message: '', type: 'success' as 'success' | 'error' | 'warning' });
+
+  useEffect(() => {
+    AsyncStorage.getItem('rememberedAuthorEmail').then((saved) => {
+      if (saved) {
+        setEmail(saved);
+        setRememberMe(true);
+      }
+    });
+  }, []);
 
   const swipeConfig = {
     velocityThreshold: 0.25,
@@ -46,7 +57,13 @@ export default function LoginScreen() {
     setLoading(true);
     try {
       await authorAPI.login(email, password);
-      
+
+      if (rememberMe) {
+        await AsyncStorage.setItem('rememberedAuthorEmail', email);
+      } else {
+        await AsyncStorage.removeItem('rememberedAuthorEmail');
+      }
+
       showToast('Welcome Back! 👋', 'success');
       
       setTimeout(() => {
@@ -168,6 +185,18 @@ export default function LoginScreen() {
                   </TouchableOpacity>
                 </View>
               </View>
+
+              {/* Remember Me */}
+              <TouchableOpacity
+                style={styles.rememberRow}
+                onPress={() => setRememberMe(!rememberMe)}
+                activeOpacity={0.7}
+              >
+                <View style={[styles.rememberCheckbox, rememberMe && styles.rememberCheckboxChecked]}>
+                  {rememberMe && <Ionicons name="checkmark" size={14} color="#FFFFFF" />}
+                </View>
+                <Text style={styles.rememberText}>Remember my email</Text>
+              </TouchableOpacity>
 
               {/* Login Button */}
               <TouchableOpacity
@@ -296,6 +325,34 @@ const styles = StyleSheet.create({
     position: "absolute",
     right: 16,
     top: 15,
+  },
+
+  rememberRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    marginTop: 4,
+  },
+
+  rememberCheckbox: {
+    width: 20,
+    height: 20,
+    borderRadius: 4,
+    borderWidth: 2,
+    borderColor: "#FFD4D1",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#FFFFFF",
+  },
+
+  rememberCheckboxChecked: {
+    backgroundColor: "#E85D54",
+    borderColor: "#E85D54",
+  },
+
+  rememberText: {
+    fontSize: 14,
+    color: "#666",
   },
 
   forgotPassword: {
