@@ -257,7 +257,7 @@ export default function EarningsPage() {
           <View style={styles.emptyBox}>
             <Ionicons name="people-outline" size={40} color="#ddd" />
             <Text style={styles.emptyText}>No referrals yet</Text>
-            <Text style={styles.emptySubText}>Share your referral code with authors. Earn ₦4,000 when they pay the upload fee.</Text>
+            <Text style={styles.emptySubText}>Share your referral code with authors. Earn ₦3,000 when they pay the upload fee.</Text>
           </View>
         ) : (
           activeReferrals.map(item => (
