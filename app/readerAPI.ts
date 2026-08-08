@@ -10,12 +10,17 @@ const readerAPI = axios.create({
 readerAPI.interceptors.response.use(
   (response) => response,
   async (error) => {
-    if (error.response?.status === 401 && error.response?.data?.message?.includes('Session expired')) {
+    if (error.response?.status === 401) {
       await AsyncStorage.multiRemove(['readerToken', 'readerData', 'readerProfileImage']);
     }
     return Promise.reject(error);
   }
 );
+
+export const isReaderLoggedIn = async () => {
+  const token = await AsyncStorage.getItem('readerToken');
+  return !!token;
+};
 
 export const readerAuth = {
   register: async (title: string, fullName: string, email: string, institution: string, password: string) => {

@@ -27,7 +27,7 @@ export default function ReaderOnboarding3() {
       style={{ flex: 1 }}
       config={swipeConfig}
       onSwipeRight={() => router.back()}
-      onSwipeLeft={() => router.push("/Reader/Login")}
+      onSwipeLeft={() => router.push("/Reader/(ReaderTabs)")}
     >
       <DynamicBackgroundPattern />
       <SafeAreaView style={styles.container}>
@@ -40,7 +40,7 @@ export default function ReaderOnboarding3() {
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.skipButton}
-            onPress={() => router.push("/Reader/Login")}
+            onPress={() => router.push("/Reader/(ReaderTabs)")}
           >
             <Text style={styles.skipText}>Skip</Text>
           </TouchableOpacity>
@@ -76,7 +76,7 @@ export default function ReaderOnboarding3() {
 
           <TouchableOpacity
             style={styles.nextButton}
-            onPress={() => router.push("/Reader/Login")}
+            onPress={() => router.push("/Reader/(ReaderTabs)")}
           >
             <Ionicons name="chevron-forward" size={24} color="#E85D55" />
           </TouchableOpacity>

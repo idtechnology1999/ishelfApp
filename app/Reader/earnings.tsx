@@ -6,7 +6,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useFocusEffect } from 'expo-router';
-import { readerReferral } from '../readerAPI';
+import { readerReferral, isReaderLoggedIn } from '../readerAPI';
 
 type Referral = {
   id: string;
@@ -43,7 +43,16 @@ export default function EarningsPage() {
 
   useFocusEffect(
     useCallback(() => {
-      loadData();
+      (async () => {
+        const loggedIn = await isReaderLoggedIn();
+        if (!loggedIn) {
+          Alert.alert('Login Required', 'Please log in to view your earnings.', [
+            { text: 'OK', onPress: () => router.replace('/Reader/Login') }
+          ]);
+          return;
+        }
+        loadData();
+      })();
     }, [])
   );
 

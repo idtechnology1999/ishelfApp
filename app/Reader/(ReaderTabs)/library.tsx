@@ -10,14 +10,22 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter, useFocusEffect } from "expo-router";
-import { readerBooks } from "../../readerAPI";
+import { readerBooks, isReaderLoggedIn } from "../../readerAPI";
 
 export default function Library() {
   const router = useRouter();
   const [purchaseCount, setPurchaseCount] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [requiresLogin, setRequiresLogin] = useState(false);
 
   const loadCounts = useCallback(async () => {
+    const loggedIn = await isReaderLoggedIn();
+    if (!loggedIn) {
+      setRequiresLogin(true);
+      setLoading(false);
+      return;
+    }
+    setRequiresLogin(false);
     setLoading(true);
     try {
       const purchaseData = await readerBooks.getMyPurchases().catch(() => ({ purchases: [] }));
@@ -40,6 +48,18 @@ export default function Library() {
   };
 
   const renderContent = () => {
+    if (requiresLogin) {
+      return (
+        <View style={styles.emptyContainer}>
+          <Ionicons name="lock-closed-outline" size={80} color="#ccc" />
+          <Text style={styles.emptyTitle}>Log in to view your library</Text>
+          <Text style={styles.emptyText}>Your purchased books appear here</Text>
+          <TouchableOpacity style={styles.browseButton} onPress={() => router.push("/Reader/Login")}>
+            <Text style={styles.browseButtonText}>Log In</Text>
+          </TouchableOpacity>
+        </View>
+      );
+    }
     if (loading) {
       return (
         <View style={styles.loadingContainer}>
@@ -162,5 +182,34 @@ const styles = StyleSheet.create({
   loadingContainer: {
     paddingVertical: 60,
     alignItems: 'center',
+  },
+  emptyContainer: {
+    paddingVertical: 80,
+    alignItems: 'center',
+    paddingHorizontal: 40,
+  },
+  emptyTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#000',
+    marginBottom: 8,
+    marginTop: 20,
+  },
+  emptyText: {
+    fontSize: 16,
+    color: '#999',
+    textAlign: 'center',
+    marginBottom: 30,
+  },
+  browseButton: {
+    backgroundColor: "#E85D54",
+    paddingHorizontal: 30,
+    paddingVertical: 12,
+    borderRadius: 25,
+  },
+  browseButtonText: {
+    color: "#fff",
+    fontWeight: "600",
+    fontSize: 16,
   },
 });

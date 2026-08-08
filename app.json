@@ -6,20 +6,21 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
-
     "icon": "./assets/images/logo.png",
-
     "splash": {
       "image": "./assets/images/logo.png",
       "resizeMode": "contain",
       "backgroundColor": "#FFFFFF"
     },
-
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.ishelf.app"
+      "bundleIdentifier": "com.ishelf.app",
+      "infoPlist": {
+        "NSPhotoLibraryUsageDescription": "I-SHELF needs access to your photo library to set your profile picture or book cover image.",
+        "NSDocumentsFolderUsageDescription": "I-SHELF needs access to your documents to upload your ID verification or book PDF files.",
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
-
     "android": {
       "package": "com.ishelf.app",
       "jsEngine": "hermes",
@@ -42,15 +43,23 @@
               "scheme": "ishelf"
             }
           ],
-          "category": ["BROWSABLE", "DEFAULT"]
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
         }
+      ],
+      "permissions": [
+        "android.permission.RECORD_AUDIO"
       ]
     },
-
     "plugins": [
-      "expo-router"
+      "expo-router",
+      "expo-image-picker",
+      "expo-document-picker",
+      "expo-font",
+      "expo-web-browser"
     ],
-
     "extra": {
       "router": {},
       "eas": {

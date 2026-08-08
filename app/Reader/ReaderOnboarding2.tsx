@@ -40,7 +40,7 @@ export default function ReaderOnboarding2() {
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.skipButton}
-            onPress={() => router.push("/Reader/Login")}
+            onPress={() => router.push("/Reader/(ReaderTabs)")}
           >
             <Text style={styles.skipText}>Skip</Text>
           </TouchableOpacity>

@@ -160,9 +160,6 @@ export default function CourseMaterials() {
                       >
                         <Text style={styles.addToCartText}>Add to Cart</Text>
                       </TouchableOpacity>
-                      <TouchableOpacity style={styles.favoriteButton}>
-                        <Ionicons name="heart-outline" size={20} color="#E85D55" />
-                      </TouchableOpacity>
                     </View>
                   </View>
                 </View>
@@ -289,16 +286,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "600",
     color: "#FFFFFF",
-  },
-  favoriteButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: "#E85D55",
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#FFFFFF",
   },
   loadingContainer: {
     paddingVertical: 60,

@@ -13,7 +13,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { readerPayment, readerBooks, readerCart } from "../../readerAPI";
+import { readerPayment, readerBooks, readerCart, isReaderLoggedIn } from "../../readerAPI";
 
 export default function MakePayment() {
   const router = useRouter();
@@ -29,8 +29,17 @@ export default function MakePayment() {
   const isCartCheckout = !!params.bookIds;
 
   useEffect(() => {
-    loadData();
-    checkPaymentStatus();
+    (async () => {
+      const loggedIn = await isReaderLoggedIn();
+      if (!loggedIn) {
+        Alert.alert('Login Required', 'Please log in to complete your purchase.', [
+          { text: 'OK', onPress: () => router.replace('/Reader/Login') }
+        ]);
+        return;
+      }
+      loadData();
+      checkPaymentStatus();
+    })();
   }, []);
 
   const loadData = async () => {
@@ -78,6 +87,12 @@ export default function MakePayment() {
         Alert.alert('Error', 'Cannot open payment page');
       }
     } catch (error: any) {
+      if (error?.response?.status === 401) {
+        Alert.alert('Login Required', 'Your session has expired. Please log in again.', [
+          { text: 'OK', onPress: () => router.replace('/Reader/Login') }
+        ]);
+        return;
+      }
       Alert.alert('Error', error.response?.data?.message || 'Payment initialization failed');
     } finally {
       setLoading(false);
@@ -97,8 +112,14 @@ export default function MakePayment() {
       } else {
         Alert.alert('Payment Failed', 'Please try again');
       }
-    } catch {
-      Alert.alert('Verification Error', 'Please contact support');
+    } catch (error: any) {
+      if (error?.response?.status === 401) {
+        Alert.alert('Login Required', 'Your session has expired. Please log in again.', [
+          { text: 'OK', onPress: () => router.replace('/Reader/Login') }
+        ]);
+      } else {
+        Alert.alert('Verification Error', 'Please contact support');
+      }
     } finally {
       setVerifying(false);
     }

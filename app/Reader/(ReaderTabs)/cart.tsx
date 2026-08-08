@@ -12,15 +12,24 @@ import {
 } from "react-native";
 import BookCover from "../../../components/BookCover";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { readerCart } from "../../readerAPI";
+import { readerCart, isReaderLoggedIn } from "../../readerAPI";
 
 export default function Cart() {
   const router = useRouter();
   const [cartItems, setCartItems] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [requiresLogin, setRequiresLogin] = useState(false);
 
   useEffect(() => {
-    loadCartItems();
+    (async () => {
+      const loggedIn = await isReaderLoggedIn();
+      if (!loggedIn) {
+        setRequiresLogin(true);
+        setLoading(false);
+        return;
+      }
+      loadCartItems();
+    })();
   }, []);
 
   const loadCartItems = async () => {
@@ -61,6 +70,18 @@ export default function Cart() {
   };
 
   const renderContent = () => {
+    if (requiresLogin) {
+      return (
+        <View style={styles.emptyContainer}>
+          <Ionicons name="lock-closed-outline" size={80} color="#ccc" />
+          <Text style={styles.emptyTitle}>Log in to view your cart</Text>
+          <Text style={styles.emptyText}>Your cart is saved to your account</Text>
+          <TouchableOpacity style={styles.browseButton} onPress={() => router.push("/Reader/Login")}>
+            <Text style={styles.browseButtonText}>Log In</Text>
+          </TouchableOpacity>
+        </View>
+      );
+    }
     if (loading) {
       return (
         <View style={styles.loadingContainer}>

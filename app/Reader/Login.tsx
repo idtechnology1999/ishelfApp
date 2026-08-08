@@ -198,19 +198,6 @@ export default function Login() {
             </TouchableOpacity>
           </View>
 
-          {/* Social Login */}
-          <Text style={styles.orText}>Or Continue With</Text>
-          <View style={styles.socialContainer}>
-            <TouchableOpacity style={styles.socialButton}>
-              <Ionicons name="logo-google" size={32} color="#DB4437" />
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.socialButton}>
-              <Ionicons name="logo-facebook" size={32} color="#4267B2" />
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.socialButton}>
-              <Ionicons name="logo-apple" size={32} color="#000000" />
-            </TouchableOpacity>
-          </View>
         </ScrollView>
       </KeyboardAvoidingView>
       <SupportWidget />
@@ -361,27 +348,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "600",
     color: "#E85D54",
-  },
-  orText: {
-    fontSize: 14,
-    color: "#999",
-    textAlign: "center",
-    marginTop: 30,
-    marginBottom: 20,
-  },
-  socialContainer: {
-    flexDirection: "row",
-    justifyContent: "center",
-    gap: 20,
-    marginBottom: 40,
-  },
-  socialButton: {
-    width: 70,
-    height: 70,
-    backgroundColor: "#FFE8E6",
-    borderRadius: 16,
-    justifyContent: "center",
-    alignItems: "center",
   },
   buttonDisabled: {
     opacity: 0.6,

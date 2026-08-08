@@ -13,7 +13,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { readerAuth } from '../../readerAPI';
+import { isReaderLoggedIn } from '../../readerAPI';
 import axios from 'axios';
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL;
@@ -23,6 +23,7 @@ export default function Profile() {
   const [reader, setReader] = useState<any>(null);
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [requiresLogin, setRequiresLogin] = useState(false);
 
   useEffect(() => {
     loadReaderData();
@@ -36,6 +37,14 @@ export default function Profile() {
 
   const loadReaderData = async () => {
     try {
+      const loggedIn = await isReaderLoggedIn();
+      if (!loggedIn) {
+        setRequiresLogin(true);
+        setLoading(false);
+        return;
+      }
+      setRequiresLogin(false);
+
       const data = await AsyncStorage.getItem('readerData');
       if (data) {
         setReader(JSON.parse(data));
@@ -107,6 +116,15 @@ export default function Profile() {
         {/* Profile Avatar Section */}
         {loading ? (
           <ActivityIndicator size="large" color="#E85D54" style={{ marginTop: 50 }} />
+        ) : requiresLogin ? (
+          <View style={styles.loginPrompt}>
+            <Ionicons name="lock-closed-outline" size={80} color="#ccc" />
+            <Text style={styles.loginPromptTitle}>Log in to view your profile</Text>
+            <Text style={styles.loginPromptText}>Sign in to access your account</Text>
+            <TouchableOpacity style={styles.loginPromptButton} onPress={() => router.push("/Reader/Login")}>
+              <Text style={styles.loginPromptButtonText}>Log In</Text>
+            </TouchableOpacity>
+          </View>
         ) : (
           <>
             <View style={styles.profileSection}>
@@ -205,6 +223,37 @@ const styles = StyleSheet.create({
 
   headerSpacer: {
     width: 36,
+  },
+
+  loginPrompt: {
+    alignItems: "center",
+    paddingVertical: 80,
+    paddingHorizontal: 40,
+  },
+  loginPromptTitle: {
+    fontSize: 20,
+    fontWeight: "700",
+    color: "#000",
+    marginBottom: 8,
+    marginTop: 20,
+    textAlign: "center",
+  },
+  loginPromptText: {
+    fontSize: 16,
+    color: "#999",
+    textAlign: "center",
+    marginBottom: 30,
+  },
+  loginPromptButton: {
+    backgroundColor: "#E85D54",
+    paddingHorizontal: 30,
+    paddingVertical: 12,
+    borderRadius: 25,
+  },
+  loginPromptButtonText: {
+    color: "#fff",
+    fontWeight: "600",
+    fontSize: 16,
   },
 
   profileSection: {

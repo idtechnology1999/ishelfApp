@@ -242,19 +242,6 @@ export default function SignUp() {
             </TouchableOpacity>
           </View>
 
-          {/* Social Login */}
-          <Text style={styles.orText}>Or Continue With</Text>
-          <View style={styles.socialContainer}>
-            <TouchableOpacity style={styles.socialButton}>
-              <Ionicons name="logo-google" size={28} color="#DB4437" />
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.socialButton}>
-              <Ionicons name="logo-facebook" size={28} color="#4267B2" />
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.socialButton}>
-              <Ionicons name="logo-apple" size={28} color="#000000" />
-            </TouchableOpacity>
-          </View>
         </ScrollView>
       </KeyboardAvoidingView>
       <SupportWidget />
@@ -304,12 +291,6 @@ const styles = StyleSheet.create({
   loginContainer: { flexDirection: "row", justifyContent: "center", marginTop: 14 },
   loginText: { fontSize: 13, color: "#333" },
   loginLink: { fontSize: 13, fontWeight: "600", color: "#E85D54" },
-  orText: { fontSize: 13, color: "#999", textAlign: "center", marginTop: 18, marginBottom: 14 },
-  socialContainer: { flexDirection: "row", justifyContent: "center", gap: 16, marginBottom: 20 },
-  socialButton: {
-    width: 60, height: 60, backgroundColor: "#FFE8E6",
-    borderRadius: 14, justifyContent: "center", alignItems: "center",
-  },
   buttonDisabled: { opacity: 0.6 },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' },
   modalSheet: {

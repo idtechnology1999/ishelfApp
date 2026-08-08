@@ -13,7 +13,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { readerBooks, readerCart } from "../../readerAPI";
+import { readerBooks, readerCart, isReaderLoggedIn } from "../../readerAPI";
 
 export default function PreviewAddToCart() {
   const router = useRouter();
@@ -53,6 +53,15 @@ export default function PreviewAddToCart() {
       return;
     }
 
+    const loggedIn = await isReaderLoggedIn();
+    if (!loggedIn) {
+      Alert.alert('Login Required', 'Please log in to add books to your cart.', [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Log In', onPress: () => router.push('/Reader/Login') }
+      ]);
+      return;
+    }
+
     try {
       const result = await readerCart.addToCart(book._id);
       setIsInCart(true);
@@ -62,8 +71,13 @@ export default function PreviewAddToCart() {
       ]);
     } catch (error: any) {
       const errorMessage = error.response?.data?.message || error.message || 'Failed to add to cart';
-      
-      if (errorMessage.includes('already purchased')) {
+
+      if (error?.response?.status === 401) {
+        Alert.alert('Login Required', 'Your session has expired. Please log in again.', [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Log In', onPress: () => router.push('/Reader/Login') }
+        ]);
+      } else if (errorMessage.includes('already purchased')) {
         setIsPurchased(true);
         Alert.alert('Already Purchased', 'You have already purchased this book. Check your library.', [
           { text: 'OK' },
@@ -81,9 +95,18 @@ export default function PreviewAddToCart() {
     }
   };
 
-  const handleMakePayment = () => {
+  const handleMakePayment = async () => {
     if (!book || !book._id) {
       Alert.alert('Error', 'Book information not available');
+      return;
+    }
+
+    const loggedIn = await isReaderLoggedIn();
+    if (!loggedIn) {
+      Alert.alert('Login Required', 'Please log in to make a purchase.', [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Log In', onPress: () => router.push('/Reader/Login') }
+      ]);
       return;
     }
 
@@ -120,12 +143,6 @@ export default function PreviewAddToCart() {
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{book.title}</Text>
         <View style={styles.headerIcons}>
-          <TouchableOpacity style={styles.iconButton}>
-            <Ionicons name="heart-outline" size={24} color="#E85D55" />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.iconButton}>
-            <Ionicons name="share-social-outline" size={24} color="#E85D55" />
-          </TouchableOpacity>
         </View>
       </View>
 
@@ -282,18 +299,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 10,
   },
   headerIcons: {
-    flexDirection: "row",
-    gap: 8,
-  },
-  iconButton: {
     width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: "#FFF5F4",
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1,
-    borderColor: "#FFE5E3",
   },
   imageContainer: {
     alignItems: "center",

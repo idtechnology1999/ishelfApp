@@ -19,7 +19,7 @@ import { useRouter } from "expo-router";
 import { useFocusEffect } from "expo-router";
 import GestureRecognizer from "react-native-swipe-gestures";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { readerBooks, readerCart, readerReferral } from "../../readerAPI";
+import { readerBooks, readerCart, readerReferral, isReaderLoggedIn } from "../../readerAPI";
 
 export default function Home() {
   const router = useRouter();
@@ -68,6 +68,11 @@ export default function Home() {
   };
 
   const handleOpenNotifications = async () => {
+    const loggedIn = await isReaderLoggedIn();
+    if (!loggedIn) {
+      router.replace('/Reader/Login');
+      return;
+    }
     setShowNotifications(v => !v);
     if (!showNotifications) {
       // Mark all as seen
@@ -161,7 +166,17 @@ export default function Home() {
               />
             </View>
             <View style={styles.headerIcons}>
-              <TouchableOpacity style={styles.iconButton} onPress={() => router.push('/Reader/earnings')}>
+              <TouchableOpacity
+                style={styles.iconButton}
+                onPress={async () => {
+                  const loggedIn = await isReaderLoggedIn();
+                  if (!loggedIn) {
+                    router.replace('/Reader/Login');
+                    return;
+                  }
+                  router.push('/Reader/earnings');
+                }}
+              >
                 <View style={styles.earningsButton}>
                   <Ionicons name="wallet-outline" size={20} color="#fff" />
                   <Text style={styles.earningsText}>₦{totalEarnings.toLocaleString()}</Text>
@@ -271,9 +286,6 @@ export default function Home() {
                         <Text style={styles.priceLabel}>Price</Text>
                         <Text style={styles.price}>₦{(book.publicPrice || book.price)?.toLocaleString()}</Text>
                       </View>
-                      <TouchableOpacity style={styles.favoriteButton}>
-                        <Ionicons name="heart-outline" size={20} color="#E85D54" />
-                      </TouchableOpacity>
                     </View>
                     <TouchableOpacity
                       style={styles.addToCartButton}
@@ -443,16 +455,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "700",
     color: "#E85D54",
-  },
-  favoriteButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: "#E85D54",
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#FFFFFF",
   },
   addToCartButton: {
     backgroundColor: "#E85D54",
